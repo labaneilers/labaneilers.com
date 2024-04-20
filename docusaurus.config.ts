@@ -71,10 +71,16 @@ const config: Config = {
         //   position: 'left',
         //   label: 'Tutorial',
         // },
-        {to: '/blog', label: 'Blog', position: 'left'},
+        {to: '/', label: 'Blog', position: 'left'},
+        {to: '/about', label: 'About', position: 'left'},
         {
-          href: 'https://github.com/labaneilers/labaneilers.com',
+          href: 'https://github.com/labaneilers',
           label: 'GitHub',
+          position: 'right',
+        },
+        {
+          href: 'https://www.linkedin.com/in/laban-eilers-38642a/',
+          label: 'LinkedIn',
           position: 'right',
         },
       ],
@@ -104,7 +110,7 @@ const config: Config = {
           items: [
             {
               label: 'Blog',
-              to: '/blog',
+              to: '/',
             },
             {
               label: 'GitHub',
@@ -112,8 +118,17 @@ const config: Config = {
             },
           ],
         },
+        {
+          title: 'About',
+          items: [
+            {
+              label: 'about',
+              to: '/about',
+            }
+          ],
+        },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Laban Eilers`,
     },
     prism: {
       theme: prismThemes.github,
