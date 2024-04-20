@@ -75,6 +75,7 @@ const config: Config = {
         // },
         {to: '/', label: 'Blog', position: 'left'},
         {to: '/about', label: 'About', position: 'left'},
+        {to: '/resume', label: 'Resume', position: 'left'},
         {
           href: 'https://github.com/labaneilers',
           label: 'GitHub',
