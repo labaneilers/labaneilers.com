@@ -1,0 +1,91 @@
+---
+slug: karpenter-you-complete-me
+title: Karpenter, you complete me
+tags: [platform-engineering, kubernetes, karpenter]
+---
+
+Every once in a while, some new product comes along that solves a problem you didn’t know you had, and does it so well that after you’ve had it, you can’t imagine how you ever lived without it.
+
+This is how I’ve come to feel about Karpenter. I guess you could say that the category it lives in already existed, given it’s designed to replace the Kubernetes Cluster Autoscaler, but the effect it’s had on my life as an EKS cluster operator and platform engineer makes me feel like the comparison cheapens it.
+
+## Back in my day, we had to use cluster autoscaler
+
+Let’s take a stroll together into the recent past, when, to provide nodes for an EKS cluster, we had to provision EC2 autoscaling groups. In most cases, we didn’t have a lot of information about what types of workloads were going to be run on the cluster, so this involved a lot of guessing about the best fixed set of instance types/sizes we should choose.
+
+Then, when load on one of our apps starts to pick up, its HorizontalPodAutoscaler would kick in and increase the replica count of a deployment, and some pods would get created. When they first started up, they’d be in a “Pending” state because there weren’t enough nodes to satisfy their resource requests. At this point, the cluster autoscaler would notice the pending pods, and make some API calls to increase the node count of the AutoScaling group by 1. Then we’d wait about 6 minutes for the instance to come up, join the cluster, and be ready for pods to be scheduled.
+
+But perhaps there were more pods than could fit on the new node… at which point the process would start over again until all pods were scheduled. Sometimes, with larger deployments, it would take 30 minutes or so for all the required nodes to come up.
+
+And then when it came time to scale back down, depending on which particular poison you wanted to pick within the scale down options (cost savings vs potential node flapping), you may have faster or slower scaling down. If you chose a managed NodeGroup to control your AutoScaleGroup, you’d get graceful draining of nodes before they shut down, so your customers wouldn’t be disrupted.
+
+All the while, we were spending a lot of time working with teams who had specific instance type requirements to configure different NodeGroups with different instance types, and set up the right taints on each so that teams could target them. Then we’d have to make sure their workloads’ tolerations were set right, and we’d have to live with the fact that each NodeGroup might be underutilized, depending on what workloads actually ended up on them.
+
+This was all fine, and I didn’t really know that life could get better.
+
+## Then Karpenter walked into my life
+
+![Karpenter logo](./karpenter-logo.png)
+
+I heard about Karpenter from the Containers from the Couch YouTube channel. They said a lot of words that sounded good to me; cost optimization, faster autoscaling, more flexible node types, support for multiple instance types. So a few weeks later I started installing Karpenter and playing with it.
+
+Jumping ahead a few months, all our EKS clusters use Karpenter instead of the cluster autoscaler. Here’s some of what we’ve got now that we didn’t before:
+
+* **Cost savings**: EC2 costs are roughly 1/2 of what they were (relative to our workload sizes). A lot of this is because we can now safely use spot instances for a bunch of workloads, but also because its easier to use ARM nodes, and because of Karpenter’s intelligent cost-optimized instance type choices, bin-packing, and consolidation (smart scale-down).
+* **No need to guess about instance types**: As a platform engineer, I don’t need to use my crystal ball to try to guess what instance types developers will need for their workloads. They just use Kubernetes scheduling primitives in their pod specs (e.g. resources, node selector and/or affinity expressions, tolerations, topology constraints, etc) and Karpenter gives them the cheapest nodes that fit their requirements.
+* **Faster Autoscaling**: Autoscaling is *way* faster. It usually takes about 3 minutes for Karpenter to have nodes up and running for all unscheduled pods.
+* **Easy migration to ARM nodes**: Developers can now flip a switch in their service’s configuration (which adds a node selector and toleration under the hood) and have their services running on ARM servers (Graviton on AWS). This is about 30% cheaper for similar performance.
+GPU instance support: On our AI workloads, we can flip a different configuration switch, and have their pods run on instance types with GPUs (and the right Nvidia plugins)
+
+What I didn’t fully grasp until I had all this running was that we now had a developer experience that felt… serverless! Developers mostly don’t think about node types anymore, they just express their requirements in basic Kubernetes manifest files.
+
+From an operator perspective, beyond the cost savings (which are still mind-boggling), Karpenter is *at least* as easy to use as managed NodeGroups. Cluster maintenance is astoundingly easy; we can push a new AMI to all our nodes (e.g for cluster upgrades, etc) with a one line config change to a custom resource (EC2NodeClass), and Karpenter handles all of the node rotation, including graceful draining of workloads. It respects PodDisruptionsBudgets, and the graceful termination properties of pods, so this is pretty much seamless from the perspective of both developers and customers.
+
+## OK, what’s the catch?
+
+For real, this works pretty much as well as it sounds. There’s a few things that you’ll notice, which are general best practices, but are more essential when using Karpenter:
+
+### Specify and tune resource.requests for all your pods
+
+This is absolutely core to how Karpenter knows what types and quantities of instances you need. And really, if you’re doing anything real with Kubernetes, you should be doing this regardless.
+
+I rely on our cadvisor prometheus metrics (e.g. container_memory_usage_bytes and container_cpu_usage_seconds_total in particular) to track the maximum pod memory and CPU utilization over a window of a few weeks, and set requests accordingly.
+
+:::tip
+Here’s some great advice for setting requests and limits: https://home.robusta.dev/blog/stop-using-cpu-limits
+:::
+
+### Use PodDisruptionBudgets for all deployments
+
+When Karpenter deprovisions nodes (due to consolidation, scale-down, or node rotation), it needs to know how slowly it should go to keep your service at a satisfactory capacity.
+
+But remember: don’t be too stingy with the maxUnavailable setting, especially if you’re using spot instances. In the case of a spot interruption, Karpenter needs to be able to drain a node within the 2 minute spot interruption window, and if your maxUnavailable setting is too low, it won’t be able to drain the node fast enough to avoid a decidedly ungraceful shutdown of your pods.
+
+Even if you aren’t using spot instances, choose a good maxUnavailable setting so that your deployments and node maintenance will run at a reasonable rate.
+
+### Implement graceful termination correctly
+
+A few times we found a developer with minimal Kubernetes experience had neglected to implement graceful termination. The most common mistake was to ignore SIGTERM, which would cause pods to just keep going until they got exceeded terminationGracePeriodSeconds and got SIGKILLed. Really long pod termination times makes lots of stuff hard (including deployments), but it also makes node deprovisioning/rotation with Karpenter really slow.
+
+On the other hand, pods that shut down immediately when receiving a SIGTERM, especially if they’re in a load balancer target group, will result in HTTP clients receiving 5XX errors, because the pod will have terminated before the load balancer stopped sending requests to it.
+
+:::tip[Quick aside]
+If you use the aws-load-balancer-controller, and have an ALB target group pointing to pod IPs, you need a minimum 15 second delay from when Kubernetes first sends a SIGTERM to your pod until you begin actually shutting down. It takes about that long for the controller to update the ALB target group to deregister the pod IPs. Even if your app’s HTTP server has a way to stop accepting new connections and drain existing ones, you should wait the 15 seconds to even start the process, since the ALB may keep sending new connections regardless if your HTTP server will accept them.
+:::
+
+### Set a max instance CPU size
+
+Fun story, I once got an alert about a crashlooping FluentBit daemonset pod. I went to check it out, and found the poor agent was getting absolutely crushed with logs. It took me a minute to realize that this was because Karpenter had provisioned an instance with **72 CPUs**, and had scheduled a gazillion pods onto it. Of course a single FluentBit pod, with resources tuned for nodes that were quite a bit smaller wouldn’t be able to keep up.
+
+It turns out that that instance was chosen by Karpenter because it was a spot instance, and was in fact the most cost effective way to schedule all the pods that had been created during a particular burst of activity! Who knew!
+
+After that day, I set our Kaprenter configuration to add a maximum instance size (16 CPUs), just to simplify how we manage daemonset resources.
+
+### Don’t use instance types with bursting
+
+Karpenter’s purpose in life is to efficiently match requests with capacity, and that doesn’t work well with instance types that can suddenly run out of bursting credits and have a totally different capacity (e.g. EC2’s `t` instance types).
+
+## 5/5 would recommend
+
+I often listen to the podcast [KubeFM](https://kube.fm/), and the host, Bart Farrell usually starts by asking each guest which 3 tools they would install first on a new Kubernetes cluster.
+
+For me, #1 is going to be Karpenter, every time.
