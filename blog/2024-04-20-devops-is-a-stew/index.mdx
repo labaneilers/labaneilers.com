@@ -74,16 +74,16 @@ The teams that had adopted containers, kubernetes, and ECS quickly discovered th
 
 ### Shift to automated testing and observability vs manual QA
 
-But as the braver teams started to actually practice continuous deployment, they found that there was an increase in the amount of regressions that would remain undiscovered, sometimes for days. In retrospect, our culture had been too reliant on having a QA team, who was organized around doing manual regression tests on big batches releases. Teams began to re-discover the need for some essential ingredients of continuous deployment:
+As the braver teams started to actually practice continuous deployment, they found that there was an increase in the amount of regressions that would remain undiscovered, sometimes for days. In retrospect, our culture had been too reliant on having a QA team, who was organized around doing manual regression tests on big batches releases. Teams began to re-discover the need for some essential ingredients of continuous deployment:
 
 * Robust observability and alerting
-* running automated regression testing in CI
+* Running automated regression testing in CI
 
 ### Platform Engineering
 
 At this point there was a huge, and increasing gap in maturity between teams who had invested significantly in their operational capabilities, and teams that hadn't. It was also clear that to get to even a basline level of continous deployment required months of investment from **every** team... and I don't think we'd even come to grips with the reality of maintenance on all that stuff.
 
-It became increasingly obvious we needed to find a way to share the capabilities between teams, so we started experimenting with a new form of "platform" engineering- one that works in a world of autonomous teams and distributed systems.
+It became increasingly obvious we needed to find a way to share the capabilities between teams, so we started experimenting with ways to reclaim some of the abilities we used to have with our monolith- but in a way that worked in a world of autonomous teams and distributed systems.
 
 We quickly realized that some things were a no-brainer to centralize: running Kubernetes clusters, CI/CD and observability infrastructure, in particular. We also started playing with integrating other opinions and best practices into tooling, and trying to find the balance between operational uniformity and developer freedom. At some point in the past few years, we started calling this "Platform Engineering".
 
