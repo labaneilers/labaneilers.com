@@ -36,7 +36,7 @@ Jumping ahead a few months, all our EKS clusters use Karpenter instead of the cl
 * **No need to guess about instance types**: As a platform engineer, I don't need to use my crystal ball to try to guess what instance types developers will need for their workloads. They just use Kubernetes scheduling primitives in their pod specs (e.g. resources, node selector and/or affinity expressions, tolerations, topology constraints, etc) and Karpenter gives them the cheapest nodes that fit their requirements.
 * **Faster Autoscaling**: Autoscaling is *way* faster. It usually takes about 3 minutes for Karpenter to have nodes up and running for all unscheduled pods.
 * **Easy migration to ARM nodes**: Developers can now flip a switch in their service's configuration (which adds a node selector and toleration under the hood) and have their services running on ARM servers (Graviton on AWS). This is about 30% cheaper for similar performance.
-GPU instance support: On our AI workloads, we can flip a different configuration switch, and have their pods run on instance types with GPUs (and the right Nvidia plugins)
+* **GPU instance support**: On our AI workloads, we can flip a different configuration switch, and have their pods run on instance types with GPUs (and the right Nvidia plugins).
 
 What I didn't fully grasp until I had all this running was that we now had a developer experience that felt… serverless! Developers mostly don't think about node types anymore, they just express their requirements in basic Kubernetes manifest files.
 
