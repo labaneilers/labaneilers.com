@@ -1,0 +1,101 @@
+---
+slug: devops-is-a-stew
+title: DevOps is a stew
+tags: [platform-engineering, devops]
+---
+
+import StewImage from './stew.jpg';
+
+<img src={StewImage} style={{width: 400, float: 'right', marginLeft: '20px'}} alt="The DevOps stew"/>
+
+When learning a new recipie, especially when dabbling in cuisine from different cultures, I find it really important to make sure one is really precise in their understanding the words used in the recipie. I've had a few unfortunate misunderstandings that resulted in gastronomic disaster.
+
+Simiilarly, I find that I can't responsibly use the word "DevOps" without testing that the person I'm talking to know which meaning I'm using. Here's some examples of what someone may think I mean when I say "DevOps":
+
+* The whole category of stuff that happens after you do a git commit, that magically makes your code turn into running software
+* A type of engineer that does the cloudy, opsy stuff (or a whole team of people that does the opsy stuff)
+* A style of operations where there's lots of automation and infrastructure as code
+* A culture where developers and operations people collaborate more tightly (vs the bad old days of "throw it over the wall")
+* A style of software development where the software engineers figure out how to deploy and operate everything themselves
+
+The thing I usually mean is similar to those last two, but here's a crisper version:
+
+> An engineering management philosophy in which teams are are responsible for operating the software they build, in order to create a virtuous feedback loop which incentivizes the team to make their software highly reliable and operable.
+
+I think this is the most useful meaning of the word, mostly because a big percentage of the other meanings are covered by the preexisting words, like "operations", "CI", or "infrastructure as code". I mean, yeah- there's definitely a specific modern flavor of operations, but I find it more useful to use more specific words about those practices.
+
+:::warning[Quick Rant]
+Some companies have a team called "DevOps". When I hear this, my eyebrows become raised, and I wonder to myself if somebody just decided to rename the "Operations" team.
+
+You know, the team the developer teams can "throw it over the wall" to.
+:::
+
+## Th DevOps-flavored stew
+
+import StewIngredientsImage from './stew-ingredients.jpg';
+
+<img src={StewIngredientsImage} style={{width: 400, float: 'right', marginLeft: '20px'}} alt="Stew ingredients"/>
+
+The thing I find really interesting about the engineering-management philosophy definition of "DevOps" is how interdependent it is on a whole bunch of other ingredients that conicided historically with it:
+
+* Microservices
+* Cloud
+* Automation and Infrastructure as Code
+* Containers and orchestrators
+* Continuous Deployment
+* Shift to automated testing and observability vs manual QA
+* Platform Engineering
+
+### Microservices
+
+About 10 years ago, the company I was working for had outgrown our monolith, and we reluctantly started on the journey to microservices, and the journey was still ongoing when I left (about 6 years ago).
+
+The thing that suprised us first was the sheer magnitude of the overhead of managing all the operational stuff that had been solved problems in the monolith. The first teams that started extracting their own services spent many weeks just trying to replicate a small fraction of what we had previously taken for granted: reliable builds, rolling deployments, centralized logs, metrics, alerting, feature flags and associated tooling, etc.
+
+:::info[Flashback]
+Sometimes looking back on this time, I think about just how **adorable** it was that we thought we were going to move to microservices but everything else was just going to continue working as-is. We were so cute.
+:::
+
+### Cloud
+
+At that point, we started toying with some public cloud (AWS), and found that there was a lot of excitement from teams using it. The fact that their infrastructure could be fully automated through reasonable APIs aleviated a whole bunch of the pain we were feeling trying to automate deployments to on-prem servers.
+
+### Infrastructure as code
+
+After building out some of this cloud automation with shell scripts, we quickly discovered that we needed some more powerful ways to manage infrastructure as code. I think at that point we played with CloudFormation and some early Terraform. We were still struggling though, caught between the low-level (infrastructure-as-a-service) nature of EC2, and the relatively immature platform-as-a-service offerings AWS had at the time. We made a little headway with tools like Spinnaker and Octopus, but deployments were still relatively slow and risky.
+
+### Containers and orchestrators
+
+Around this time, Docker was making waves, and we started experimenting with it and early versions of (pre-EKS) Kubernetes and ECS. The speed and ease of deployments, relative to what we had been doing with hand-rolled automation of EC2 and autoscale groups was game changing. Suddenly, treating infrastructure as immutable felt natural, and deployments were cheap and fast.
+
+### Continuous deployment
+
+The teams that had adopted containers, kubernetes, and ECS quickly discovered the power of continuous deployment. While it was technically possible previously, deployments were slow enough that teams were still batching up changes and doing big-ish releases (maybe a couple times a week). Now, the opportunity presented itself to deploy any given feature the second it was ready.
+
+### Shift to automated testing and observability vs manual QA
+
+But as the braver teams started to actually practice continuous deployment, they found that there was an increase in the amount of regressions that would remain undiscovered, sometimes for days. In retrospect, our culture had been too reliant on having a QA team, who was organized around doing manual regression tests on big batches releaseEvents. Teams began to re-discover the need for some essential ingredients of continuous deployment:
+
+* Robust observability and alerting
+* running automated regression testing in CI
+
+### Platform Engineering
+
+At this point there was a huge, and increasing gap in maturity between teams who had invested significantly in their operational capabilities, and teams that hadn't. It was also clear that to get to even a basline level of continous deployment required months of investment from **every** team... and I don't think we'd even come to grips with the reality of maintenance on all that stuff.
+
+It became increasingly obvious we needed to find a way to share the capabilities between teams, so we started experimenting with a new form of "platform" engineering- one that works in a world of autonomous teams and distributed systems.
+
+We quickly realized that some things were a no-brainer to centralize: running Kubernetes clusters, CI/CD and observability infrastructure, in particular. We also started playing with integrating other opinions and best practices into tooling, and trying to find the balance between operational uniformity and developer freedom. At some point in the past few years, we started calling this "Platform Engineering".
+
+## Flavoring is key
+
+Looking back, its actually hard for me to imagine, in any practical way, how any of these practices would exist on their own. I mean, you can gnaw on a potato, but its hard to call that a meal without the rest of the ingredients.
+
+Historically speaking, there's a few more tasty bits sprinkled into this stew:
+
+* Servant leadership and [Intent-based leadership](https://www.youtube.com/watch?v=nzynH2BmoJM)
+* The [Lean Startup](https://theleanstartup.com/) varietal of Agile
+
+These are really key to building a modern engineering culture where developers can flourish; you can't have a high-performing team without enlightened leadership.
+
+I should note that I've tasted a version of this stew, but with these flavorings replaced with "command and control" and "waterfall". That stew tasted like garbage.
