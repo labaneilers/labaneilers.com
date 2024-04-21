@@ -6,14 +6,14 @@ tags: [platform-engineering, devops]
 
 import StewImage from './stew.jpg';
 
-<img src={StewImage} style={{width: 400, float: 'right', marginLeft: '20px'}} alt="The DevOps stew"/>
+<img src={StewImage} style={{width: 400, float: 'right', margin: '20px'}} alt="The DevOps stew"/>
 
-When learning a new recipie, especially when dabbling in cuisine from different cultures, I find it really important to make sure one is really precise in their understanding the words used in the recipie. I've had a few unfortunate misunderstandings that resulted in gastronomic disaster.
+When learning a new recipie, especially when dabbling in cuisine from different cultures, I find it really important to make sure one is really precise in their understanding the words used in the recipie. I've had a few unfortunate misunderstandings that resulted in... gastronomic disaster.
 
 Simiilarly, I find that I can't responsibly use the word "DevOps" without testing that the person I'm talking to know which meaning I'm using. Here's some examples of what someone may think I mean when I say "DevOps":
 
 * The whole category of stuff that happens after you do a git commit, that magically makes your code turn into running software
-* A type of engineer that does the cloudy, opsy stuff (or a whole team of people that does the opsy stuff)
+* A type of engineer that does the cloudy, opsy stuff
 * A style of operations where there's lots of automation and infrastructure as code
 * A culture where developers and operations people collaborate more tightly (vs the bad old days of "throw it over the wall")
 * A style of software development where the software engineers figure out how to deploy and operate everything themselves
@@ -34,7 +34,7 @@ You know, the team the developer teams can "throw it over the wall" to.
 
 import StewIngredientsImage from './stew-ingredients.jpg';
 
-<img src={StewIngredientsImage} style={{width: 400, float: 'right', marginLeft: '20px'}} alt="Stew ingredients"/>
+<img src={StewIngredientsImage} style={{width: 400, float: 'right', margin: '20px'}} alt="Stew ingredients"/>
 
 The thing I find really interesting about the engineering-management philosophy definition of "DevOps" is how interdependent it is on a whole bunch of other ingredients that conicided historically with it:
 
@@ -74,7 +74,7 @@ The teams that had adopted containers, kubernetes, and ECS quickly discovered th
 
 ### Shift to automated testing and observability vs manual QA
 
-As the braver teams started to actually practice continuous deployment, they found that there was an increase in the amount of regressions that would remain undiscovered, sometimes for days. In retrospect, our culture had been too reliant on having a QA team, who was organized around doing manual regression tests on big batches releases. Teams began to re-discover the need for some essential ingredients of continuous deployment:
+As the braver teams started to actually practice continuous deployment, they found that there was an increase in the number of bugs that would remain undiscovered, sometimes for days. In retrospect, our culture had been too reliant on having a QA team, who was organized around doing manual regression tests on big batch releases. Teams began to re-discover the need for some essential ingredients of continuous deployment:
 
 * Robust observability and alerting
 * Running automated regression testing in CI
@@ -83,13 +83,13 @@ As the braver teams started to actually practice continuous deployment, they fou
 
 At this point there was a huge, and increasing gap in maturity between teams who had invested significantly in their operational capabilities, and teams that hadn't. It was also clear that to get to even a basline level of continous deployment required months of investment from **every** team... and I don't think we'd even come to grips with the reality of maintenance on all that stuff.
 
-It became increasingly obvious we needed to find a way to share the capabilities between teams, so we started experimenting with ways to reclaim some of the abilities we used to have with our monolith- but in a way that worked in a world of autonomous teams and distributed systems.
+It became obvious we needed to find a way to share the capabilities between teams, so we started experimenting with ways to reclaim some of the abilities we used to have with our monolith- but in a way that worked in a world of autonomous teams and distributed systems.
 
-We quickly realized that some things were a no-brainer to centralize: running Kubernetes clusters, CI/CD and observability infrastructure, in particular. We also started playing with integrating other opinions and best practices into tooling, and trying to find the balance between operational uniformity and developer freedom. At some point in the past few years, we started calling this "Platform Engineering".
+We quickly realized that some things were a no-brainer to centralize: running Kubernetes clusters, CI/CD, and observability infrastructure, in particular. We also started playing with integrating other opinions and best practices into tooling, and trying to find the balance between operational uniformity and developer freedom. At some point in the past few years, we started calling this "Platform Engineering".
 
 ## Flavoring is key
 
-Looking back, its actually hard for me to imagine, in any practical way, how any of these practices would exist on their own. I mean, you can gnaw on a potato, but its hard to call that a meal without the rest of the ingredients.
+Looking back, its actually hard for me to imagine, in any practical way, how any of these practices could exist on their own. I mean, you can gnaw on a potato, but its hard to call that a meal without the rest of the ingredients.
 
 Historically speaking, there's a few more tasty bits sprinkled into this stew:
 
