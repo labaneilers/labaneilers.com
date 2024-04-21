@@ -6,7 +6,7 @@ tags: [platform-engineering, kubernetes, karpenter]
 
 Every once in a while, some new product comes along that solves a problem you didn't know you had, and does it so well that after you've had it, you can't imagine how you ever lived without it.
 
-This is how I've come to feel about Karpenter. I guess you could say that the category it lives in already existed, given it's designed to replace the Kubernetes Cluster Autoscaler, but the effect it's had on my life as an EKS cluster operator and platform engineer makes me feel like the comparison cheapens it.
+This is how I've come to feel about [Karpenter](https://karpenter.sh/). I guess you could say that the category it lives in already existed, given it's designed to replace the Kubernetes Cluster Autoscaler, but the effect it's had on my life as an EKS cluster operator and platform engineer makes me feel like the comparison cheapens it.
 
 ## Back in my day, we had to use cluster autoscaler
 
@@ -14,7 +14,7 @@ Let's take a stroll together into the recent past, when, to provide nodes for an
 
 Then, when load on one of our apps starts to pick up, its HorizontalPodAutoscaler would kick in and increase the replica count of a deployment, and some pods would get created. When they first started up, they'd be in a “Pending” state because there weren't enough nodes to satisfy their resource requests. At this point, the cluster autoscaler would notice the pending pods, and make some API calls to increase the node count of the AutoScaling group by 1. Then we'd wait about 6 minutes for the instance to come up, join the cluster, and be ready for pods to be scheduled.
 
-But perhaps there were more pods than could fit on the new node… at which point the process would start over again until all pods were scheduled. Sometimes, with larger deployments, it would take 30 minutes or so for all the required nodes to come up.
+But perhaps there were more pods than could fit on the new node... at which point the process would start over again until all pods were scheduled. Sometimes, with larger deployments, it would take 30 minutes or so for all the required nodes to come up.
 
 And then when it came time to scale back down, depending on which particular poison you wanted to pick within the scale down options (cost savings vs potential node flapping), you may have faster or slower scaling down. If you chose a managed NodeGroup to control your AutoScaleGroup, you'd get graceful draining of nodes before they shut down, so your customers wouldn't be disrupted.
 
@@ -28,7 +28,7 @@ import KarpenterLogo from './karpenter-logo.png';
 
 <img src={KarpenterLogo} style={{width: 200, float: 'right', marginLeft: '20px'}} alt="KarpenterLogo"/>
 
-I heard about Karpenter from the Containers from the Couch YouTube channel. They said a lot of words that sounded good to me; cost optimization, faster autoscaling, more flexible node types, support for multiple instance types. So a few weeks later I started installing Karpenter and playing with it.
+I heard about Karpenter from the [Containers from the Couch](https://www.youtube.com/containersfromthecouch) YouTube channel. They said a lot of words that sounded good to me; cost optimization, faster autoscaling, more flexible node types, support for multiple instance types. So a few weeks later I started installing Karpenter and playing with it.
 
 Jumping ahead a few months, all our EKS clusters use Karpenter instead of the cluster autoscaler. Here's some of what we've got now that we didn't before:
 
