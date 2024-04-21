@@ -46,11 +46,11 @@ From an operator perspective, beyond the cost savings (which are still mind-bogg
 
 For real, this works pretty much as well as it sounds. There's a few things that you'll notice, which are general best practices, but are more essential when using Karpenter:
 
-### Specify and tune resource.requests for all your pods
+### Specify and tune resources.requests for all your pods
 
 This is absolutely core to how Karpenter knows what types and quantities of instances you need. And really, if you're doing anything real with Kubernetes, you should be doing this regardless.
 
-I rely on our cadvisor prometheus metrics (e.g. container_memory_usage_bytes and container_cpu_usage_seconds_total in particular) to track the maximum pod memory and CPU utilization over a window of a few weeks, and set requests accordingly.
+I rely on our cadvisor prometheus metrics (e.g. `container_memory_usage_bytes` and `container_cpu_usage_seconds_total` in particular) to track the maximum pod memory and CPU utilization over a window of a few weeks, and set requests accordingly.
 
 :::tip
 Here's some great advice for setting requests and limits: https://home.robusta.dev/blog/stop-using-cpu-limits
@@ -60,23 +60,23 @@ Here's some great advice for setting requests and limits: https://home.robusta.d
 
 When Karpenter deprovisions nodes (due to consolidation, scale-down, or node rotation), it needs to know how slowly it should go to keep your service at a satisfactory capacity.
 
-But remember: don't be too stingy with the maxUnavailable setting, especially if you're using spot instances. In the case of a spot interruption, Karpenter needs to be able to drain a node within the 2 minute spot interruption window, and if your maxUnavailable setting is too low, it won't be able to drain the node fast enough to avoid a decidedly ungraceful shutdown of your pods.
+But remember: don't be too stingy with the `maxUnavailable` setting, especially if you're using spot instances. In the case of a spot interruption, Karpenter needs to be able to drain a node within the 2 minute spot interruption window, and if your maxUnavailable setting is too low, it won't be able to drain the node fast enough to avoid a decidedly ungraceful shutdown of your pods.
 
-Even if you aren't using spot instances, choose a good maxUnavailable setting so that your deployments and node maintenance will run at a reasonable rate.
+Even if you aren't using spot instances, choose a good `maxUnavailable` setting so that your deployments and node maintenance will run in a reasonable amount of time.
 
 ### Implement graceful termination correctly
 
-A few times we found a developer with minimal Kubernetes experience had neglected to implement graceful termination. The most common mistake was to ignore SIGTERM, which would cause pods to just keep going until they got exceeded terminationGracePeriodSeconds and got SIGKILLed. Really long pod termination times makes lots of stuff hard (including deployments), but it also makes node deprovisioning/rotation with Karpenter really slow.
+A few times we found a developer with minimal Kubernetes experience had neglected to implement graceful termination. The most common mistake was to ignore SIGTERM, which would cause pods to just keep going until they got exceeded their `terminationGracePeriodSeconds` and got SIGKILLed. Really long pod termination times makes lots of stuff hard (including deployments), but it also makes node deprovisioning/rotation with Karpenter really slow.
 
 On the other hand, pods that shut down immediately when receiving a SIGTERM, especially if they're in a load balancer target group, will result in HTTP clients receiving 5XX errors, because the pod will have terminated before the load balancer stopped sending requests to it.
 
-:::tip[Quick aside]
-If you use the aws-load-balancer-controller, and have an ALB target group pointing to pod IPs, you need a minimum 15 second delay from when Kubernetes first sends a SIGTERM to your pod until you begin actually shutting down. It takes about that long for the controller to update the ALB target group to deregister the pod IPs. Even if your app's HTTP server has a way to stop accepting new connections and drain existing ones, you should wait the 15 seconds to even start the process, since the ALB may keep sending new connections regardless if your HTTP server will accept them.
+:::tip[Fun Fact]
+If you use the [aws-load-balancer-controller](https://kubernetes-sigs.github.io/aws-load-balancer-controller), and have an ALB target group pointing to pod IPs, you need a minimum 15 second delay from when Kubernetes first sends a SIGTERM to your pod until you begin actually shutting down. It takes about that long for the controller to update the ALB target group to deregister the pod IPs. Even if your app's HTTP server has a way to stop accepting new connections and drain existing ones, you should wait the 15 seconds to even start the process, since the ALB may keep sending new connections regardless if your HTTP server will accept them.
 :::
 
 ### Set a max instance CPU size
 
-Fun story, I once got an alert about a crashlooping FluentBit daemonset pod. I went to check it out, and found the poor agent was getting absolutely crushed with logs. It took me a minute to realize that this was because Karpenter had provisioned an instance with **72 CPUs**, and had scheduled a gazillion pods onto it. Of course a single FluentBit pod, with resources tuned for nodes that were quite a bit smaller wouldn't be able to keep up.
+Fun story, I once got an alert about a crashlooping FluentBit daemonset pod. I went to check it out, and found the poor agent was getting absolutely crushed with logs. It took me a minute to realize that this was because Karpenter had provisioned an instance with **72 CPUs**, and had scheduled a gazillion pods onto it. Of course a single FluentBit pod, with resources tuned for nodes that were quite a bit smaller, wouldn't be able to keep up.
 
 It turns out that that instance was chosen by Karpenter because it was a spot instance, and was in fact the most cost effective way to schedule all the pods that had been created during a particular burst of activity! Who knew!
 
@@ -88,6 +88,6 @@ Karpenter's purpose in life is to efficiently match requests with capacity, and 
 
 ## 5/5 would recommend
 
-I often listen to the podcast [KubeFM](https://kube.fm/), and the host, Bart Farrell usually starts by asking each guest which 3 tools they would install first on a new Kubernetes cluster.
+I often listen to the podcast [KubeFM](https://kube.fm/), and the host, Bart Farrell, usually starts by asking each guest which 3 tools they would install first on a new Kubernetes cluster.
 
 For me, #1 is going to be Karpenter, every time.
