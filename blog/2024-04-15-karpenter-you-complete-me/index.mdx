@@ -8,6 +8,8 @@ Every once in a while, some new product comes along that solves a problem you di
 
 This is how I've come to feel about [Karpenter](https://karpenter.sh/). I guess you could say that the category it lives in already existed, given it's designed to replace the Kubernetes Cluster Autoscaler, but the effect it's had on my life as an EKS cluster operator and platform engineer makes me feel like the comparison cheapens it.
 
+{/* truncate */}
+
 ## Back in my day, we had to use cluster autoscaler
 
 Let's take a stroll together into the recent past, when, to provide nodes for an EKS cluster, we had to provision EC2 autoscaling groups. In most cases, we didn't have a lot of information about what types of workloads were going to be run on the cluster, so this involved a lot of guessing about the best fixed set of instance types/sizes we should choose.
