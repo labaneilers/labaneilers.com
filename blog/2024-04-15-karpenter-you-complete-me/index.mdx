@@ -82,7 +82,7 @@ Fun story, I once got an alert about a crashlooping FluentBit daemonset pod. I w
 
 It turns out that that instance was chosen by Karpenter because it was a spot instance, and was in fact the most cost effective way to schedule all the pods that had been created during a particular burst of activity! Who knew!
 
-After that day, I set our Kaprenter configuration to add a maximum instance size (16 CPUs), just to simplify how we manage daemonset resources.
+After that day, I set our Karpenter configuration to add a maximum instance size (16 CPUs), just to simplify how we manage daemonset resources.
 
 ### Don't use instance types with bursting
 

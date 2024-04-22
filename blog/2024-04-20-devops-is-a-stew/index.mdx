@@ -8,9 +8,9 @@ import StewImage from './stew.jpg';
 
 <img src={StewImage} style={{width: 400, float: 'right', margin: '20px'}} alt="The DevOps stew"/>
 
-When learning a new recipie, especially when dabbling in cuisine from different cultures, I find it really important to make sure one is really precise in their understanding the words used in the recipie. I've had a few unfortunate misunderstandings that resulted in... gastronomic disaster.
+When learning a new recipe, especially when dabbling in cuisine from different cultures, I find it really important to make sure one is really precise in their understanding the words used in the recipe. I've had a few unfortunate misunderstandings that resulted in... gastronomic disaster.
 
-Simiilarly, I find that I can't responsibly use the word "DevOps" without testing that the person I'm talking to know which meaning I'm using. Here's some examples of what someone may think I mean when I say "DevOps":
+Similarly, I find that I can't responsibly use the word "DevOps" without testing that the person I'm talking to know which meaning I'm using. Here's some examples of what someone may think I mean when I say "DevOps":
 
 {/* truncate */}
 
@@ -38,7 +38,7 @@ import StewIngredientsImage from './stew-ingredients.jpg';
 
 <img src={StewIngredientsImage} style={{width: 400, float: 'right', margin: '20px'}} alt="Stew ingredients"/>
 
-The thing I find really interesting about the engineering-management philosophy definition of "DevOps" is how interdependent it is on a whole bunch of other ingredients that conicided historically with it:
+The thing I find really interesting about the engineering-management philosophy definition of "DevOps" is how interdependent it is on a whole bunch of other ingredients that coincided historically with it:
 
 * Microservices
 * Cloud
@@ -52,7 +52,7 @@ The thing I find really interesting about the engineering-management philosophy 
 
 About 10 years ago, the company I was working for had outgrown our monolith, and we reluctantly started on the journey to microservices, and the journey was still ongoing when I left (about 6 years ago).
 
-The thing that suprised us first was the sheer magnitude of the overhead of managing all the operational stuff that had been solved problems in the monolith. The first teams that started extracting their own services spent many weeks just trying to replicate a small fraction of what we had previously taken for granted: reliable builds, rolling deployments, centralized logs, metrics, alerting, feature flags and associated tooling, etc.
+The thing that surprised us first was the sheer magnitude of the overhead of managing all the operational stuff that had been solved problems in the monolith. The first teams that started extracting their own services spent many weeks just trying to replicate a small fraction of what we had previously taken for granted: reliable builds, rolling deployments, centralized logs, metrics, alerting, feature flags and associated tooling, etc.
 
 :::info[Flashback]
 Sometimes looking back on this time, I think about just how **adorable** it was that we thought we were going to move to microservices but everything else was just going to continue working as-is. We were so cute.
@@ -60,7 +60,7 @@ Sometimes looking back on this time, I think about just how **adorable** it was 
 
 ### Cloud
 
-At that point, we started toying with some public cloud (AWS), and found that there was a lot of excitement from teams using it. The fact that their infrastructure could be fully automated through reasonable APIs aleviated a whole bunch of the pain we were feeling trying to automate deployments to on-prem servers.
+At that point, we started toying with some public cloud (AWS), and found that there was a lot of excitement from teams using it. The fact that their infrastructure could be fully automated through reasonable APIs alleviated a whole bunch of the pain we were feeling trying to automate deployments to on-prem servers.
 
 ### Infrastructure as code
 
@@ -83,7 +83,7 @@ As the braver teams started to actually practice continuous deployment, they fou
 
 ### Platform Engineering
 
-At this point there was a huge, and increasing gap in maturity between teams who had invested significantly in their operational capabilities, and teams that hadn't. It was also clear that to get to even a basline level of continous deployment required months of investment from **every** team... and I don't think we'd even come to grips with the reality of maintenance on all that stuff.
+At this point there was a huge, and increasing gap in maturity between teams who had invested significantly in their operational capabilities, and teams that hadn't. It was also clear that to get to even a baseline level of continuous deployment required months of investment from **every** team... and I don't think we'd even come to grips with the reality of maintenance on all that stuff.
 
 It became obvious we needed to find a way to share the capabilities between teams, so we started experimenting with ways to reclaim some of the abilities we used to have with our monolith- but in a way that worked in a world of autonomous teams and distributed systems.
 

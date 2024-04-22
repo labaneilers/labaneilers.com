@@ -1,9 +1,25 @@
 {
     "cSpell.words": [
+        "autoscale",
+        "autoscaler",
+        "brainer",
         "cadvisor",
         "crashlooping",
         "daemonset",
         "Eilers",
-        "Kaprenter"
+        "FAANG",
+        "incentivizes",
+        "Kanban",
+        "Karpenter",
+        "Karpenter's",
+        "KOPS",
+        "mindblowing",
+        "nerdiness",
+        "timebox",
+        "tolerations",
+        "Vistaprint"
+    ],
+    "cSpell.enableFiletypes": [
+        "mdx"
     ]
 }
