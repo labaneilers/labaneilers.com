@@ -4,28 +4,57 @@ title: Let a thousand flowers bloom
 tags: [leadership]
 ---
 
-I've been working with a coleauge on setting up a new team at work; we're splitting a new Developer Experience team out of our pre-existing Cloud Engineering team (which I'm very excited about). He's the actual, official manager of the Cloud Engineering team (which I've been working closely with over the past couple years), and I've been a sort of guest on the team, though I'm in all the ceremonies, and try to follow the working agreements of the team. 
+I've been working with a colleague on setting up a new team at work; we're splitting a new Developer Experience team out of our pre-existing Cloud Engineering team (which I'm very excited about). He's the actual, official manager of the Cloud Engineering team (which I've been working closely with over the past couple years). I've been a sort of guest on the team, though I'm in all the ceremonies, work out of their JIRA board, and try to follow their working agreements. 
 
-A few years ago, I made a deliberate decision to step away from managing teams directly, but I'm also not strictly an individual contributor. I'm pretty lucky to have a role where I'm expected to have an organization-scoped impact, without having to do peopole management. Given this outsized influence, I have to be careful not to suck up too much oxygen within my host team; its really important to me that everyone feels empowered, trusted, and comfortable to throw out crazy ideas (often the best kind of ideas). I also want to make sure I'm using my influence to support the team manager and help him succeed.
+{/* truncate */}
 
-On the other hand, I sometimes have strong opinions. I try to be fairly gentle when expressing them, but particularly so when it has to do with team health, work management, or other areas where the team's manager is ultimately accountable. I have a personal policy that I'm allowed to share an idea or observation, but I try to limit the follow-up advocacy for it unless the team is actively expressing interest.
+A few years ago, I made a deliberate decision to step away from managing teams directly, but I'm also not strictly an individual contributor. I'm pretty lucky to have a role where I'm expected to have an organization-scoped impact, without having to do people management. Given this outsized influence, I have to be careful not to suck up too much oxygen within my host team; its really important to me that everyone feels empowered, trusted, and comfortable to throw out crazy ideas (often the best kind of ideas). I also want to make sure I'm using my influence to support the team manager and help him succeed.
 
-Sometimes the manager follows up with me on something I might have shared, but not followed up on. Recently we've been talking a lot about Kanban vs Scrum, optimizing for lead time, and the role of the agile coach/scrum master in day-to-day operations. He's spent most of his career doing a fairly specific flavor of Scrum, and has a mix of curiosity and anxiety about venturing away from the methodologies that have worked for him in the past.
+## OK, sometimes it just comes out
 
-At one point, in a moment of exhaspiration, he pointed out that I had a suprising level of confidence in some of my assertions... and was a bit skeptical this wasn't stemming from some tidbit I had read in a managagement article, rather than from actual hard-won experience. I realized at this point I hadn't told him before about where I had formed these opionions.
+On the other hand, I sometimes have strong opinions. I try to be fairly gentle when expressing them, but particularly so when it has to do with team health, work management, or other areas where the team's manager is ultimately accountable. I have a personal policy that I'm allowed to share an idea or observation, but I try to limit my follow-up/advocacy for it unless the team is actively expressing interest.
 
-## Some title
+Sometimes my manager colleague's curiosity might be peaked about something I shared, but had engaged my advocacy shut-off switch on. While doing some preparation for the new DevX team, we've been talking a lot about Kanban vs Scrum, optimizing for lead time, and the role of the agile coach/scrum master in day-to-day operations. He's spent most of his career doing a fairly specific flavor of Scrum, and has a mix of curiosity and skepticism about venturing away from the methodologies that have worked for him in the past.
 
-About 3 and a half years before I left Vistaprint, I was asked to join the Engineering leadership team by our new VP of Engineering. She was a particularly bold leader in terms of her progressive management ideas, and was rapidly reshaping the organization with a strong set of values around empowerment and servant leadership.
+At one point, in a moment of exasperation, he pointed out that I had a surprising level of confidence in some of my assertions... and was a bit skeptical this wasn't stemming from my actual lived experience, but a tidbit I had read in some bullshit management article. I realized at this point I hadn't told him before about where I had formed these opinions.
+
+## Some crazy stuff went down at Vistaprint
+
+About 3 and a half years before I left Vistaprint, I was asked to join the Engineering leadership team by our (relatively) new VP of Engineering, Erin DeCesare (who is now the [CTO of EZCater](https://www.ezcater.com/company/team/erin-decesare/)). She was a particularly bold leader in terms of her progressive management ideas, and was rapidly reshaping the organization with a strong set of values around empowerment and servant leadership.
 
 We were responsible for about 200 developers, who were organized into squads (a.k.a. two-pizza teams), who were then loosely grouped into "tribes" (an idea borrowed from [Spotify](https://www.atlassian.com/agile/agile-at-scale/spotify)). The real difference from the previous regime was a pretty extreme amount of autonomy given to teams; they could choose their own technologies, work processes, architectures.
 
-On top of this, our VP was pushing us to introduce a series of even more progressive empowerment concepts. For example:
+On top of this, Erin was pushing farther into some even more progressive empowerment concepts. For example:
 
-* Managers were given a lot of coaching on servant leadership, and the ones who weren't able to adapt were managed out
+* Managers were given a lot of coaching on servant leadership, and the ones who weren't able to evolve were managed out
 * Teams would be supported by embedded agile coaches, who helped them optimize team health properties, such as psychological safety and culture of feedback
 * Teams were given the freedom to decide what work to pull from our enterprise backlog
-* Teams would decide how to distribute bonuses between them (seriously)
+* Teams would decide how to distribute bonuses between them (this one went a bit sideways)
 * TODO
 
-All this stuff was a bit mindblowing to me, but I was doing my best to be open minded about it all. 
+All this stuff was a bit mindblowing to me, but I was doing my best to be open minded about it all. It was an extraordinary amount of cat-herding, managing through influence, and general chaos. 
+
+We rapidly iterated on organizational mechanisms to turn all this chaos into features and products that made our customers happy. We found points of leverage across teams, elevated thoughtful and visionary people, and set up structures to help make sane architectural decisions.
+
+## Then we watched the experiments unfold
+
+Then, things got very interesting. We had something like 30 squads, each running themselves in almost any way they saw fit. There was a lot of diversity between teams; folks with different backgrounds, different technology preferences, teams with stronger or weaker opinions, etc. What I witnessed was 30 different teams running 30 different experiments into what makes a team successful... or not.
+
+Some examples:
+
+* Some teams stuck conservatively to the practices that had served them well in the past (working with our legacy tech stack and processes) and did a release every 2 weeks, others spun up Kubernetes clusters in AWS with KOPS and deployed their apps via helm charts several times a day.
+* Some were absolutely religious about automated testing, and obsessive about code coverage, others had a more deliberate risk-management strategy. 
+* Some teams spent a long time getting observability working, and others relied more on signals from external SRE and QA.
+* Some worked via consensus and mostly made decisions together, others had one or two very senior folks which set the direction for the team
+* Some teams did all their work in pairs, or via "mobbing", while others only interacted with their teammates when they were stuck.
+
+There was also a lot of variation in the adoption of the agile philosophies we were coaching the teams into adopting. 
+
+Strong POs
+Strong agile coaches
+Managers who were deep in the problem space vs focusing on culture and work management
+
+
+## Looking back
+
+I'm incredibly thankful to Erin for taking me with her on this journey- I really couldn't have had more learning jam-packed into a few short years of my life.
