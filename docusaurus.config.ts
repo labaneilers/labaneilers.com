@@ -59,7 +59,7 @@ const config: Config = {
   ],
 
   themeConfig: {
-    image: 'img/docusaurus-social-card.jpg',
+    image: 'img/profile-square.jpg',
     navbar: {
       title: 'Software, thoughts, and stuff',
       logo: {
