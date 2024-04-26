@@ -42,7 +42,7 @@ Then, things got very interesting. We had something like 30 squads, each running
 
 Some examples:
 
-* Some teams stuck conservatively to the practices that had served them well in the past (working with our legacy tech stack and processes) and did a release every 2 weeks, others spun up Kubernetes clusters in AWS with KOPS and deployed their apps via helm charts several times a day.
+* Some teams stuck conservatively to working in our monolith, and did a release every 2 weeks, others spun up Kubernetes clusters in AWS with KOPS and deployed their apps via helm charts several times a day.
 * Some were absolutely religious about automated testing, and obsessive about code coverage, others had a more deliberate risk-management strategy. 
 * Some teams spent a long time getting observability working, and others relied more on signals from external SRE and QA.
 * Some worked via consensus and mostly made decisions together, others had one or two very senior folks which set the direction for the team
@@ -50,9 +50,51 @@ Some examples:
 
 There was also a lot of variation in the adoption of the agile philosophies we were coaching the teams into adopting. 
 
-Strong POs
-Strong agile coaches
+## Things I noticed
+
+After running in this mode for about 9 months, there were a few themes I noticed which have really informed my perspective today:
+
+### Moderately strong teams outperform strong individuals surrounded by a meh team
+
+We had a few squads where 4-5 (out of 6) team members were solid "A-" or "B+" players. In contrast, there were other teams held together by one very strong "superstar" lead surrounded by "B"s and "C"s. The teams with the more homogenous, moderately strong members significantly outperformed the teams with the superstar.
+
+The underlying cause was that the superstar would get randomized trying to support the rest of the team, and didn't have enough time to do anything innovative. If they ever did manage to spend some time on something interesting, it was generally too advanced for the team to run with, and the momentum fizzled. The rest of the team became helpless and dependent on the superstar to make decisions.
+
+Of course, there was occasionally the more enlightened superstar, who would spend their energy trying to elevate their lower-performing team members. The effectiveness of this was highly dependent on the latent potential of the rest of the team, and usually didn't work without management injecting additional stronger engineers to support the superstar.
+
+In general, the ratio of strong vs weak really can't dip below 2/1 before the team veered into unhealthy territory. Who knew, you need good people to have a good team.
+
+### Strong POs are critical
+
+We had Product Owners deployed to each squad, usually a PO would cover 2-3 squads. The difference between a great PO and a bad one was **very** stark. POs ultimately decide what the teams work on, so it seems fairly obvious that they'd have an outsized influence on the team.
+
+At the core of the role is having great instincts about customers, the product, and the problem space, and this usually just comes down to the same observation that you need great people to build a great product. But there are other key factors which are underappreciated in POs:
+
+* Empathy and rapport with developers
+* A willingness and interest in understanding technical limitations and tradeoffs
+* An understanding that they're not only responsible for the customer experience, but the long-term health of the technology it's built on
+
+### Agile can be so powerful, or so horrible
+
+Some teams got really religious about their agile methodology (it's Scrum adherents that do this), and used agile "rules" as a weapon against their PO, manager, or sometimes each other. They'd spend a lot more time playing games with ticket management, ceremonies, and storypoints than they did thinking about customers, products, or using their common sense.
+
+One of the best defenses against teams going this direction was having great agile coaches (and not the high priests from big consultancies who spend their time promoting their seminars on LinkedIn). A good agile coach can provide a sort of intervention for a team, where they hold up a mirror, help them see their own disfunction, and help re-center them on what matters.
+
+:::tip
+I've noticed a correlation that great agile coaches tend to also be very product-centered, and are genuinely interested in developing technical and domain knowledge from the team they're helping. They ask a lot of questions, and develop insights that are specific to the practical limitations the team is working with. They don't just waltz in and start unloading a bunch of dogma.
+:::
+
+Its interesting that when you see a healthy, high-performing team, agile methodologies are sort of invisible- they sort of melt away into the background. The team is just focusing on the actual work: how to meet a customer's need, what hypotheses they should be testing, finding the quickest way to answer a question with data, etc.
+
+### The cult of test
+
+We had a few teams that drank the TDD kool-aid **hard**. One in particular had set up their CI/CD to fail builds where the code coverage dipped below 95%, and spent about 3/4 of their time working on their test suites. The result wasn't amazing quality, it was utter paralysis. Every feature they implemented broke a gazillion tests, and the pressure to get the features out was causing them to make the tests increasingly brittle.
+
+In this case, the intervention involved going back to the basics of why
+
 Managers who were deep in the problem space vs focusing on culture and work management
+
+Testing coverage
 
 
 ## Looking back
