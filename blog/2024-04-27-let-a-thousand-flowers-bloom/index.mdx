@@ -4,28 +4,15 @@ title: Let a thousand flowers bloom
 tags: [leadership]
 ---
 
-I've been working with my colleague EJ on setting up a new team at work; we're splitting a new Developer Experience team out of our pre-existing Cloud Engineering team (which I'm very excited about). He's the actual, official manager of the Cloud Engineering team (which I've been working closely with over the past couple years). I've been a sort of guest on the team, though I'm in all the ceremonies, work out of their JIRA board, and try to follow their working agreements. 
+import FlowersImage from './nasturtium.jpg';
 
-{/* truncate */}
+<img src={FlowersImage} style={{width: 250, float: 'right', marginLeft: '20px'}} alt="Less than a thousand flowers"/>
 
-A few years ago, I made a deliberate decision to step away from managing teams directly, but I'm also not strictly an individual contributor. I'm pretty lucky to have a role where I'm expected to have an organization-scoped impact, without having to do people management. Given this outsized influence, I have to be careful not to suck up too much oxygen within my host team; its really important to me that everyone feels empowered, trusted, and comfortable to throw out crazy ideas (often the best kind of ideas). I also want to make sure I'm using my influence to support the team manager and help him succeed.
-
-## OK, sometimes it just comes out
-
-On the other hand, I sometimes have strong opinions. I try to be fairly gentle when expressing them, but particularly so when it has to do with team health, work management, or other areas where the team's manager is ultimately accountable. I have a personal policy that I'm allowed to share an idea or observation, but I try to limit my follow-up/advocacy for it unless the team is actively expressing interest.
-
-:::warning
-I often fail at adhering to my own policy. This is something I'm trying to do better at.
-:::
-
-While doing some preparation for the new DevX team, EJ and I been talking a lot about Kanban vs Scrum, optimizing for lead time, and the role of the agile coach/scrum master in day-to-day operations. He's spent most of his career doing a fairly specific flavor of Scrum, and has a mix of curiosity and skepticism about venturing away from the methodologies that have worked for him in the past.
-
-Some of the points I was making to EJ seemed to be inducing some reservations (and perhaps triggering some past trauma). I had the sense that he thought I was regurgitating some tidbit from a bullshit management article, or otherwise overselling my intuitions. It took me a second to remember that, a few years back, I had a fairly unusual experience that has colored my perspective on engineering management, and I hadn't shared it with him.
-
-
-## Some crazy stuff went down at Vistaprint
+I've been reflecting recently on a really formative period in my career, when I had a chance to be part of a massive experiment in progressive engineering management.
 
 About 3 and a half years before I left Vistaprint, I was asked to join the Engineering leadership team by our (relatively) new VP of Engineering, Erin DeCesare (who is now the [CTO of EZCater](https://www.ezcater.com/company/team/erin-decesare/)). She was a particularly bold leader in terms of her progressive management ideas, and was rapidly reshaping the organization with a strong set of values around empowerment and servant leadership.
+
+{/* truncate */}
 
 We were responsible for about 200 developers, who were organized into squads (a.k.a. two-pizza teams), who were then loosely grouped into "tribes" (an idea borrowed from [Spotify](https://www.atlassian.com/agile/agile-at-scale/spotify)). The real difference from the previous regime was a pretty extreme amount of autonomy given to teams; they could choose their own technologies, work processes, architectures.
 
@@ -35,15 +22,16 @@ On top of this, Erin was pushing farther into some even more progressive empower
 * Teams would be supported by embedded agile coaches, who helped them optimize team health properties, such as psychological safety and culture of feedback
 * Teams were given the freedom to decide what work to pull from our enterprise backlog
 * Teams would decide how to distribute bonuses between them (this one went a bit sideways)
-* TODO
 
-All this stuff was a bit mindblowing to me, but I was doing my best to be open minded about it all. It was an extraordinary amount of cat-herding, managing through influence, and general chaos. 
+All this stuff was a bit mindblowing to me, but I was doing my best to commit to making it all work. It was an extraordinary amount of cat-herding, managing through influence, and general chaos, but it felt crazy enough that it just might work.
 
-We set up some initial organizational mechanisms to attempt to manage all this chaos, and make sure we maintained our ability to build features and products that made our customers happy. We found points of leverage across teams, elevated thoughtful and visionary people, and set up structures to help make sane architectural decisions.
+We set up some initial organizational mechanisms to attempt to manage all this chaos, since the whole point was to build a better team that could deliver features and products that made our customers happy. We set up feedback loops, elevated thoughtful and visionary people, and set up structures to help make sane architectural decisions.
+
+Then, things got very interesting.
 
 ## Then we watched the experiments unfold
 
-Then, things got very interesting. We had something like 30 squads, each running themselves in almost any way they saw fit. There was a lot of diversity between teams; folks with different backgrounds, different technology preferences, stronger or weaker opinions, different seniority levels, etc. 
+We had something like 30 squads, each running themselves in almost any way they saw fit. There was a lot of diversity between teams; folks with different backgrounds, different technology preferences, stronger or weaker opinions, different seniority levels, etc. 
 
 What I witnessed was 30 different teams running 30 different experiments into what makes a team successful... or not.
 
@@ -82,33 +70,37 @@ Some teams got really religious about their agile methodology (usually Scrum), a
 
 One of the best defenses against teams going this direction was having great agile coaches (NOT the high priests from big consultancies who spend their time promoting seminars on LinkedIn). A good agile coach can provide a sort of continous intervention for a team; they hold up a mirror, allow them see their own disfunction, and help re-center them on what matters.
 
-:::tip
-I've noticed that great agile coaches tend to also be very product-centered, and are genuinely interested in developing technical and domain knowledge from the team they're working with. They ask a lot of questions, and develop insights that are specific to the practical limitations the team is managing. They don't just waltz in and start unloading a bunch of dogma.
-:::
+From observing these coaches in action, I formed two separate beliefs:
 
-Its interesting that **when you see a healthy, high-performing team, agile methodologies are sort of invisible**; they're there, but they sort of melt away into the background. The team is just focusing on the actual work: how to meet a customer's need, what hypotheses they should be testing, or thinking critically about business requirements in order to find an 80/20 solution.
+* I've noticed that **great agile coaches tend to also be very product-centered**, and are genuinely interested in developing technical and domain knowledge from the team they're working with. They ask a lot of questions, and develop insights that are specific to the practical limitations the team is managing. They don't just waltz in and start unloading a bunch of dogma.
+
+* Its interesting that **when you see a healthy, high-performing team, agile methodologies are sort of invisible**; they're there, but they sort of melt away into the background. The team is just focusing on the actual work: how to meet a customer's need, what hypotheses they should be testing, or thinking critically about business requirements in order to find an 80/20 solution.
 
 ### The cult of test
 
-We had a few teams that drank the TDD kool-aid **hard**. One in particular had agreed as a team to take testing really seriously. They set about implementing extensive test suites, held book groups about BDD, and spent hours trying to compile Gherkin files so their business partners could define test cases (they never did). They believed in the singular truth of the test pyramid, and went big on unit tests, shunning higher-level approaches as lacking in virtue. They set up CI/CD to fail builds when code coverage dipped below 95%.
+We had a few teams that drank the TDD kool-aid **hard**. One in particular had agreed as a team to take testing really seriously. They set about implementing extensive test suites, held book groups about [BDD](https://en.wikipedia.org/wiki/Behavior-driven_development), and spent hours trying to compile Gherkin files so their business partners could define test cases (which they never actually did). They believed in the singular truth of the [test pyramid](https://martinfowler.com/bliki/TestPyramid.html), and went big on unit tests, shunning higher-level approaches as lacking in virtue. They set up CI/CD to fail builds when code coverage dipped below 95%.
 
 Things started to go sideways fast. Because their test suites were targeting low-level implementation details, every feature they implemented broke a gazillion tests. They were terrified to refactor anything (including the tests) because it would ensure weeks of work and an avalanche of merge conflicts. They'd get nothing done, sprint after sprint. The result wasn't amazing quality, it was utter paralysis.
 
+:::info[Deep Thoughts]
 There's definitely some lessons to learn here specifically about testing practices, but I think this is really a more general case of a failure to apply **continuous improvement**. The intervention wasn't to parachute in and tell them how to do testing better, it was to have them pause and reflect, re-focus on what they were trying to accomplish, and **give them permission to try something new**.
+:::
 
 With some perspective and coaching, they started to re-think their testing strategy. They began to see that some risks were more important to mitigate than others, and some testing techniques gave you a lot more bang for your buck. They came to the conclusion that 95% on a code coverage report wasn't a business objective, since we were building a *freaking e-commerce site*, not pacemakers or cruise missiles. They gradually woke up from their fog, and came up with some much more clever testing strategies, such as testing the high-level interfaces and APIs, which were far more stable, and gave them the freedom to refactor implementation details.
 
-### Moderately strong teams outperform strong individuals surrounded by a meh team
+### Moderately strong teams outperform superstars surrounded by a meh team
 
 We had a few squads where 4-5 (out of 6) team members were solid "A-" or "B+" players. In contrast, there were other teams held together by one very strong "superstar" lead surrounded by "B"s and "C"s. It was strikingly obvious to everyone that the teams with the more homogenous, moderately strong members significantly outperformed the teams with the superstar.
 
-The underlying cause was that the superstar would get randomized trying to support the rest of the team, and didn't have enough time to do anything innovative. If they ever did manage to spend some time on something interesting, it was generally too advanced for the team to run with, and the momentum fizzled. The rest of the team became helpless and dependent on the superstar to make decisions.
+My take on the underlying cause was that the superstar would get randomized trying to support the rest of the team, and didn't have enough time to do anything innovative. If they ever did manage to spend some time on something interesting, it was generally too advanced for the team to run with, and the momentum fizzled. The rest of the team became helpless and dependent on the superstar to make decisions.
 
 Of course, there was occasionally the more enlightened superstar, who would spend their energy trying to elevate their lower-performing team members. The effectiveness of this was highly dependent on the latent potential of the rest of the team, and usually didn't work without management intervening to shore up the team with additional strong engineers to support the superstar.
 
 In general, the ratio of strong vs weak really can't dip below 2/1 before the team veered into unhealthy territory. The members of strong teams will support and help each other, but there has to be balance between them; if it gets asymmetrical, it starts to drain everyone. 
 
+:::tip[Blinding flash of the obvious]
 Who knew, you need good people to have a good team.
+:::
 
 ### Strong POs are critical
 
@@ -122,6 +114,10 @@ At the core of the role is having great instincts about customers, the product, 
 
 ## Looking back
 
-It's been a while since I left Vistaprint, and a there have been a few regime changes since then. It's my understanding that most of what we built (both organizational and software) was discarded in favor of replacements that were developed more incrementally (based on lessons learned).
+I imagine for most people working there at this time, being the guinea pigs in a giant experiment might not have been the ideal work experience. Actually a lot of folks thrived, and did some amazing work. But some reeled from the unrelenting waves of change, and others understandably just threw in the towel.
+
+For me, though, it was very different. I got to see all this from a birds-eye view, but also on the ground, since I spent time with nearly every team. It was a bit like watching a whirlwind from inside- it gave me a sense of how seemingly small, well-meaning and thoughtful inputs can have huge, unintended effects that ripple across the whole system.
+
+Like a lot of younger engineers, I used to occasionally express casual and flippant disregard for out-of-touch upper management. OK, admittedly I still might feel this way from time to time, but this experience left me with a very different understanding of what it takes to manage a large engineering organization, gave me a dose of humility and appreciation for how challenging it is.
 
 I'm incredibly thankful to Erin for taking me with her on this journey- I really couldn't have had more learning jam-packed into a few short years of my life.
