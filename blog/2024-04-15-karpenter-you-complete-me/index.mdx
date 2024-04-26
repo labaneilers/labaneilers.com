@@ -32,6 +32,8 @@ import KarpenterLogo from './karpenter-logo.png';
 
 I heard about Karpenter from the [Containers from the Couch](https://www.youtube.com/containersfromthecouch) YouTube channel. They said a lot of words that sounded good to me; cost optimization, faster autoscaling, more flexible node types, support for multiple instance types. So a few weeks later I started installing Karpenter and playing with it.
 
+Karpenter's whole schtick is that it bypasses the traditional cluster-autoscaler model, and directly interfaces between the kubernetes scheduler and EC2 APIs, incorporating a bunch of intelligence about how to optimally provision nodes. It sounds like a simple difference, but it has huge implications.
+
 Jumping ahead a few months, all our EKS clusters use Karpenter instead of the cluster autoscaler. Here's some of what we've got now that we didn't before:
 
 * **Cost savings**: EC2 costs are roughly 1/2 of what they were (relative to our workload sizes). A lot of this is because we can now safely use spot instances for a bunch of workloads, but also because its easier to use ARM nodes, and because of Karpenter's intelligent cost-optimized instance type choices, bin-packing, and consolidation (smart scale-down).
