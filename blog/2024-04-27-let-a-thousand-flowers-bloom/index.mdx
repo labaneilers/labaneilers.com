@@ -4,7 +4,7 @@ title: Let a thousand flowers bloom
 tags: [leadership]
 ---
 
-I've been working with a colleague on setting up a new team at work; we're splitting a new Developer Experience team out of our pre-existing Cloud Engineering team (which I'm very excited about). He's the actual, official manager of the Cloud Engineering team (which I've been working closely with over the past couple years). I've been a sort of guest on the team, though I'm in all the ceremonies, work out of their JIRA board, and try to follow their working agreements. 
+I've been working with my colleague EJ on setting up a new team at work; we're splitting a new Developer Experience team out of our pre-existing Cloud Engineering team (which I'm very excited about). He's the actual, official manager of the Cloud Engineering team (which I've been working closely with over the past couple years). I've been a sort of guest on the team, though I'm in all the ceremonies, work out of their JIRA board, and try to follow their working agreements. 
 
 {/* truncate */}
 
@@ -14,9 +14,14 @@ A few years ago, I made a deliberate decision to step away from managing teams d
 
 On the other hand, I sometimes have strong opinions. I try to be fairly gentle when expressing them, but particularly so when it has to do with team health, work management, or other areas where the team's manager is ultimately accountable. I have a personal policy that I'm allowed to share an idea or observation, but I try to limit my follow-up/advocacy for it unless the team is actively expressing interest.
 
-Sometimes my manager colleague's curiosity might be peaked about something I shared, but had engaged my advocacy shut-off switch on. While doing some preparation for the new DevX team, we've been talking a lot about Kanban vs Scrum, optimizing for lead time, and the role of the agile coach/scrum master in day-to-day operations. He's spent most of his career doing a fairly specific flavor of Scrum, and has a mix of curiosity and skepticism about venturing away from the methodologies that have worked for him in the past.
+:::warning
+I often fail at adhering to my own policy. This is something I'm trying to do better at.
+:::
 
-At one point, in a moment of exasperation, he pointed out that I had a surprising level of confidence in some of my assertions... and was a bit skeptical this wasn't stemming from my actual lived experience, but a tidbit I had read in some bullshit management article. I realized at this point I hadn't told him before about where I had formed these opinions.
+While doing some preparation for the new DevX team, EJ and I been talking a lot about Kanban vs Scrum, optimizing for lead time, and the role of the agile coach/scrum master in day-to-day operations. He's spent most of his career doing a fairly specific flavor of Scrum, and has a mix of curiosity and skepticism about venturing away from the methodologies that have worked for him in the past.
+
+Some of the points I was making to EJ seemed to be inducing some reservations (and perhaps triggering some past trauma). I had the sense that he thought I was regurgitating some tidbit from a bullshit management article, or otherwise overselling my intuitions. It took me a second to remember that, a few years back, I had a fairly unusual experience that has colored my perspective on engineering management, and I hadn't shared it with him.
+
 
 ## Some crazy stuff went down at Vistaprint
 
@@ -34,11 +39,13 @@ On top of this, Erin was pushing farther into some even more progressive empower
 
 All this stuff was a bit mindblowing to me, but I was doing my best to be open minded about it all. It was an extraordinary amount of cat-herding, managing through influence, and general chaos. 
 
-We rapidly iterated on organizational mechanisms to turn all this chaos into features and products that made our customers happy. We found points of leverage across teams, elevated thoughtful and visionary people, and set up structures to help make sane architectural decisions.
+We set up some initial organizational mechanisms to attempt to manage all this chaos, and make sure we maintained our ability to build features and products that made our customers happy. We found points of leverage across teams, elevated thoughtful and visionary people, and set up structures to help make sane architectural decisions.
 
 ## Then we watched the experiments unfold
 
-Then, things got very interesting. We had something like 30 squads, each running themselves in almost any way they saw fit. There was a lot of diversity between teams; folks with different backgrounds, different technology preferences, teams with stronger or weaker opinions, etc. What I witnessed was 30 different teams running 30 different experiments into what makes a team successful... or not.
+Then, things got very interesting. We had something like 30 squads, each running themselves in almost any way they saw fit. There was a lot of diversity between teams; folks with different backgrounds, different technology preferences, stronger or weaker opinions, different seniority levels, etc. 
+
+What I witnessed was 30 different teams running 30 different experiments into what makes a team successful... or not.
 
 Some examples:
 
@@ -54,49 +61,67 @@ There was also a lot of variation in the adoption of the agile philosophies we w
 
 After running in this mode for about 9 months, there were a few themes I noticed which have really informed my perspective today:
 
+### Engineers will fill all available space with engineering work
+
+One of the "tribes" (4 squads, around 25 people) was given an objective, some constraints, and 6-12 months to deliver a new platform for managing our product catalog. We were replacing our "legacy" product system because it had grown too creaky and complex over the years, and we wanted a bunch of new features, especially for marketers to be able to manage content without needing engineering time. 
+
+Yeah, I know, this is a classic case of [second-system syndrome](https://en.wikipedia.org/wiki/Second-system_effect), but everything just seemed so *obvious* to us at the time;  we were smart people, and it seemed achievable to us. So we did some design, broke the work up and gave pieces to each of the squads.
+
+As it turns out, our teams invented engineering problems to fill all available space. They created an elaborate network of microservices, built SPAs out of hip new JavaScript frameworks, integrated some truly abominable "enterprise" vendor products, and designed massively complex processes and workflows to solve every use case that we failed to account for in the legacy system.
+
+It started to hit me that we had jumped the shark when I noticed that a microservice one of the teams built could have been implemented as a single text file. Once that clicked, I started realizing, to my horror, that everywhere I looked, the entire system was like this. And then, through the haze of the groupthink, it occurred to me:
+
+ **We'd have been better off giving this entire objective to a team of 5 people for a month**. 
+ 
+ A small, constrained team would have had no choice but to build something small and simple that worked. Then they would have had to evolve it incrementally, which as we now all know, is the [only way to build a working system](http://principles-wiki.net/principles:gall_s_law).
+
+
+### Agile can be so powerful, or so horrible
+
+Some teams got really religious about their agile methodology (usually Scrum), and used agile "rules" as a weapon against their PO, manager, and occasionally each other. They'd spend a lot more time playing games with ticket management, ceremonies, and storypoints than they did thinking about customers, products, or using their common sense.
+
+One of the best defenses against teams going this direction was having great agile coaches (NOT the high priests from big consultancies who spend their time promoting seminars on LinkedIn). A good agile coach can provide a sort of continous intervention for a team; they hold up a mirror, allow them see their own disfunction, and help re-center them on what matters.
+
+:::tip
+I've noticed that great agile coaches tend to also be very product-centered, and are genuinely interested in developing technical and domain knowledge from the team they're working with. They ask a lot of questions, and develop insights that are specific to the practical limitations the team is managing. They don't just waltz in and start unloading a bunch of dogma.
+:::
+
+Its interesting that **when you see a healthy, high-performing team, agile methodologies are sort of invisible**; they're there, but they sort of melt away into the background. The team is just focusing on the actual work: how to meet a customer's need, what hypotheses they should be testing, or thinking critically about business requirements in order to find an 80/20 solution.
+
+### The cult of test
+
+We had a few teams that drank the TDD kool-aid **hard**. One in particular had agreed as a team to take testing really seriously. They set about implementing extensive test suites, held book groups about BDD, and spent hours trying to compile Gherkin files so their business partners could define test cases (they never did). They believed in the singular truth of the test pyramid, and went big on unit tests, shunning higher-level approaches as lacking in virtue. They set up CI/CD to fail builds when code coverage dipped below 95%.
+
+Things started to go sideways fast. Because their test suites were targeting low-level implementation details, every feature they implemented broke a gazillion tests. They were terrified to refactor anything (including the tests) because it would ensure weeks of work and an avalanche of merge conflicts. They'd get nothing done, sprint after sprint. The result wasn't amazing quality, it was utter paralysis.
+
+There's definitely some lessons to learn here specifically about testing practices, but I think this is really a more general case of a failure to apply **continuous improvement**. The intervention wasn't to parachute in and tell them how to do testing better, it was to have them pause and reflect, re-focus on what they were trying to accomplish, and **give them permission to try something new**.
+
+With some perspective and coaching, they started to re-think their testing strategy. They began to see that some risks were more important to mitigate than others, and some testing techniques gave you a lot more bang for your buck. They came to the conclusion that 95% on a code coverage report wasn't a business objective, since we were building a *freaking e-commerce site*, not pacemakers or cruise missiles. They gradually woke up from their fog, and came up with some much more clever testing strategies, such as testing the high-level interfaces and APIs, which were far more stable, and gave them the freedom to refactor implementation details.
+
 ### Moderately strong teams outperform strong individuals surrounded by a meh team
 
-We had a few squads where 4-5 (out of 6) team members were solid "A-" or "B+" players. In contrast, there were other teams held together by one very strong "superstar" lead surrounded by "B"s and "C"s. The teams with the more homogenous, moderately strong members significantly outperformed the teams with the superstar.
+We had a few squads where 4-5 (out of 6) team members were solid "A-" or "B+" players. In contrast, there were other teams held together by one very strong "superstar" lead surrounded by "B"s and "C"s. It was strikingly obvious to everyone that the teams with the more homogenous, moderately strong members significantly outperformed the teams with the superstar.
 
 The underlying cause was that the superstar would get randomized trying to support the rest of the team, and didn't have enough time to do anything innovative. If they ever did manage to spend some time on something interesting, it was generally too advanced for the team to run with, and the momentum fizzled. The rest of the team became helpless and dependent on the superstar to make decisions.
 
-Of course, there was occasionally the more enlightened superstar, who would spend their energy trying to elevate their lower-performing team members. The effectiveness of this was highly dependent on the latent potential of the rest of the team, and usually didn't work without management injecting additional stronger engineers to support the superstar.
+Of course, there was occasionally the more enlightened superstar, who would spend their energy trying to elevate their lower-performing team members. The effectiveness of this was highly dependent on the latent potential of the rest of the team, and usually didn't work without management intervening to shore up the team with additional strong engineers to support the superstar.
 
-In general, the ratio of strong vs weak really can't dip below 2/1 before the team veered into unhealthy territory. Who knew, you need good people to have a good team.
+In general, the ratio of strong vs weak really can't dip below 2/1 before the team veered into unhealthy territory. The members of strong teams will support and help each other, but there has to be balance between them; if it gets asymmetrical, it starts to drain everyone. 
+
+Who knew, you need good people to have a good team.
 
 ### Strong POs are critical
 
 We had Product Owners deployed to each squad, usually a PO would cover 2-3 squads. The difference between a great PO and a bad one was **very** stark. POs ultimately decide what the teams work on, so it seems fairly obvious that they'd have an outsized influence on the team.
 
-At the core of the role is having great instincts about customers, the product, and the problem space, and this usually just comes down to the same observation that you need great people to build a great product. But there are other key factors which are underappreciated in POs:
+At the core of the role is having great instincts about customers, the product, and the problem space. But there are other key factors which are underappreciated in POs:
 
 * Empathy and rapport with developers
 * A willingness and interest in understanding technical limitations and tradeoffs
 * An understanding that they're not only responsible for the customer experience, but the long-term health of the technology it's built on
 
-### Agile can be so powerful, or so horrible
-
-Some teams got really religious about their agile methodology (it's Scrum adherents that do this), and used agile "rules" as a weapon against their PO, manager, or sometimes each other. They'd spend a lot more time playing games with ticket management, ceremonies, and storypoints than they did thinking about customers, products, or using their common sense.
-
-One of the best defenses against teams going this direction was having great agile coaches (and not the high priests from big consultancies who spend their time promoting their seminars on LinkedIn). A good agile coach can provide a sort of intervention for a team, where they hold up a mirror, help them see their own disfunction, and help re-center them on what matters.
-
-:::tip
-I've noticed a correlation that great agile coaches tend to also be very product-centered, and are genuinely interested in developing technical and domain knowledge from the team they're helping. They ask a lot of questions, and develop insights that are specific to the practical limitations the team is working with. They don't just waltz in and start unloading a bunch of dogma.
-:::
-
-Its interesting that when you see a healthy, high-performing team, agile methodologies are sort of invisible- they sort of melt away into the background. The team is just focusing on the actual work: how to meet a customer's need, what hypotheses they should be testing, finding the quickest way to answer a question with data, etc.
-
-### The cult of test
-
-We had a few teams that drank the TDD kool-aid **hard**. One in particular had set up their CI/CD to fail builds where the code coverage dipped below 95%, and spent about 3/4 of their time working on their test suites. The result wasn't amazing quality, it was utter paralysis. Every feature they implemented broke a gazillion tests, and the pressure to get the features out was causing them to make the tests increasingly brittle.
-
-In this case, the intervention involved going back to the basics of why
-
-Managers who were deep in the problem space vs focusing on culture and work management
-
-Testing coverage
-
-
 ## Looking back
+
+It's been a while since I left Vistaprint, and a there have been a few regime changes since then. It's my understanding that most of what we built (both organizational and software) was discarded in favor of replacements that were developed more incrementally (based on lessons learned).
 
 I'm incredibly thankful to Erin for taking me with her on this journey- I really couldn't have had more learning jam-packed into a few short years of my life.
