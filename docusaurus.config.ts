@@ -75,6 +75,7 @@ const config: Config = {
         // },
         {to: '/', label: 'Blog', position: 'left'},
         {to: '/about', label: 'About', position: 'left'},
+        {to: '/paintings', label: 'Paintings', position: 'left'},
         {to: '/resume', label: 'Resume', position: 'left'},
         {
           href: 'https://github.com/labaneilers',
@@ -127,6 +128,10 @@ const config: Config = {
             {
               label: 'about',
               to: '/about',
+            },
+            {
+              label: 'paintings',
+              to: '/paintings',
             },
             {
               label: 'resume',
