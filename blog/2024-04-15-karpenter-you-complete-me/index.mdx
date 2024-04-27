@@ -1,6 +1,7 @@
 ---
 slug: karpenter-you-complete-me
 title: Karpenter, you complete me
+description: Karpenter is a better Kubernetes cluster autoscaler 
 tags: [platform-engineering, kubernetes, karpenter]
 ---
 
@@ -76,6 +77,8 @@ On the other hand, pods that shut down immediately when receiving a SIGTERM, esp
 
 :::tip[Fun Fact]
 If you use the [aws-load-balancer-controller](https://kubernetes-sigs.github.io/aws-load-balancer-controller), and have an ALB target group pointing to pod IPs, you need a minimum 15 second delay from when Kubernetes first sends a SIGTERM to your pod until you begin actually shutting down. It takes about that long for the controller to update the ALB target group to deregister the pod IPs. Even if your app's HTTP server has a way to stop accepting new connections and drain existing ones, you should wait the 15 seconds to even start the process, since the ALB may keep sending new connections regardless if your HTTP server will accept them.
+
+And remember folks, always monitor your load balancer CloudWatch metrics. If you see spikes of random 5XX errors coming from your load balancer on deployments or node draining, you don't have graceful shutdown working properly.
 :::
 
 ### Set a max instance CPU size
