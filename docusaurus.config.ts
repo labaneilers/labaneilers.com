@@ -60,6 +60,9 @@ const config: Config = {
 
   themeConfig: {
     image: 'img/profile-square.jpg',
+    metadata: [
+      {name: 'keywords', content: 'laban, eilers, devops, platform engineering, blog, kubernetes'},
+    ],
     navbar: {
       title: 'Software, thoughts, and stuff',
       logo: {
