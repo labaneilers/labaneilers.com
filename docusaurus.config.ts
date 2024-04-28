@@ -66,7 +66,7 @@ const config: Config = {
     navbar: {
       title: 'Software, thoughts, and stuff',
       logo: {
-        alt: 'Picture of Laban',
+        alt: 'Laban Eilers blog',
         src: 'img/laban-prague.jpg',
       },
       items: [
