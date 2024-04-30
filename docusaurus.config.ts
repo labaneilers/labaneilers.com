@@ -59,7 +59,7 @@ const config: Config = {
   ],
 
   themeConfig: {
-    image: 'img/profile-square.jpg',
+    image: 'img/waterfall.jpg',
     metadata: [
       {name: 'keywords', content: 'laban, eilers, devops, platform engineering, blog, kubernetes'},
     ],
