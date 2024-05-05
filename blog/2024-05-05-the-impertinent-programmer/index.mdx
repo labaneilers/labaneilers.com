@@ -1,0 +1,104 @@
+---
+slug: the-impertinent-programmer
+title: The impertinent programmer
+tags: [platform-engineering, programming]
+---
+
+It was 2004, and I had a huge chip on my shoulder.
+
+{/* truncate */}
+
+## Wait, you need some background first
+
+Let's back up for a minute... It was 2000, and I had been hired for my first actual job as a programmer at a company called Corex (makers of CardScan, a business card scanner). At this point I had a few years of employment under my belt, but this was as a graphic designer who did a little programming on the side. I was pretty clear about this in the interview for Corex, but I guess I did well enough on some programming problems (or there was some misunderstanding?) that my new boss was reasonably confident I could grow into a programmer who did a little graphic design. 
+
+They dropped me onto a team comprised entirely of people who had gone to engineering schools, wrote C++, and used words like "orthogonal". They gave me a web-oriented project, put me under the watchful eye of a cranky Russian PhD who would write COM objects that I could script against, and left me to decide how to glue this all together with a true gem of 2000-era web tech: ASP and VBScript.
+
+I crammed books on programming most nights in bed, trying desperately to incorporate some high-level theory to make sense of the trial-and-error hacking I was doing during the day. The feeling of barely keeping myself from drowning eventually gave way to the sense of floating; I was making real, tangible progress, and I was having a ton of fun using a computer to put pixels on a screen.
+
+Three years into this job, I got the opportunity to join a startup that had recently spun out of Corex called [ZoomInfo](https://www.zoominfo.com/) (they're still around). I'm not 100% certain exactly what number employee I was, but I was definitely in the first ten. Most folks on the team were roughly the same age as me, but like the previous job, they had all studied computer science, and knew things like whatever a "heapsort" is for. They were all C++ slingers too, and once again, I was the rookie who was hanging with the pros. 
+
+
+## OK, so back to 2004 and that giant chip
+
+At this point, despite my questionable background, I'd earned enough trust to be put in charge of a small team working on our B2B products. The main product was also built with ASP (this is still classic ASP; .NET existed, but was still the bleeding edge) with an era-appropriate amount of CSS and JavaScript. The app got its data from a massive SQL Server that had been populated by web crawlers, using some natural language processing. This was some legitimately groundbreaking stuff, written by a [French Canadian genius](https://www.linkedin.com/in/michel-decary-61b7239b) whose brilliance probably made the rest of the team feel like, well, how I felt around all of them.
+
+The core UI of the product was pretty simple: you'd search for people by attributes (what industry they were in, what titles they may have had, what their field of expertise was), get a list of results, and click on one of them to get to the detail view. 
+
+I had inherited the implementation of this from some more senior members of the team a year previously, and had been slowly dolling it up, adding features and generally just making it look spiffier. 
+
+One thing had been bothering me since the first time I used the product, though: this detail view page took at least six or seven seconds to load, at a minimum. I mean, the page had a lot of great stuff on it, but it got annoying waiting for it on every click. It didn't seem to be a huge deal to anyone on the dev team, but the sales people occasionally grumbled about it.
+
+:::tip[Do you remember the 2000s?]
+Keep in mind, in 2004, a lot of us had just gotten our first cable modems, so we were used to going to get coffee while a big page loaded.
+:::
+
+The page was built (as lots of ASP applications were at the time) out of C++ COM components, glued together into a UI with VBScript. With some very crude debugging, I could see that all the time was being spent in the C++ code, which I still had very little ability to wrangle. 
+
+I went to my boss (who may have been one of the original authors of said C++ component.. I'm not 100% sure), and asked about the performance bottleneck. He told me that C++ was the fastest, most efficient, and powerful language we had available, and that there was really not much that could be done to make this component any faster. The real engineers had already taken their pass at this, so I should let it go and get back to delivering that feature the sales team wanted.
+
+This felt like a dam breaking; at this moment, I felt like I had endured the subtle condescension of these "real" engineers for 4 years now, and despite how much I had grown, I realized they were always going to view me as 2nd rate.
+
+## Programming out of spite
+
+I knocked out the feature the sales team wanted within an hour of this conversation, and instead of going back to JIRA for more work, I made the deliberate decision to carve out some time to prove my boss wrong. 
+
+First, I had to decipher this god forsaken C++ code. I was able to hack in some printf statements to log each SQL query as it ran, compiled it, and within another hour, was able to replicate the data access pattern in an interactive SQL Server query window. As expected, these queries did indeed take about 6-7 seconds to run.
+
+This component had a fancy, object-oriented design, which elegantly encapsulated each row as an object which was responsible for fetching its own data. The effect was it was hitting the database like a machine gun- running **a separate query for every row in the grid it was rendering**. In most cases it was running like **60 queries** to render this page.
+
+:::tip[Fun fact]
+I didn't realize this yet, since C++ was inscrutable to me, but there was also no connection pooling configured for this C++ driver, so each query was establishing a new connection to the DB.
+:::
+
+So I concocted 4 very, very, dumb queries to retrieve all the same information that the C++ component did, and ran it in the SQL Explorer. After a little bit of tuning indices, the whole thing ran in like 300 milliseconds. 
+
+At this point, I was pretty confident I was on to something, so I snuck a little time over the next couple days to wrap this all up into a VBScript function (with proper connection pooling) and replace the C++ component altogether. I fired up my localhost server, started clicking around from the search screen into the details pages... and it felt **insanely fast**!
+
+## Err, so what do I do with this now?
+
+At this point I was in a bind. In the sober light of day, I realized that a fit of rage, I had engaged in an **unauthorized product improvement**. I really wanted to show my boss, but I was honestly a bit afraid. 
+
+So I tested the water by showing a couple of my colleagues, who initially thought it was some kind of trick. Once they realized this was for real, there was no keeping the horse in the barn. Within a few minutes, my boss caught wind and came over to see what was going on.
+
+:::warning[Reality check]
+Hold up a second, though. Did I give you the impression that my boss was some caricature of a feckless micromanager? Remember, this story is from the perspective of a twenty-something who's been deranged by insecurity. 
+
+Truthfully, my boss was a lovely person, and had been a really important mentor to me. Seriously, he had *attended my wedding*, and we kept in touch for years after I left.
+
+The tone here is mostly for effect, though does reflect my emotional truth at the time.
+:::
+
+So once I explained what I did, he was actually fairly impressed, and called the CEO over to see it too. The CEO was a legitimately intimidating Israeli guy (who had worked in the Mossad), but even he had a hard time moderating his delight over this unexpected gift.
+
+## Looking back, this was fairly trivial
+
+In retrospect, this was a really elementary little exercise of basic engineering. I've done many more difficult and interesting things since, but this one still sticks out in my mind, because it was my youthful impertinence that pushed me to do something no one else thought I could do... or even try to do.
+
+## 20 years later...
+
+Fast forward to just a few days ago.
+
+I had a meeting scheduled with a guy at work who I hadn't met before. The invite said he had some questions about Helm and Kubernetes, so I thought, perfect, I can help.
+
+Right out of the gate, the meeting went a little sideways, when I realized he was asking me for help finding a way to deploy his app to our Kubernetes cluster *without* using the client tooling that my team had built for this purpose. He was generally skeptical of any internal tools, and assumed they must obviously be inferior junk, and would just get in his way.
+
+It took me a second, since I was self-aware enough to recognize I was feeling defensive, so I took a deep breath and asked some questions about his app. After a few minutes of questions, we had a pretty good understanding what he wanted. Before I did any advocacy, I clarified that I didn't believe in forcing our tools on anyone, and that he was free to make any decision that made sense to him and is team. But I asked him to take a few moments to listen while I listed some of the problems that were solved in our platform tooling that he would have to replicate if he decided not to use it.
+
+This included stuff like IAM integration, Service/Ingress integration with AWS load balancers, cross-platform docker builds, configuration management, ephemeral environments, and test orchestration. I gave him a chance to ask some questions, to help him understand what he was getting himself into. The tide turned a little bit when, while arguing that IAM integration shouldn't be so hard, he said he could just inject some (long lived) AWS credentials into his pods. At this point, one of his colleagues realized he was advocating doing something that was totally bonkers (and a violation of our security policy).
+
+After this, opened up a little and we were able to figure out that a lot of what he thought about our platform tooling were misconceptions, and it actually did all the things he wanted. He agreed he'd start out with our stuff, and let us know how it went.
+
+## The nerve of that guy!
+
+It took me about an hour to unwind from that meeting. I was so miffed! Our team's platform tooling has been wildly successful, and its been a couple years since we needed to do any proactive advocacy for it. Demand has been spreading mostly by word-of-mouth, as our developer teams have been really happy with it.
+
+I paced my kitchen while obsessing over the interaction. How impertinent! Doesn't he know that I've already solved these problems? He just casually dismissed all the work my team has done over the last 2 years! He thinks its trivial; he'll just whip out some shell scripts to solve everything. It can't be that hard.
+
+## Recalling the virtues of impertinence
+
+At this moment I remembered my own experience as an impertinent young programmer, and my mind began to settle. I realized he was offering me a gift: the perspective of someone who, however naive, might have ideas or insight that I was missing. It had been a while since I'd faced this kind of skepticism, and I realized this was a good thing- it's important to have someone keep you on your toes.
+
+This was a reminder that impertinence can be a virtue: a fuel to do cool stuff. Hopefully the next time I meet an impertinent upstart programmer, I'll smile and keep my thoughts to myself.
+
+Or wait... maybe I should be really condescending to get them fired up? I'm gonna have to think about that.
