@@ -38,7 +38,7 @@ const config: Config = {
         docs: false,
         blog: {
           blogTitle: 'Software, thoughts, and stuff',
-          blogDescription: 'Adventures in life and other minutiae',
+          blogDescription: 'A blog about software, engineering management, platform engineering, and other minutiae.',
           showReadingTime: true,
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
