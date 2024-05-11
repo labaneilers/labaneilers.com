@@ -21,12 +21,7 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-fund
       - name: Build website
-        run: |
-          npm run build
-          mv build build-prd
-          BASE_URL=/preview/ npm run build-dev
-          mv build build-prd/preview
-          mv build-prd build
+        run: ./build.sh
 
       - name: Upload Build Artifact
         uses: actions/upload-pages-artifact@v3

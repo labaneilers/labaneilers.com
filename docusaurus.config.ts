@@ -7,11 +7,13 @@ const config: Config = {
   tagline: 'Adventures in life and other minutiae',
   favicon: 'img/favicon.ico',
 
+  noIndex: process.env["PREVIEW_MODE"] ? true : false,
+
   // Set the production url of your site here
   url: 'https://labaneilers.com',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: process.env["BASE_URL"] ?? '/',
+  baseUrl: process.env["PREVIEW_MODE"] ? '/preview/' : '/',
 
   trailingSlash: false,
 

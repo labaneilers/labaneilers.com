@@ -127,7 +127,7 @@ I knew that the OTEL collector had a number of [processors](https://github.com/o
 It took me a bit of time to figure it all out, mostly because the OTEL collector documentation isn't amazing, but I was eventually able to replicate pretty much all of the advanced "drop" rules we needed using the OTEL collector's processors.
 
 :::tip[Check it out]
-Check out [some of the tricks I used replicate some of Chronosphere's drop rule features in the OTEL collector](/fun-with-otel-collectors)
+Check out [some of the tricks I used replicate some of Chronosphere's drop rule features in the OTEL collector](/fun-with-otel-collectors-and-metrics)
 :::
 
 In the end, with the combination of Grafana Cloud's adaptive metrics and the OTEL collector processors, we were able to get our total cardinality down to a similar level as we had with Chronosphere. While the resulting solution was a bit more complicated, it was an acceptable tradeoff given the other advantages of Grafana Cloud.
