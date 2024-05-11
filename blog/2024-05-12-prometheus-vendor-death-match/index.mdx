@@ -1,0 +1,139 @@
+---
+slug: prometheus-vendor-death-match
+title: Prometheus vendor death match
+tags: [opentelemetry, devops, platform-engineering, observability]
+draft: true
+---
+
+import FightersImage from './fighters.jpg';
+
+<img src={FightersImage} style={{width: 250, float: 'right', marginLeft: '20px'}} alt="Death match"/>
+
+At work, we're in the process of rebuilding our metrics pipeline, as we've outgrown our old self-managed TIG (Telegraf, InfluxDB, Grafana) solution. We've had this solution in place for many years, and it's served us well. Especially given the increasingly predatory pricing models of observability vendors, it's been extraordinarily cost-effective.
+
+But over the last couple years, as we've grown, we've started to hit the limits of what we can handle with a single, vertically scaled instance of InfluxDB (especially using InfluxDB v1). It was increasingly stressful to keep it running smoothly, and we had to be very vigilant about cardinality, as it's very easy to accidentally introduce a cardinality explosion that can bring down the entire database.
+
+{/* truncate */}
+
+Just upgrading InfluxDB would have been similar in scope to moving to a new vendor, since InfluxDB v2 has a new query language, and we would have had to rewrite all our queries and dashboards anyways. So we decided to take the opportunity to do a proper RFP, and see if we could a vendor to take this entire problem off our plate.
+
+## The landscape
+
+We decided to focus specifically on metrics, since we needed to limit the scope of our evaluation by some criteria. Observability products vary drastically across many dimensions, and metrics were the area where we were in the most pain.
+
+The vendors we considered fell into a few categories:
+
+### The dominant players
+
+These include both [Datadog](https://www.datadoghq.com/) and [New Relic](https://newrelic.com/), which are both well established and *very* feature-rich. They're also known for being *extremely* expensive, and having pricing models that are difficult to predict or control. I've talked to some friends who've worked with them, and they said although they were great products, it was pretty typical that the cost would be 30% over an already bloated budget every year. But because they were so locked in, every year they'd have to renew, and the sales people would show up looking for another pound of flesh.
+
+Another thing we noticed about the dominant players was their transparently conflicted relationship with [Open Telemetry](https://opentelemetry.io/). While OTEL support features prominently in their marketing materials, their documentation tells a different story. Customers who choose to instrument their systems with OTEL SDKs will find that they're missing a whole lot of the best features of these products. The sales folks were not exactly subtle about recommending we run the evaluation using their proprietary agents instead.
+
+Yuck on both fronts.
+
+### The up-and-comers
+
+There's a few interesting, smaller players in the space. We looked at SigNoz, Logit, and a few others. They all appeared to be offering basically the same thing: a hosted, Prometheus-compatible backend along with a Grafana-based front end. They all had very competitive pricing, but we felt a bit concerned at how immature they were, and decided against doing a full evaluation.
+
+### The cloud-provider option
+
+Since we're an AWS shop, we also considered using [AWS's Managed Prometheus offering](https://aws.amazon.com/prometheus/), which would have simplified some of the operational complexity of running a Prometheus backend (e.g. [Thanos](https://thanos.io/) or [Cortex](https://cortexmetrics.io/)) ourselves. Doing some back-of-the-napkin math, we realized that, if we didn't do anything differently, we'd end up spending about 3x what we were currently spending on InfluxDB. Plus, we'd still have to manage our own Grafana instance.
+
+### The goldilocks zone
+
+We also looked at a few vendors that were in the middle of price distribution, such as [Chronosphere](https://chronosphere.io/) and [Grafana Cloud](https://grafana.com/products/cloud/). These were also Prometheus-compatible, with Grafana front-ends, but both companies were reasonably established, and had similar looking feature sets.
+
+Chronosphere was the first vendor we decided to evaluate, because their sales pitch included something we hadn't heard from any other vendor; they'd provide a way for us to manage costs with powerful, centralized ingestion controls, an as a result, could offer us predictable pricing.
+
+This piqued our interest, not just for managing costs, but because we'd long had problems with cardinality. At any moment, cardinality from any given service could unexpectedly explode- based on the decisions of a single programmer. For example, we've occasionally had instances of programmers inserting a metric label where the value is a unique ID (such as a customer ID), which could have hundreds of thousands of possible values. Previously, we had to be extremely vigilant about this, and pounce on any team that introduced cardinality explosions before they could bring down our InfluxDB backend.
+
+So having a way to manage cardinality, centrally, was very enticing.
+
+## Evaluating Chronosphere
+
+We decided to proceed with a PoC of Chronosphere. We started with some changes to our metrics pipeline infrastructure, adding [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/)s to help capture and redirect our current metrics data (which was coming mostly from telegraf), so that we could send metrics to both our in-house InfluxDB and Chronosphere concurrently.
+
+We had, as part of a previous set of experiments, already set up some common Prometheus metrics infrastructure in our Kubernetes clusters, including kube-state-metrics, node-exporter, and cadvisor. We were able to easily point these at Chronosphere as well.
+
+### The sheer volume of metrics
+
+The first thing we realized was that we were sitting on an *enormous* amount of cardinality. Chronosphere reported that we were generating over **8 million active series**, and our sales engineers were a flabbergasted about how we were even able to handle all of it with a single InfluxDB server.
+
+:::tip[Fun fact]
+Actually, every vendor we talked to was certain we were mistaken when reported to them we were handling 8-9 million active series in a single InfluxDB; they assured us that this wasn't possible.
+
+And yet, somehow we were doing it.
+:::
+
+### The Chronosphere control plane
+
+Our sales engineers immediately got to work helping us learn how to use their "control plane" feature, which allows you to write fairly arbitrary rules which can select metrics by virtually any criteria (names, label values, and/or combinations based on boolean expressions), and perform complex transformations on them, including:
+ 
+* Drop them entirely
+* Aggregate away high-cardinality labels
+* More complex transformations, such as changing the temporality of the counters (e.g. change a "delta" counter to a "cumulative" counter)
+
+It was immediately clear that their control plane was **extremely powerful**. We did a bit of analysis on the highest cardinality metrics coming in, and by cross-referencing them with a JSON export of our existing Grafana dashboards, were able to create a relatively small number of rules that reduced our cardinality by about 60%. It took a bit more work to go farther, but we eventually got our cardinality down to about ~1.7 million active series.
+
+At this point, since we had a handle on our active series volume, Chronosphere's sales folks gave us an initial price, which turned out to be very reasonable. 
+
+Holy cow, it looked like this just might work!
+
+### Using Chronosphere
+
+Once we had addressed the initial concerns around affordability, we got to work evaluating the product's overall fit. We had a bunch of teams convert some of their InfluxDB-backed dashboards and alerts over to Chronosphere, and started to get a feel for how it would be to use it day-to-day.
+
+Since Chronosphere's UI was based on Grafana (v7), it turned out to be very similar to our self-managed Grafana/InfluxDB from a developer perspective, with the main differences being:
+
+* The PromQL language
+* Much better query performance
+
+After a few weeks of playing with the product, we were satisfied it would do the job. We gave it the thumbs up.
+
+## Evaluating Grafana Cloud
+
+Initially, we had sort of written off Grafana Cloud, since the price they gave us originally, based on our active series in InfluxDB, was in the same range as New Relic and DataDog. However, this was before we realized that they had a feature that was similar to Chronosphere's control plane, called [Adaptive Metrics](https://grafana.com/products/cloud/metrics/prometheus-cardinality-optimization/).
+
+We told the Grafana sales team that, using Chronosphere, we'd been able to reduce our metrics to under 2 million active series, and asked for a new quote based on the assumption we could use Adaptive Metrics to get similar results in Grafana Cloud.
+
+They came back with a price that was almost exactly the same as Chronosphere. The race was back on!
+
+### Using Adaptive Metrics
+
+Once we updated our metrics pipeline to export to Grafana Cloud, and had a chance to start playing with Adaptive Metrics, we were disappointed to find that it wasn't nearly as powerful as Chronosphere's control plane. The biggest difference was that you could only target metrics based on their names, and not their labels or values. This was a big limitation, as we had a lot rules we had written in Chronosphere that did things like:
+
+* Drop all metrics from a specific service, except for a few key ones
+* Drop a particular metric generated by a telegraf plugin (e.g. procstat or diskio), but not for services in an "allowlist"
+
+### But we really, really liked Grafana Cloud
+
+Aside from cardinality management, where Chronosphere clearly had the lead, we found a lot of areas where we preferred Grafana Cloud:
+
+* They had a more modern, polished user experience (both used Grafana as a front-end, but Grafana Cloud has the latest version, while Chronosphere's was pinned to v7, which is very old)
+* Their documentation was significantly better
+* They had support for multiple data sources, including CloudWatch, ElasticSearch, and Athena (which were important to us)
+* They were strong leaders in the open source observability community
+* Grafana Labs was a larger and more established company, with a more robust and mature product portfolio
+* It seemed credible that we may eventually be able to migrate our traces and logs to them as well, giving us a unified observability platform
+
+It was clear that, besides the discrepancy in cardinality management, we'd prefer to go with Grafana Cloud. However, if we wanted to make this work, we'd need to find a way to handle the use cases that adaptive metrics wouldn't cover.
+
+### Taking another look at the OTEL collector
+
+It turns out that the [OTEL Collector](https://opentelemetry.io/docs/collector/) (which I mentioned we were already using) is an insanely useful swiss-army knife for building observability pipelines. It can collect metrics, traces, and logs in virtually any format, run a pipeline of transformations, and output them in virtually any other format. 
+
+I knew that the OTEL collector had a number of [processors](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor) available, though we hadn't used them much previously. I wondered if we could use these to replicate some of the more advanced metrics selector functionality that Chronosphere offered.
+
+It took me a bit of time to figure it all out, mostly because the OTEL collector documentation isn't amazing, but I was eventually able to replicate pretty much all of the advanced "drop" rules we needed using the OTEL collector's processors.
+
+:::tip[Check it out]
+Check out [some of the tricks I used replicate some of Chronosphere's drop rule features in the OTEL collector](/fun-with-otel-collectors)
+:::
+
+In the end, with the combination of Grafana Cloud's adaptive metrics and the OTEL collector processors, we were able to get our total cardinality down to a similar level as we had with Chronosphere. While the resulting solution was a bit more complicated, it was an acceptable tradeoff given the other advantages of Grafana Cloud.
+
+## Conclusion
+
+The experience of running a head-to-head evaluation of two vendors, especially given the penetration of OpenTelemetry and Prometheus in the market, was a real eye-opener. I'm more bullish than ever on OTEL (and cloud-native standardization initiatives in general), and I think its going to continue to reshape the observability landscape in the coming years.
+
+I should point out that, even though we selected Grafana Cloud, I think Chronosphere would have also been an excellent choice. If your biggest pain point is cardinality and/or cost management, and you have a large number of heterogenous metrics sources, Chronosphere might be a better choice for you.
