@@ -136,10 +136,18 @@ In the end, with the combination of Grafana Cloud's adaptive metrics and the OTE
 
 The experience of running a head-to-head evaluation of two vendors, especially given the penetration of OpenTelemetry and Prometheus in the market, was a real eye-opener. I'm more bullish than ever on OTEL (and cloud-native standardization initiatives in general), and I think its going to continue to reshape the observability landscape in the coming years.
 
-I should point out that, even though we selected Grafana Cloud, I think Chronosphere would have also been an excellent choice. If your biggest pain point is cardinality and/or cost management, and you have a large number of heterogenous metrics sources, Chronosphere might be a better choice for you.
+I should point out that, even though we selected Grafana Cloud, I think Chronosphere would have also been an excellent choice. I think it might even be a better choice for a company that meets a few criteria:
+
+* Your biggest pain point is cardinality and/or cost management
+* You have a large number of metrics producers that would be hard to corral into a uniform schema
+* You don't have a lot of third party metrics sources (e.g. CloudWatch, ElasticSearch) that you want to query directly (Chronosphere integrates with those data sources through scraping them and converting them to Prometheus metrics)
+* You're OK with a slightly less polished user experience (or you're willing to wait for Chronosphere to catch up)
+
 
 :::warning[Confession]
 The sales engineering team at Chronosphere was *absolutely amazing*. They put in a *ton* of work helping me adapt our existing Influx-centric pipeline to work with Prometheus and OTEL. Plus they had to put up with me, who required a remedial education in Prometheus concepts before we could do anything.
 
-They were so patient, knowledgeable, and great to work with, I feel legitimately *terrible* we eventually decided to go with a competitor.
+They were so patient, knowledgeable, and great to work with, I feel legitimately *terrible* (on a personal level) we eventually decided to go with a competitor.
 :::
+
+That said, Grafana Cloud has been a great fit for us, and we're interested in expanding our use into their logging (Loki) and tracing (Tempo) products. I'll let you know how that goes.
