@@ -15,7 +15,7 @@ But over the last couple years, as we've grown, we've started to hit the limits 
 
 {/* truncate */}
 
-Just upgrading InfluxDB would have been similar in scope to moving to a new vendor, since InfluxDB v2 has a new query language, and we would have had to rewrite all our queries and dashboards anyways. So we decided to take the opportunity to do a proper RFP, and see if we could a vendor to take this entire problem off our plate.
+Just upgrading InfluxDB would have been similar in scope to moving to a new vendor, since InfluxDB v2 has a new query language, and we would have had to rewrite all our queries and dashboards anyways. So we decided to take the opportunity to do a proper RFP, and see if we could find a vendor to take this entire problem off our plate.
 
 ## The landscape
 
@@ -137,3 +137,9 @@ In the end, with the combination of Grafana Cloud's adaptive metrics and the OTE
 The experience of running a head-to-head evaluation of two vendors, especially given the penetration of OpenTelemetry and Prometheus in the market, was a real eye-opener. I'm more bullish than ever on OTEL (and cloud-native standardization initiatives in general), and I think its going to continue to reshape the observability landscape in the coming years.
 
 I should point out that, even though we selected Grafana Cloud, I think Chronosphere would have also been an excellent choice. If your biggest pain point is cardinality and/or cost management, and you have a large number of heterogenous metrics sources, Chronosphere might be a better choice for you.
+
+:::warning[Confession]
+The sales engineering team at Chronosphere was *absolutely amazing*. They put in a *ton* of work helping me adapt our existing Influx-centric pipeline to work with Prometheus and OTEL. Plus they had to put up with me, who required a remedial education in Prometheus concepts before we could do anything.
+
+They were so patient, knowledgeable, and great to work with, I feel legitimately *terrible* we eventually decided to go with a competitor.
+:::
