@@ -140,7 +140,7 @@ I should point out that, even though we selected Grafana Cloud, I think Chronosp
 
 * Your biggest pain point is cardinality and/or cost management
 * You have a large number of metrics producers that would be hard to corral into a uniform schema
-* You don't have a lot of third party metrics sources (e.g. CloudWatch, ElasticSearch) that you want to query directly (Chronosphere integrates with those data sources through scraping them and converting them to Prometheus metrics)
+* You don't have a lot of third party metrics sources (e.g. CloudWatch, ElasticSearch) that you want to query directly (Chronosphere integrates with those data sources by eagerly scraping them and converting them to Prometheus metrics... which can increase costs for sources, like CloudWatch, that charge by the API call)
 * You're OK with a slightly less polished user experience (or you're willing to wait for Chronosphere to catch up)
 
 
