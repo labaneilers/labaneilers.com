@@ -3,12 +3,16 @@ slug: prometheus-vendor-death-match
 title: Prometheus vendor death match
 tags: [opentelemetry, devops, platform-engineering, observability]
 image: ./fighters.jpg
-draft: true
 ---
+
+:::tip[TL;DR]
+We evaluated a number of observability vendors, with a focus on metrics, and did detailed PoCs with both [Chronosphere](https://chronosphere.io/) and [Grafana Cloud](https://grafana.com/products/cloud/). Both are excellent products, and have slightly different strengths.
+:::
 
 import FightersImage from './fighters.jpg';
 
 <img src={FightersImage} style={{width: 250, float: 'right', marginLeft: '20px'}} alt="Death match"/>
+
 
 At work, we're in the process of rebuilding our metrics pipeline, as we've outgrown our old self-managed TIG (Telegraf, InfluxDB, Grafana) solution. We've had this solution in place for many years, and it's served us well. Especially given the increasingly predatory pricing models of observability vendors, it's been extraordinarily cost-effective.
 
@@ -144,11 +148,21 @@ I should point out that, even though we selected Grafana Cloud, I think Chronosp
 * You don't have a lot of third party metrics sources (e.g. CloudWatch, ElasticSearch) that you want to query directly (Chronosphere integrates with those data sources by eagerly scraping them and converting them to Prometheus metrics... which can increase costs for sources, like CloudWatch, that charge by the API call)
 * You're OK with a slightly less polished user experience (or you're willing to wait for Chronosphere to catch up)
 
-
 :::warning[Confession]
 The sales engineering team at Chronosphere was *absolutely amazing*. They put in a *ton* of work helping me adapt our existing Influx-centric pipeline to work with Prometheus and OTEL. Plus they had to put up with me, who required a remedial education in Prometheus concepts before we could do anything.
 
 They were so patient, knowledgeable, and great to work with, I feel legitimately *terrible* (on a personal level) we eventually decided to go with a competitor.
 :::
 
-That said, Grafana Cloud has been a great fit for us, and we're interested in expanding our use into their logging (Loki) and tracing (Tempo) products. I'll let you know how that goes.
+That said, Grafana Cloud has been a great fit for us. Their support and customer success teams, in particular, have been really effective in helping get our team ramped up and successful. Given this experience, we're interested in expanding our use into their logging (Loki) and tracing (Tempo) products. I'll let you know how that goes.
+
+### Addendum
+
+I reached out to both Grafana Labs and Chronosphere with a draft of this post. I'm glad I did, because Chronosphere let me know that due to feedback like ours, and they've been investing in some of the areas in which they were weakest relative to Grafana Cloud, namely UI quality:
+
+* https://chronosphere.io/learn/chronosphere-bolsters-oss-contributions-for-perses-otel/
+* https://chronosphere.io/resource/chronosphere-lens-solutions-brief-pdf/
+
+They're the primary force behind [Perses](https://github.com/perses/perses), which a competitor for OSS Grafana (which Chronosphere was previously using for visualizations). They weren't specific about the details, but my guess is the monolithic design of Grafana, combined with its [AGPL license](https://www.gnu.org/licenses/agpl-3.0.en.html), limited their ability to integrate it effectively into their product without having their proprietary UI be infected with the AGPL redistribution terms. 
+
+Perses is permissively licensed (Apache 2) and backed by the Linux Foundation, and is designed to be modular, embedable. It's built to be more IaC/GitOps-friendly than Grafana. The project is very young, but I'm excited to see some more open-source visualization options available.
