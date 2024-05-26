@@ -7,3 +7,16 @@ With the benefit of this perspective, I'm now sure that I'm actually a pretty me
 * working with PhD wizards
 * plumbers vs city planners
 * The wizards build raw capabilities, and I find a way to combine them into a product
+
+* Tight integration with the companies centralized systems:
+  * identity provider
+  * docker registries 
+  * observability stack
+  * 
+* A flexible configuration management system that allows teams define arbitrary environments
+* Transparent mapping of configuration to local Docker, Kubernetes, and IDE debuggers
+* Local-first tooling, enabling decoupling from the CI/CD system
+* Ephemeral environments for branches
+* Ability to define custom CLI commands with arbitrary (imperative) code
+* A pipeline of client-side Kubernetes object transforms to enable "golden path" patterns easy (e.g. Ingress, )
+

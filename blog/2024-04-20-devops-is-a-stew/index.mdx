@@ -6,8 +6,8 @@ image: https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Irish_Stew_%281
 tags: [platform-engineering, devops, engineering-management]
 ---
 
-<figure style={{width: 300, float: 'right', marginLeft: '20px', marginTop: '0'}} >
-<a title="jeffreyw, CC BY 2.0 &lt;https://creativecommons.org/licenses/by/2.0&gt;, via Wikimedia Commons" href="https://commons.wikimedia.org/wiki/File:Irish_Stew_(10320713316).jpg"><img width="256" alt="Irish Stew (10320713316)" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Irish_Stew_%2810320713316%29.jpg/256px-Irish_Stew_%2810320713316%29.jpg" /></a>
+<figure className="blog-image">
+<a title="jeffreyw, CC BY 2.0 &lt;https://creativecommons.org/licenses/by/2.0&gt;, via Wikimedia Commons" href="https://commons.wikimedia.org/wiki/File:Irish_Stew_(10320713316).jpg"><img alt="Irish Stew (10320713316)" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Irish_Stew_%2810320713316%29.jpg/256px-Irish_Stew_%2810320713316%29.jpg" /></a>
 </figure>
 
 When learning a new recipe, especially when dabbling in cuisine from different cultures, I find it really important to make sure one is really precise in their understanding the words used in the recipe. I've had a few unfortunate misunderstandings that resulted in... gastronomic disaster.
@@ -38,7 +38,7 @@ You know, the team the developer teams can "throw it over the wall" to.
 
 import StewIngredientsImage from './stew-ingredients.jpg';
 
-<img src={StewIngredientsImage} style={{width: 400, float: 'right', margin: '20px'}} alt="Stew ingredients"/>
+<img src={StewIngredientsImage} className="blog-image" alt="Stew ingredients"/>
 
 The thing I find really interesting about the engineering-management philosophy definition of "DevOps" is how interdependent it is on a whole bunch of other ingredients that coincided historically with it:
 

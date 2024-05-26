@@ -1,0 +1,225 @@
+---
+slug: i-got-out-of-first-republic-alive
+title: I got out of First Republic alive
+tags: [opentelemetry, devops, platform-engineering, observability]
+draft: true
+---
+
+A few years back, I did something uncharacteristic, and took a job in the financial services sector. Why, you say, was this unlike me? Well, before this, I had a few rules laid out for myself to guide my career:
+
+{/* truncate */}
+
+* No gambling
+* No weapons/military
+* No health care
+
+The gambling one was actually based on the experience of my first job. Oddly enough, I built some of the first websites for the casinos on the Las Vegas strip. No joke! Gambling is definitely not something I enjoy personally, but after several visits to Vegas, my gut was telling me I didn't want to be part of this industry in general.
+
+:::warning[caution]
+I actually know the founders of Draft Kings, and was once at a lunch table in the Vistaprint cafeteria while they were discussing their business idea for this sports betting website. I knew joining them would have violated my gambling rule, but more importantly, I thought the whole idea sounded idiotic.
+
+Moral of the story: don't take investment advice from me.
+:::
+
+My aversion to making weapons isn't a moral question. I'm not a pacifist, and I'm quite grateful to the brave people who protect my country and keep my family safe. Its more that I don't want the stakes of my programming bugs to be people getting blown up.
+
+Healthcare is similar; I don't want to be in a position where a bad line of code causes someone's heart to stop, but also I'm just pretty squeamish about medical stuff, and just mostly... yuck.
+
+While it wasn't something I had put much thought into, I didn't have a specific rule about avoiding a job in financial services. I mean, I have nothing against money, but financial products never sounded particularly interesting to me.
+
+## Burnout was closing in
+
+At the time I made this decision, I had been at Vistaprint for almost 13 years, and had spent my [last 3 years doing engineering management](/let-a-thousand-flowers-bloom). I wasn't exactly burnt out, but for the first time in my career, I didn't find myself excited about what I was going to work on each day. My role put me in the position of having to constantly fight fires, resolve conflicts between teams, or try to talk down irate developers fighting religious battles over language choices.
+
+In this moment of weakness, I got a call from a recruiter. It wasn't a cold call, this was someone I knew personally; someone who had left Vistaprint a few years before. We gossiped a bit about who was still there, who had left, and who had gotten married or divorced. So much drama.
+
+I was pretty open with her about my malaise, and she suggested I might be interested in talking with another former colleague, [Joe Finsterwald](https://www.linkedin.com/in/joefinsterwald/), who had also left Vistaprint a few years back to build a startup called [Gradifi](https://www.gradifi.com/). I was well aware of Gradifi since it had recently been acquired by First Republic Bank, as the news had radiated through my social circles. She admitted I was on his short list of people to poach from Vistaprint, which was flattering, because I really liked Joe. 
+
+:::tip[note]
+OK, you just heard the name "First Republic Bank", and you're thinking, *where have I heard about this before?* Probably because it was the second-largest bank to fail in U.S. history; it collapsed in the same series of bank runs that brought down Silicon Valley Bank and Signature Bank. 
+
+At the time I joined, it was viewed (much like Silicon Valley Bank) as fairly hip among startups, especially in tech.
+
+I left 2 and a half years before it failed, and I'm fairly certain I had nothing to do with it. Somehow, I still feel a little ashamed about the whole thing.
+
+But lets just put this foreshadowing aside for now, and pretend for a moment we're back in 2018.
+:::
+
+So I met up with Joe and another former colleague for dinner. It turns out that First Republic had been so impressed with Gradifi's technical agility, they had appointed Joe their new CTO. His mandate was to transform and modernize First Republic's admittedly second rate technology team, and solve some rather large, looming technical problems.   
+
+I don't know if it was my exhaustion at work, or Joe's charismatic pitch, but something clicked, and it felt like an adventure I wanted to be part of. This was a chance to transform a Fortune 500 company, and an iconic institution among the Silicon Valley set, from the inside. It sounded legitimately exciting.
+
+:::tip[Probability of Success: 80%]
+I should point out that Joe was very clear-eyed and transparent with me that he knew there was a chance that we'd fail at this transformation. At this point he rated it about a 80% chance of success.
+:::
+
+## A new beginning
+
+After resigning and winding things down at Vistaprint, I took a few weeks of vacation time. It was glorious. I hadn't realized how much weight I had been holding after fighting the same battles over many successive regimes in the same company. It was hard to believe I could just let it all go.
+
+Pretty soon after, I started at First Republic. I got oriented and met the team Joe been working to assemble, and was very excited to learn that they were all great, smart, accomplished people.
+
+Knowing we had a limited amount of goodwill from Joe's "honeymoon" period, we decided we needed to get started on something that could give us a quick win, demonstrate they type of modern engineering management and practices that we had used at our previous companies (which included Amazon, Microsoft, and Google), and give us a chance to get oriented in the organization.
+
+We started on a project to revamp the bank's private wealth management web interface, which was pretty useless at the time, and everyone agreed that we'd likely gain a lot of credibility if we could crack this nut.
+
+Three of us quickly banged out a prototype with a React frontend and a dotnet (core) backend, and populated it with some fake data that had been provided by some of the wealth managers. It wasn't long before it was looking spiffy as heck, and we got some nice feedback from the wealth management team.
+
+:::tip[Probability of Success: 80%]
+We were feeling good. The team we had hired was awesome, and we had some momentum.
+:::
+
+## I wonder how you deploy stuff at a bank
+
+At this point, I volunteered to take on the build and deployment challenges we knew we were going to have to tackle sooner or later. Over my last year at Vistaprint, I had been getting really into platform engineering, and was managing a team that was trying to build a PaaS on Kubernetes. First Republic already had a relationship with Red Hat, and even had some Kubernetes (OpenShift) clusters. It seemed like Kubernetes might be a good fit, not only for this project, but to help us build a paved road for other projects coming up.
+
+I figured to start out, I should first try to do things *the bank way*, just to get a sense of the baseline. Unsurprisingly, the developer experience was horrible and soul crushing, with a byzantine mess of undocumented processes, inscrutable approval forms, incompatible ticketing systems, and apathetic gatekeepers. 
+
+:::danger[Waiting for Approval]
+Sorry, Marge is on vacation. You'll have to wait until she gets back next week to get your firewall change request approved.
+:::
+
+Everything was being deployed in on-prem data centers, and every single step required us to go through the bank's fearsome and all-powerful InfoSec team. Theirs was a playbook of accumulated rules that everyone was afraid to question, lest they be put on the naughty list. It was almost a month before we were able to get our first app deployed to an OpenShift cluster in a *dev* environment. 
+
+:::tip[Probability of Success: 60%]
+I was starting to get a more realistic tatse of what we were up against. The team was still great, though.
+:::
+
+## I can haz cloud pls?
+
+Even before I volunteered for this mission, my colleagues and I had already been working on convincing the bank leadership that we needed to rebuild our development processes from the ground up. One of our central goals was to help the bank get a foothold in AWS, where we could build a more sane, segmented environment where we didn't have to apply the same security controls in dev as we did in production. 
+
+:::warning[honest question]
+Having never worked in a financial institution before, is that really a thing? Do you generally need to go through a full security audit to deploy to dev environment?
+:::
+
+While some of my other colleagues started working on the network design, security model, IaC strategy, and general account setup, I started working on the developer experience, intending to build a PaaS on top of OpenShift. It took almost a year (I shit you not, everything moved like molasses), but we finally managed to build out a development environment that consisted of:
+
+* An OpenShift cluster, with all the goodness Red Hat, in its benevolence, saw fit to bestow upon us
+* Artifactory
+* Vault
+* A CloudBees Jenkins cluster, with the nice Kubernetes agent stuff
+* A bunch of security tooling (AquaSec, Crowdstrike, CloudSomething...)
+* Some expensive observability tooling (they kind you get when money is no object)
+
+On top of this, we built a pretty cool set of client tooling that helped developers get a namespace provisioned, their apps built and deployed, scanned for vulnerabilities, and exposed via ingress, all within about 10 minutes. It scaffolded out a working CI/CD pipeline out of the gate, and either bypassed or automated away most of the the crazy cargo-cult bank processes (it would literally file the ServiceNow tickets needed to get approvals). Everything about the deployment and operational model was pre-approved by InfoSec, so users didn't need to go through security approval for the initial deployment.
+
+My internal team, with our private wealth management app, was the first to use it, and they found it... satisfactory. We got some feedback, iterated as much as we could with the political capital we had to spend, and made some improvements. Then we set out to get some teams outside our "bubble" using it.
+
+I guess I didn't really understand how big a deal it would be; every team we on-boarded had their minds instantly blown; they had never before gotten something deployed and usable within 10 *weeks*, much less 10 minutes. 
+
+Within a few months, we were rock stars. You, know, within bank IT.
+
+:::tip[Probability of Success: 50%]
+We had made a lot of progress, but it had been freaking exhausting.
+:::
+
+
+## The institutional immune system
+
+While nothing about my work on developer experience was going exactly smoothly, we were making slow and steady progress, earning the trust of the teams, and especially a few key people on the InfoSec team. They began to see us as allies, and while I had to occasionally make some sacrifices, it was generally a good tradeoff.
+
+But my not all my colleagues were having the same luck. The wheels that had been turning slowly in the background were becoming increasingly visible to us. The bank's institutional immune system was starting to kick in.
+
+## Types of people at the bank
+
+To help explain what I mean, I should try to describe some categories of people working at the bank:
+
+### 1. The vast majority of non-tech people at the bank
+
+The bulk of people I met at the bank were nice, friendly, lovely people. Most people seemed to really believe in the bank's core culture, which was *extremely* focused on customer service. While it seemed a bit hokey at times, it came out of a real and genuine place. They had always catered to very high net worth clients, so it made sense to build a culture where clients are your reason for being, and you move heaven and earth to keep them happy. 
+
+Now, admittedly, bank people are different than the kind of people I've worked with at tech companies. They're a bit more conformist and hierarchical, but regardless, I had a healthy respect for them. They were the ones keeping the whole thing working, after all. They were experts in things I was almost entirely ignorant of.
+
+:::warning[perplexing anecdote]
+The bank's president would regularly say "teamwork makes the dream work" in all-hands meetings, with a straight face. Financial people really are different.
+:::
+
+### 2. The tech worker bees
+
+The majority of people on the technology team were pretty similar. They had a bit less of the obsessive customer focus, but they still mostly cared about doing a good job, and helping the people around them.
+
+The challenge with these folks was that many of their jobs were sort of anachronistic in a world of cloud and APIs. For many of them, if we were successful with our cloud/modernization mission, automation was 100% going to replace their jobs. Seriously, I remember one team that whose whole job was managing TLS certs. AWS Certificate Manager was going to completely replace them.
+
+That said, a number of these folks understood that the world around them had changed, and were accepting that they needed to evolve too. They were willing to listen to us, and though they were often skeptical, they genuinely wanted to be open minded.
+
+I'd actually put a lot of the tech middle and upper management in this category too. Their skepticism of our vision was a bit more pronounced, but this was usually comoing out of a sense of protective of their teams. But again, most of them were operating in good faith, and were just caught in a system that set up powerful incentives to resist change.
+
+One of my colleagues put it eloquently about this set: "They want to want to change".
+
+### 3. The allies
+
+There were a small handful of legitimately, shockingly great technologists at the bank (preceding us). The ones I worked with were either acqui-hired in or came in as consultants, and then got put in charge of things once the business realized how absurdly effective they were. It was blindingly clear to everyone around them that they were operating at a very different level.
+
+It didn't take very long for us to recognize these people, and it was no-brainer for us to team up. Unlike most folks there, they had recently worked in less pathological environments, and didn't need any convincing that we had the right vision. 
+
+### 4. The keepers of the status quo
+
+You knew I was going to get to these guys eventually, right?
+
+Unfortunately, there were a small minority of middle and upper management who had very different goals than most others in the organization. They didn't give a shit about our customers. They cared about power, status, headcount, and promotions. Their mission had always been to build a comfortable fiefdom, and to maximize the perception that they were indispensible, while minimizing the actual effort they spent on anything. 
+
+The CTO team was a huge threat to everything they had built for themselves. We were a bunch of arrogant hipsters who thought we were going to come in and tell everyone they've been doing it all wrong.
+
+These guys (I say guys because they were 100% men) played it smart when we arrived. They paid lip service to the ideas of developer empowerment, cloud, and automation, biding their time, waiting for Joe to burn through his political capital. They knew they could slowly grind him down, and then start ramping up their attack when he was vulnerable.
+
+:::warning[a note about cynical players]
+Just to be clear, I know there's cynical, manipulative people in the tech industry too, just like everywhere else. I've definitely dealt with them.
+
+This was different only by degrees. These guys were just a little more power hungry, a little more entrenched, a little more willing to be dishonest, and a little more prone to conspire. There were a few more of them. And because the culture was a little bit more conformist an hierarchical, it gave them that much more influence.
+
+The little differences really added up.
+:::
+
+## A little color on Joe
+
+Joe is a genuinely great guy, with quirky sense of humor, and an inability to be anything but his authentic self. He's also somewhat neuroatypical, kind of awkward, and has a hard time hiding when he wasn't impressed with people. His charm wasn't so charming to everyone. A few times I've witnessed him put his foot very, very, deep in his mouth. 
+
+Luckily, Joe had [Nicholas Pirollo](https://www.linkedin.com/in/nicholaspirollo/) as a deputy CTO. Nick was a young guy, but incredibly dynamic and talented, both as a technologist and a leader. He was also deeply emotionally intelligent, and in many ways, was holding everything together. Even the folks that hated Joe couldn't help but like Nick.
+
+I think because of Nick, we were able to make it about 9 months longer than we would have otherwise.
+
+... actual progress here...
+
+:::tip[Probability of Success: 40%]
+At this point I was seeing the pressure around me, but I was actually having a pretty good time with the technology I was working with, and Covid was raging, and I was hoping we could stick with it and turn things around.
+:::
+
+## The long grind
+
+I spent the next year heads down, focused on my developer experience team. We were making slow, steady progress, and more and more of the developer teams were adopting our tooling. I had built some important relationships, and developed some trust throughout most of the organization. Even some of Joe's enemies had come around to believing that I was actually trying to help them. 
+
+Matt Stump?
+
+It came at a real cost though- every step was a battle, and we'd constantly have to re-litigate decisions that had already been made.
+
+Some of my other colleagues were having a harder time. Friction increasing
+
+At this point, most of us had quietly decided to stop tapping our own networks for new hires, and we were beginning to lose good people for whom, despite the considerable money, the slog was just too much.
+
+:::tip[Probability of Success: 20%]
+I think subconsciously, I already knew I was running out of gas. At this point, I was hanging on because I didn't want to give up on my team.
+:::
+
+## The final straw
+- Alan getting fired was the last straw.
+
+:::tip[Probability of Success: 0%]
+It was at this moment I realized that even if I could succeed with our platform, the bank was never actually going to buy into the cultural ideas that I really cared about, namely developer empowerment.
+
+The vision of the platform was ultimately tied to ideas of developer empowerment, but that was never going to happen 
+:::
+
+## Reflections
+
+* it was worth it for the learning:
+  * I got to go very deep on Kubernetes
+  * I had two iterations of building a PaaS, with the second iteration being the direct predecessor of the one I built at SimpliSafe
+* security and regulatory environment. compilance and policies
+* It paid better than anywhere I've ever worked
+* I got to work with some truly awesome people
+    * I think its likely we'll be working together again in the future
+
+
+
+
