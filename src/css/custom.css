@@ -28,3 +28,36 @@
   --ifm-color-primary-lightest: #dfb274;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
+
+.blog-image {
+  padding: 5px;
+  margin-bottom: 10px;
+  width: 100%;
+  clear: both;
+  display: block;
+}
+
+figure.blog-image {
+  padding: 5px;
+  margin-inline-start: 0;
+  width: 100%;
+  clear: both;
+  display: block;
+}
+
+/* Media query for wide screens */
+@media (min-width: 768px) {
+  .blog-image {
+    margin: 20px;
+    margin-top: 0;
+    float: right;
+    width: 40%;
+  }
+
+  figure.blog-image {
+    margin: 20px;
+    margin-top: 0;
+    float: right;
+    width: 40%;
+  }
+}

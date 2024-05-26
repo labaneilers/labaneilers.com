@@ -1,0 +1,166 @@
+---
+slug: developer-experience-is-a-product
+title: Developer experience is a product
+tags: [opentelemetry, devops, platform-engineering, observability]
+image: ./devx-soda.jpg
+draft: true
+---
+
+:::tip[TL;DR]
+The most important feature of an internal developer platform is that the team that builds it has to compete to win over their users. 
+
+Figure out your initial value proposition, build a minimum viable product, get it in front of customers, listen, learn, and iterate.
+
+Platforms imposed by a top-down mandate tend to be garbage.
+:::
+
+import SodaImage from './devx-soda.jpg';
+
+<img src={SodaImage} className="blog-image" alt="Developer Experience Soda"/>
+
+Over the past 15 years, I've been working on one form or another of internal developer platform. Even long before, when I was working at small startups, I inevitably ended up building (or curating) some little web framework, a build system, and slapping together scripts to package an deploy our stuff reliably. No one ever told me to do this, it was just obviously necessary. 
+
+{/* truncate */}
+
+## Developer experience in the monolith
+
+At the first larger company I worked for, I worked on improving the developer (and user) experience on top of a giant, pre-existing monolithic app, with a lot of custom-built tooling. One needed custom-tooling when dealing with a monolith of several million lines of code being concurrently modified by 200 developers, especially since there wasn't really any off-the-shelf tooling available that could handle this scale.
+
+Since there was already an established build and deployment system, I was mostly focused on improving the experience of web developers. At that time, the challenge was mostly around providing a sprawling army of mostly backend developers with a decent library of web UI components, while providing some semblance of brand consistency. 
+
+This whole thing required some culture change, and a lot of outreach. I had no power to enforce usage of our web framework, nor any power to force web designers to work within the constraints we'd defined together. To get the designers on board, we needed to build some trust, listen to their concerns, and help them see we were trying to help them realize their vision with greater fidelity. 
+
+For developers, it just required that our framework was easier and better at helping teams make their pages look like what the designers wanted. Ultimately, no one ever had to force anyone to use our framework, it just made things easier for everyone, so they did it. 
+
+The next time we had to do a brand refresh of the site, it only took a couple people a couple weeks- whereas the last rebrand had been a major project across the whole company that took months.
+
+## Microservice babies
+
+A few years later, it was becoming apparent that we had been gradually losing productivity in our monolith, and there were some factions interested in pursuing a [service-oriented architecture](https://en.wikipedia.org/wiki/Service-oriented_architecture). A new platform team started working on a set of tooling to enable teams to stand up independent services outside of the monolith. 
+
+In a marked contrast to the proprietary infrastructure we'd been using for the monolith, they were toying around with a bunch of different open source and vendor tools. After some prototyping and getting an initial MVP built, some teams started using their stuff. 
+
+:::warning[Fuzzy recollection]
+My recollection may not be 100% accurate, since it was a while ago, and I wasn't privy to all the goings-on. I have the impression the team gained the backing of leadership, who provided some degree of pressure on teams to adopt their tooling.
+:::
+
+This endeavor ended up ultimately fizzling. In retrospect, there was a lot going against it:
+
+* We weren't yet using a public cloud (they were targeting on-prem infrastructure)
+* Kubernetes and containers were in their infancy
+* We were legitimately deluded about what it would take to make microservices actually work. Seriously, were were like little babies.
+
+These were pretty strong headwinds, but there was another factor I can see in retrospect, which was even more critical:
+ 
+*The platform team didn't spend enough time learning from their customers, or trying to understand the actual problems they were facing*.
+
+I remember several specific tales of teams working on building services outside our monolith using their tooling, running into some friction, and experiencing something other than empathy from the platform team. At least once I remember a VP getting involved to put pressure on a team that was expression reservations and looking for alternative approaches.
+
+
+## Building a great platform for the wrong customer
+
+Let me explain: the toolkit was built as a set of Ruby gems, referenced via a root gem that composed them to enable some higher level operations. Each gem was responsible for interacting with some of the platform's parts, such as Artifactory, Jenkins, or whatever deployment tool we were using (I think at one point it was [Octopus Deploy](https://octopus.com/)?). The tool would scaffold out a rakefile, with predefined tasks (e.g. build, deploy) the user could execute with the `rake` CLI. The user could then customize their rakefile, combining these gems to implement all the custom processes their service needed, but a lot of the low-level details would be taken care of within the gems.
+
+Here's where the problems started: the gems were fairly course-grained, strongly opinionated, and had pretty limited extensibility. They were also composed and packaged in a way that made it hard to replace any single gem with an alternative implementation. The options for a user that had an unsupported use case were pretty limited:
+
+* Get the tooling owners to implement the feature
+* Implement the feature and try to convince the owners to take the patch
+* Monkey-patch the gems (I think this is technically possible in Ruby)
+* Implement the feature from scratch outside of the pre-existing gems
+
+All of these options were particularly unappealing, partially because there was virtually no Ruby experience to be found among our developer population. But more importantly, after a number of teams' feature requests were met with apathy (and a bit of paternalistic "you're doing it wrong"), the "brand" of the tooling began to suffer.
+
+Despite strong top-down pressure to use the tooling, teams openly rebelled, and began piecing together their own bespoke solutions. In the long run, management gave up the fight, because ultimately, they just cared that business problems were getting solved.
+
+In retrospect, I think that leadership's decision to push the tooling was its death knell. The platform team lost its incentive to win the trust of the developer teams, got caught up in their own vision, and built a beautiful product that no one was asking for.
+
+:::warning[Reality check]
+I should note that despite the way things turned out with this particular platform, I can't deny that this team's work had a huge influence on the way I've thought about platform engineering ever since.
+
+This is one of the rare occasions on which I've had the wherewithal to learn from others' failures instead of my usual approach of repeating all the same mistakes myself.
+:::
+
+## Kubernetes emerges from the chaos
+
+A [few years and a regime change later](/let-a-thousand-flowers-bloom), we had a whole lot of teams individually managing their own build/deployment tooling. This was, in no small part, a reaction to the bad experiences many of us had with the aforementioned platform team. It seemed obvious to me at the time that there was a lot of waste in having every team have to rediscover their own solution, but I also acknowledged that the alternative of a central platform team managing this for everyone hadn't worked so well last time.
+
+Meanwhile, management had blessed adoption of AWS. At the time, we had a vague and naive idea that AWS was a ready-to-use platform. and hadn't yet come to terms with its true character: an extremely powerful, but low-level set of primitives. The had a few offerings at the time that looked a little like a PaaS if you squinted, but we seriously underestimated the amount of boilerplate glue scripts we had to write to, for example, get a service built and deployed on ECS or Elastic Beanstalk. 
+
+One team in particular had been toying around with Kubernetes, and was having some success. While I'd used docker a bit, and had been following the orchestrator wars (mostly as a lurker on Hacker News), I didn't yet see what the big deal was. But smart people I respected were saying good things about it, including words I liked, like "rolling deployments", "autoscaling", and "self-healing". 
+
+I had just spent the previous 2 months trying to help another team, who had been struggling to execute a basic blue-green deployment with CloudFormation. Then I saw a demo in which a `kubectl apply` of a single `deployment.yaml` file executed a seamless rolling update of a service within a minute, and I was sold. 
+
+As I learned more about the abstractions Kubernetes was built around, my thoughts returned to the idea of creating a developer platform. It seemed possible that containers and the Kubernetes API might be the membrane we needed to give developers autonomy over all things they cared about, while enabling central management of the stuff they didn't. The [ingredients of the devops stew](./devops-is-a-stew) were finally all out on the counter.
+
+It took some convincing, but I managed to get some of the influential developers on board with the idea that we'd create a new platform team, and attempt to build a scaled-up, multi-tenant version of the Kubernetes solution they had pioneered. We started the team, and spend most of the first month learning how to build and operate a cluster with [kOps](https://github.com/kubernetes/kops) (EKS didn't exist yet). 
+
+We got a couple of the teams to try it out, and found that it was, indeed a Kubernetes cluster; it allowed us to define workloads and roll them out reliably. This was a huge improvement. But it didn't take long until the teams using it had accumulated a bunch of shell scripts and additional tooling to manage a few other things:
+
+* Authentication to Kubernetes, Artifactory, and other services
+* Running docker builds (passing in build args, ssh-agent sockets, managing cache volumes, etc)
+* Defining per-environment configurations
+* Syncing secrets between our secret store and Kubernetes
+* Managing load balancers, DNS, and certs
+* Orchestrating integration tests with a bunch of docker containers
+
+Once again, each individual team was re-solving the same problems, each with their own flavor of tradeoffs and bugs. Clearly we had a lot more opportunity to provide value here.
+
+Coincidentally, I was fighting a little burnout around this time, and ended up deciding that 13 years was long enough in one company. I never got to take this particular platform farther, but the shape of the problem space had become a lot more clear in my head.
+
+## Three developer platforms later, lessons learned
+
+Over the next 7 years, I've iterated on this idea three more times at two different companies, all built on Kubernetes. The results have been increasingly compelling with each iteration, and I've added a lot of key elements to the approach. The central idea has become:
+
+*The platform encapsulates the operational, cultural, and security opinions of the organization, gluing together the company's chosen infrastructure and tooling.*
+
+There's a lot of principles and patterns underneath this high-level idea, but there are a few, universal key dimensions along which you have to strike a balance:
+
+* Finding the right line between things that have to be standardized, and things where there's value in flexibility and autonomy for teams.
+* Adding enough power so that the platform can support all the use cases in your company, while also having a small number of simple, default paths that work for the vast majority of cases.
+* Creating the right extensibility points, allowing teams to solve their own problems without the platform team being a bottleneck, but still maintain enough coherence in the core aspects of the platform so it can evolve and improve over time.
+
+The right balance in these dimensions is highly dependent on the culture and values of your organization, but there's one thing I'm pretty sure is universal, which is how you find that balance: 
+
+**Treat your developer experience like a product.** 
+
+## Finding product-market fit
+
+I don't think this is any different than a startup would approach things:
+
+* Observe your developers, listen to them, learn about their pain
+* Formulate hypotheses about how you can alleviate that pain
+* Build a minimum viable product
+* Get it in front of developers
+* Listen, learn, and iterate
+* Pivot if what you're building doesn't resonate
+
+Don't fall in love with your own vision. When developers ask for a feature, don't dismiss them, even if you don't see where it fits on your roadmap. Regardless of the implementation details they may be stuck on, they're giving you critical information about their pain points. Don't squander that opportunity.
+
+If you're exceptionally visionary, you may have innovative, paradigm-shifting ideas about solutions that developers don't even know they need. That's great, but you should slow your roll. Use the scientific method: test and learn. Maybe you're as smart as Solomon Hykes, but the odds are against you. In reality, 99% of ideas you think are novel aren't actually new, they just got discarded because they didn't work in practice.
+
+For a internal developer platform, you don't have to be particularly innovative, and you certainly don't have to be original. In fact, it's usually a lot better to shamelessly steal ideas from successful platforms outside your company. Bias towards open-source tools, vendor or cloud-provider products. Rip off the CLI interface of a popular PaaS product your developers are already using for their side hustle.
+
+
+## Congratulations, you're a brand manager
+
+And like a startup, you're also the steward of your product's brand. You have to earn trust with your customers, show them that you're listening to their feedback, and that you're committed to making their lives better.
+
+Your brand is also relevant to stakeholders besides your direct customers, including leadership, security teams, product owners, etc. If they don't understand your value proposition, they'll a good chance they'll be asking uncomfortable questions at a moment when its least helpful.
+
+## Remember, you don't have the monopoly you think you do
+
+import MonopolistImage from './monopolist.jpeg';
+
+<figure className="blog-image">
+<img src={MonopolistImage} alt="Monopolist"/>
+<figcaption>You don't want to be this guy.</figcaption>
+</figure>
+
+In a few cases, especially with the latest developer platform I've worked on, I've had to fend of requests from leadership who'd like to accelerate adoption by cranking up pressure on teams to use our stuff. Certainly, there are benefits to the organization in standardizing (especially for security and cost management). But each time I push back. 
+
+For one thing, we haven't needed to do anything to drive demand; teams are migrating services whenever they can spare a sprint... because they like what we've built, and they know they have a say in the direction we take it. We're going to get to 100% adoption at some point soon, and we won't have ever forced anyone's hand.
+
+I think this principle is pretty universal for teams working on internal tooling. When you're tempted to use management to force people to use your product, step back and consider the big picture. You don't have the monopoly you think you do. Companies evolve and change; new executives and managers come into power, technologies evolve, and the business climate changes. 
+
+If you want to stay on top, you have to acknowledge that you're always competing for your customers' business. If they're happy with the platform, and trust you to keep improving it, they'll defend you against shifting tides. If they're not, they'll abandon ship as soon as another option presents itself.
+
