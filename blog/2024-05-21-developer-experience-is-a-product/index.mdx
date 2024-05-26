@@ -20,7 +20,7 @@ import SodaImage from './devx-soda.jpg';
 
 Over the past 15 years, I've been working on one form or another of internal developer platform. Even long before, when I was working at small startups, I inevitably ended up building (or curating) some little web framework, a build system, and slapping together scripts to package an deploy our stuff reliably. No one ever told me to do this, it was just obviously necessary.
 
-In these cases, I was building a product for myself and my immediate team members, so it was a pretty tight feedback loop with the customer. I'd put a little extra effort to make things nice for other developers on my team, and also out of a bit of pride in making something a bit more elegant than the alternatives.
+In these cases, I was building a product for myself and my immediate team members, so it was a pretty tight feedback loop with the customer. I'd put a little extra effort to make things nice for other developers on my team, and also out of a bit of pride in making something that felt elegant.
 
 {/* truncate */}
 
@@ -28,23 +28,19 @@ In these cases, I was building a product for myself and my immediate team member
 
 At the first larger company I worked for, I worked on improving the developer (and user) experience on top of a giant, pre-existing monolithic app, with a lot of custom-built tooling. One needed custom-tooling when dealing with a monolith of several million lines of code being concurrently modified by 200 developers, especially since there wasn't really any off-the-shelf tooling available that could handle this scale.
 
-Since there was already an established build and deployment system, I was mostly focused on improving the experience of web developers. At that time, the challenge was mostly around providing a sprawling army of mostly backend developers with a decent library of web UI components, while providing some semblance of brand consistency. 
+Since there was already an established build and deployment system, I was mostly focused on improving the experience of web developers. At that time, the challenge was mostly around providing a sprawling army of mostly backend developers with a decent library of web UI components, and achieving some semblance of brand consistency. 
 
 This whole thing required some culture change, and a lot of outreach. I had no power to enforce usage of our web framework, nor any power to force web designers to work within the constraints we'd defined together. To get the designers on board, we needed to build some trust, listen to their concerns, and help them see we were trying to help them realize their vision with greater fidelity. 
 
 For developers, it just required that our framework was easier and better at helping teams make their pages look like what the designers wanted. Ultimately, no one ever had to force anyone to use our framework, it just made things easier for everyone, so they did it. 
 
-The next time we had to do a brand refresh of the site, it only took a couple people a couple weeks- whereas the last rebrand had been a major project across the whole company that took months.
+The next time we had to do a brand refresh of the site, it only took a couple people a couple weeks, whereas the last rebrand had been a major project across the whole company that took months. This was a small win against the entropy which was slowly devouring our monolith.
 
 ## Microservice babies
 
 A few years later, it was becoming apparent that we had been gradually losing productivity in our monolith, and there were some factions interested in pursuing a [service-oriented architecture](https://en.wikipedia.org/wiki/Service-oriented_architecture). A new platform team started working on a set of tooling to enable teams to stand up independent services outside of the monolith. 
 
 In a marked contrast to the proprietary infrastructure we'd been using for the monolith, they were toying around with a bunch of different open source and vendor tools. After some prototyping and getting an initial MVP built, some teams started using their stuff. 
-
-:::warning[Fuzzy recollection]
-My recollection may not be 100% accurate, since it was a while ago, and I wasn't privy to all the goings-on. I have the impression the team gained the backing of leadership, who provided some degree of pressure on teams to adopt their tooling.
-:::
 
 Unfortunately, the fate of this particular platform was to fizzle. In retrospect, there was a lot going against it:
 
@@ -57,6 +53,12 @@ These were pretty strong headwinds, but there was another factor I can see in re
 *The platform team didn't spend enough time learning from their customers, or trying to understand the actual problems they were facing*.
 
 I remember several specific tales of teams working on building services outside our monolith using their tooling, running into some friction, and experiencing something other than empathy from the platform team. At least once I remember a VP getting involved to put pressure on a team that was expressing reservations and looking for alternative approaches.
+
+:::warning[Caution: Fuzzy recollection]
+My recollection may not be 100% accurate, since it was a while ago, and I wasn't privy to all the goings-on. I have the impression the team gained the backing of leadership, who provided some degree of pressure on teams to adopt their tooling.
+
+I'm not sure to what degree this pressure was applied in practice, but I do remember that the impression of the teams was that usage of the platform was expected of us.
+:::
 
 
 ## Building a great platform for the wrong customer
@@ -79,7 +81,7 @@ All of these options were particularly unappealing, partially because there was 
 
 Despite strong top-down pressure to use the tooling, teams openly rebelled, and began piecing together their own bespoke solutions. In the long run, management gave up the fight, because ultimately, they just cared that business problems were getting solved.
 
-In retrospect, I think that leadership's decision to push the tooling was its death knell. The platform team lost its incentive to win the trust of the developer teams, got caught up in their own vision, and built a beautiful product. It just didn't happen to be the product we needed.
+In retrospect, I think that leadership's decision to push the tooling was its death knell. The platform team lost its incentive to win the trust of the developer teams, and got caught up in their own vision. They built a beautiful product, it just didn't happen to be the product we needed.
 
 :::warning[Reality check]
 I should note that despite the way things turned out with this particular platform, I can't deny that this team's work had a huge influence on the way I've thought about platform engineering ever since.
