@@ -1,7 +1,7 @@
 ---
 slug: developer-experience-is-a-product
 title: Developer experience is a product
-tags: [devops, platform-engineering]
+tags: [devops, platform-engineering, storytime]
 image: ./devx-soda.jpg
 draft: true
 ---
@@ -46,7 +46,7 @@ In a marked contrast to the proprietary infrastructure we'd been using for the m
 My recollection may not be 100% accurate, since it was a while ago, and I wasn't privy to all the goings-on. I have the impression the team gained the backing of leadership, who provided some degree of pressure on teams to adopt their tooling.
 :::
 
-This endeavor ended up ultimately fizzling. In retrospect, there was a lot going against it:
+Unfortunately, the fate of this particular platform was to fizzle. In retrospect, there was a lot going against it:
 
 * We weren't yet using a public cloud (they were targeting on-prem infrastructure)
 * Kubernetes and containers were in their infancy
@@ -56,25 +56,30 @@ These were pretty strong headwinds, but there was another factor I can see in re
  
 *The platform team didn't spend enough time learning from their customers, or trying to understand the actual problems they were facing*.
 
-I remember several specific tales of teams working on building services outside our monolith using their tooling, running into some friction, and experiencing something other than empathy from the platform team. At least once I remember a VP getting involved to put pressure on a team that was expression reservations and looking for alternative approaches.
+I remember several specific tales of teams working on building services outside our monolith using their tooling, running into some friction, and experiencing something other than empathy from the platform team. At least once I remember a VP getting involved to put pressure on a team that was expressing reservations and looking for alternative approaches.
 
 
 ## Building a great platform for the wrong customer
 
-Let me explain: the toolkit was built as a set of Ruby gems, referenced via a root gem that composed them to enable some higher level operations. Each gem was responsible for interacting with some of the platform's parts, such as Artifactory, Jenkins, or whatever deployment tool we were using (I think at one point it was [Octopus Deploy](https://octopus.com/)?). The tool would scaffold out a rakefile, with predefined tasks (e.g. build, deploy) the user could execute with the `rake` CLI. The user could then customize their rakefile, combining these gems to implement all the custom processes their service needed, but a lot of the low-level details would be taken care of within the gems.
+What was wrong with the product? Let me explain: 
+
+The toolkit was built as a set of Ruby gems, referenced via a root gem that composed them to enable some higher level operations. Each gem was responsible for interacting with some of the platform's parts, such as Artifactory, Jenkins, or whatever deployment tool we were using (I think at one point it was [Octopus Deploy](https://octopus.com/)?). The tool would scaffold out a rakefile, with predefined tasks (e.g. build, deploy) the user could execute with the `rake` CLI. The user could then customize their rakefile, combining these gems to implement all the custom processes their service needed, but a lot of the low-level details would be taken care of within the gems.
 
 Here's where the problems started: the gems were fairly course-grained, strongly opinionated, and had pretty limited extensibility. They were also composed and packaged in a way that made it hard to replace any single gem with an alternative implementation. The options for a user that had an unsupported use case were pretty limited:
 
 * Get the tooling owners to implement the feature
 * Implement the feature and try to convince the owners to take the patch
-* Monkey-patch the gems (I think this is technically possible in Ruby)
 * Implement the feature from scratch outside of the pre-existing gems
+
+:::info[hindsight]
+I think that monkey patching may also have been an option. I don't think any of us had enough Ruby experience to know that was a thing.
+:::
 
 All of these options were particularly unappealing, partially because there was virtually no Ruby experience to be found among our developer population. But more importantly, after a number of teams' feature requests were met with apathy (and a bit of paternalistic "you're doing it wrong"), the "brand" of the tooling began to suffer.
 
 Despite strong top-down pressure to use the tooling, teams openly rebelled, and began piecing together their own bespoke solutions. In the long run, management gave up the fight, because ultimately, they just cared that business problems were getting solved.
 
-In retrospect, I think that leadership's decision to push the tooling was its death knell. The platform team lost its incentive to win the trust of the developer teams, got caught up in their own vision, and built a beautiful product that no one was asking for.
+In retrospect, I think that leadership's decision to push the tooling was its death knell. The platform team lost its incentive to win the trust of the developer teams, got caught up in their own vision, and built a beautiful product. It just didn't happen to be the product we needed.
 
 :::warning[Reality check]
 I should note that despite the way things turned out with this particular platform, I can't deny that this team's work had a huge influence on the way I've thought about platform engineering ever since.
@@ -94,7 +99,7 @@ I had just spent the previous 2 months trying to help another team, who had been
 
 As I learned more about the abstractions Kubernetes was built around, my thoughts returned to the idea of creating a developer platform. It seemed possible that containers and the Kubernetes API might be the membrane we needed to give developers autonomy over all things they cared about, while enabling central management of the stuff they didn't. The [ingredients of the devops stew](./devops-is-a-stew) were finally all out on the counter.
 
-It took some convincing, but I managed to get some of the influential developers on board with the idea that we'd create a new platform team, and attempt to build a scaled-up, multi-tenant version of the Kubernetes solution they had pioneered. We started the team, and spend most of the first month learning how to build and operate a cluster with [kOps](https://github.com/kubernetes/kops) (EKS didn't exist yet). 
+It took some convincing, but I managed to get some of the influential developers on board with the idea that we'd create a new platform team, and attempt to build a scaled-up, multi-tenant version of the Kubernetes solution they had pioneered. We started the team, and spend most of the first month learning how to build and operate a cluster with [kOps](https://github.com/kubernetes/kops) (EKS either didn't exist yet, or was too new to consider seriously). 
 
 We got a couple of the teams to try it out, and found that it was, indeed a Kubernetes cluster; it allowed us to define workloads and roll them out reliably. This was a huge improvement. But it didn't take long until the teams using it had accumulated a bunch of shell scripts and additional tooling to manage a few other things:
 
