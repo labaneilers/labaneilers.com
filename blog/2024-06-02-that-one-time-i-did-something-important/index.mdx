@@ -89,11 +89,13 @@ I spent a couple days feeling sorry for myself, and then resolve set in. I was h
 
 ## Kindling and a spark
 
-Around this time, a couple engineers had been working on Vistaprint's document rendering technologies, and had been working on a new set of server-side text rendering services that we could use for simpler products that didn't require Studio. I saw a demo that they'd built, and found myself unable to stop thinking about it for several days. One evening, while trying to get to sleep, I had a crazy idea.
+Around this time, a couple engineers had been working on a new set of server-side text rendering services that we could use for simpler products that didn't require Studio (this was especially appealing at the time, because the conversion rate in Studio was so terrible). I saw a demo that they'd built, and found myself unable to stop thinking about it for several days. One evening, while trying to get to sleep, I had a crazy idea.
 
-What if we could build a brand-new Studio from scratch, where the document's elements would be composed of a set of server-rendered images? The client-side code would just be an interface for moving, resizing, end opening an editor for these elements, which from the perspective of the client, would just be rectangles with a set of properties. These elements would be the same types of elements users could edit in the legacy studio (e.g. text boxes, images, vector shapes, etc), but we'd build server-side rendering services for each one, which would output transparent PNG images.
+What if we could build a brand-new Studio from scratch, where the document's elements would be composed of a set of server-rendered images? The client-side code would just be an interface for moving, resizing, end opening an editor for these elements, which from the perspective of the client, would just be rectangles with a set of properties. These elements would be the same types of elements users could edit in the legacy studio (e.g. text boxes, images, vector shapes, etc), but we'd build server-side rendering services for each one, which would output transparent PNG images so they could be composited together on the client.
 
-The user could then just double click on any of the rectangles to open an element-specific editor. So for text boxes, this would open a simple text-box editor, which would allow the user to type, and then we'd debounce the keypress events to trigger a refresh of the server-rendered text. This way, the documents we produced client-side could be faithfully rendered server-side using the same text-layout engine.
+The user could then just double click on any of the rectangles to open an element-specific editor. So for text boxes, this would open a simple text-box editor, which would allow the user to type, and then we'd debounce the keypress events to trigger a refresh of the server-rendered text. 
+
+This way, the documents we produced client-side could be faithfully rendered server-side using the same text-layout engine, and we could remove a huge amount of complexity on the client.
 
 ## The pitch
 
@@ -102,7 +104,7 @@ The next day, I spent some time with the engineers who had done the text renderi
 I explained the idea to her over the next half hour, and left with permission to suspend feature development on Studio, and to work with one of the rendering guys for a few weeks to build a prototype.
 
 :::info[Why not Flash?]
-In the weeks that followed, I had to address a lot of questions from folks about why I had decided to use pure HTML/Javascript instead of Flash. It wasn't obvious at the time the Flash's days were numbered.
+In the weeks that followed, I had to address a lot of questions from folks about why I'd decided to use pure HTML/Javascript instead of Flash. It wasn't obvious at the time the Flash's days were numbered.
 
 The real reason was, similar to with the IE text rendering engine, that we didn't want to build another server-side renderer that was dependent on Flash's proprietary text engine. It also wasn't clear that it was possible to use Flash server-side, or that Adobe wouldn't do something at any point to break our whole system.
 :::
@@ -113,7 +115,8 @@ Within a week, the two of us had a working version of Studio that could create a
 
 * It loaded in just a couple seconds
 * It worked in IE, but also Firefox and Opera. It also worked on a Mac.
-* The feel of the text editing, which we were most worried would be weird, was totally fine.
+* It was smooth, snappy and responsive
+* The feel of the pop-up text editor, which we were afraid might be weird, was totally fine.
 
 As soon as she saw the prototype, Wendy gave us the green light to go all in. I spent the next few months turning the prototype into a real replacement for the legacy Studio, adding support for each of the element types needed to support our most important products, including business cards and postcards. My colleagues on the rendering side worked on building a new version of the program that would transform Studio documents into press-ready PDFs, using the new server-side text rendering engine (and NOT using IE).
 
@@ -126,13 +129,13 @@ import StudioImage from './studio.png';
 
 We launched via an A/B test shortly thereafter. Most A/B tests run for changes to Studio for the last few years had either negative or statistically insignificant results, and despite how much better our new version felt, we thought the odds of hitting a home run on the first pitch were pretty low. We would have been happy with breaking even- at which point we would have been able to take advantage of the more maintainable codebase, and focus on optimizing.
 
-When the first A/B test came back, we were floored. Conversion rate was up by about 5 *points*. Out of the gate, this hack was immediately worth tens of millions of dollars a year for Vistaprint. And we had done *zero* optimization.
+When the first A/B test came back, we were floored. Conversion rate was up by about 5 *points*. Out of the gate, this hack was immediately worth tens of millions of dollars a year for Vistaprint, just for one product! And we had done *zero* optimization.
 
 ## The results
 
 Over the next year, the effects of this success rippled throughout the company. A large number of engineers were redirected to execute changes throughout the system needed to replace the old IE-based document rendering with the new server-side rendering engine. A team was built around me to keep developing the new Studio, and we gradually added the features needed to support an increasing share of Vistaprint's product portfolio. 
 
-All this time, Vistaprint was growing like crazy. Each time we would move a product over to the new Studio, we'd see a huge jump in conversion rate. New core capabilities were being built on top the new Studio architecture, and enabled a ton of new design content, products, and features. Manufacturing could now be optimized much more efficiently given that we now had a reliable way to render documents that were faithful to the users' intentions.
+All this time, Vistaprint was growing like crazy. Each time we'd move a product over to the new Studio, we'd see a huge jump in conversion rate. New core capabilities were being built on top the new Studio architecture, and a ton of new design content, products, and features were enabled. The process of rendering documents for manufacturing was far more efficient now that we had a reliable way to render documents that were faithful to the users' intentions, and we no longer needed a small army of humans to fix broken documents.
 
 Every year we were growing revenue by hundreds of millions of dollars. It was an incredible ride.
 
