@@ -5,19 +5,27 @@ tags: [leadership, storytime]
 draft: true
 ---
 
-One of the truisms we hear in software engineering leadership is that managers have a much bigger potential for impact on a business than an individual contributor. This is certainly a credible argument, given that a great manager can have a huge impact on a team. They're responsible for recruiting the right people, steering the culture, and making the biggest decisions about what risks to take, what opportunities to pursue, etc. Ultimately, they're accountable for what the team delivers.
+:::tip[TL;DR]
+This is the story of the most impactful accomplishment of my career (building Vistaprint's Studio), which happened to be as an individual contributor.
+
+For those of us who've actively chosen to be ICs, and have resisted the pressure to join management, it's important to remember that innovation is driven by *individuals*.
+:::
+
+A commonly accepted notion in software engineering leadership is that managers have a much bigger potential for impact on a business than an individual contributor. This is certainly a credible argument, given that a great manager can have a huge impact through building a great team. They're responsible for recruiting the right people, steering the culture, and making the biggest decisions about what risks to take, what opportunities to pursue, etc. Ultimately, they're accountable for what the team delivers.
+
+{/* truncate */}
 
 And of course, a big team can deliver bigger outcomes, with bigger impact, than any individual contributor could on their own. Given this leverage, its no wonder that it's very rare for companies to have pay scales for individual contributors that match that of managers, especially into senior management. For those of us who find happiness and fulfillment in working directly with technology, our decision to avoid management can come with a significant economic penalty.
 
-## The penalty for following your heart
+## The penalty for optimizing your career for joy
 
-I made the explicit decision a few years ago that I would leave management in order to get back to the things that originally drew me to this industry. While I still think of what I do as leadership, I've come to terms with the fact that for the remainder of my career, I'm going to watch my former peers surpass me in titles, power, and especially in compensation. 
+I made an explicit decision a few years ago that I would leave management in order to get back to the things that originally drew me to technology. While I still think of what I do as leadership, I've come to terms with the fact that for the remainder of my career, I'm going to watch my former peers surpass me in titles, power, and especially in compensation. 
 
 At the beginning, this was a little hard on my ego, but over the past few years, I've come to a place of contentment. The amount I look forward to any given day of work is directly proportionate to the amount of uninterrupted time I have to work on engineering problems. I've decided my goal should be optimizing my career for happiness, so this tradeoff works for me.
 
-But I want to push back a little on the idea that management is categorically more impactful than individual contribution. The concept is a bit of a tautology, because managers take credit for the innovation and impact of the individual contributors they hire. And because of the nature of software, a single person with the right idea, at the right time, can manifest that idea into the world without a ton of infrastructure or support.
+But I want to push back a little on the idea that management is categorically more impactful than individual contribution. The concept is a bit of a tautology, because managers take credit for the innovation and impact of the individual contributors they hire. And because of the nature of software, a single person with the right idea, at the right time, can manifest that idea into the world to great effect- sometimes without any organization supporting them at all.
 
-I'd like to tell you the story of the most impactful thing I've ever done, which was as an individual contributor. Even though though this was 18 years ago, I honestly don't know if I'll have another chance to do something with quite such a big effect.
+I'd like to tell you the story of the most impactful thing I've ever done, which was as an individual contributor. Even though though this was 18 years ago, I honestly don't know if I'll have another chance to do something quite like it.
 
 ## Do you remember Web 2.0?
 
@@ -28,7 +36,7 @@ Let me just set the stage, and remind my readers what the web was like in 2006: 
 There was nothing like modern web frameworks like React or Vue. Even frameworks now considered legacy, such as jQuery, YUI, and MooTools, wouldn't have their first releases until later that year. The leading JavaScript frameworks at the time were Prototype and Dojo. Flash was still considered *the* technology for interactive web applications.
 
 :::info[Comparison]
-There are now lots of apps that allow users to do really sophisticated design in the browser (e.g. Canva, Figma). We didn't have any of the browser technologies back then that make this possible today: the `canvas` tag, WebAssembly, WebGL, or even half-decent JavaScript engines.
+There are now lots of apps that allow users to do really sophisticated design in the browser (e.g. Canva, Figma). We didn't have any of the browser technologies back then that make this possible today: the `canvas` tag, SVG, WebAssembly, WebGL, or even half-decent JavaScript engines.
 
 We were building web apps with mud, sticks, and gumption.
 :::
@@ -43,7 +51,7 @@ Vistaprint's first Studio had been built back around 2001, by a [brilliant hacke
 
 The most important of these hacks was to use multiply-nested `iframe`s (and a makeshift protocol that looked a little like JSONP) to communicate with the server without requiring a navigation on the main page. This allowed him to effectively simulate AJAX requests before browsers even had the capability.
 
-What's even crazier about this is that the client-side code for Studio was used in an insane (but also brilliant) hack, where they loaded instances of IE *server-side* in order to measure text bounding boxes, so that they could render documents for manufacturing. It turns out text rendering engines are really freaking complex, and given the fact that we relied on IE for text layout on the client, the most reliable way to ensure that customers' printed products were faithful to their browser renderings was to use the browser to render them.
+What's even crazier about this is that the client-side code for Studio was used in an insane (but also brilliant) hack, where they **loaded instances of IE *server-side*** in order to measure text bounding boxes, so that they could render documents for manufacturing. It turns out text rendering engines are really freaking complex, and given the fact that we relied on IE for text layout on the client, the most reliable way to ensure that customers' printed products were faithful to their browser renderings was to use the browser to render them on the server.
 
 :::tip[Hat tip]
 Despite all this hackery, I'm never going to criticize the folks that built what became a multi-billion dollar company. You do what you have to do to get a business off the ground, and Vistaprint's early team did incredibly creative and audacious stuff. 
@@ -103,6 +111,13 @@ Within a week, the two of us had a working version of Studio that could create a
 
 As soon as she saw the prototype, Wendy gave us the green light to go all in. I spent the next few months turning the prototype into a real replacement for the legacy Studio, adding support for each of the element types needed to support our most important products, including business cards and postcards. My colleagues on the rendering side worked on building a new version of the program that would transform Studio documents into press-ready PDFs, using the new server-side text rendering engine (and NOT using IE).
 
+import StudioImage from './studio.png';
+
+<figure>
+<img src={StudioImage} alt="Vistaprint's Studio, today"/>
+<figcaption>Vistaprint's Studio, today. The code has been rewritten, but it still uses the same architecture I helped create in 2006.</figcaption>
+</figure>
+
 We launched via an A/B test shortly thereafter. Most A/B tests run for changes to Studio for the last few years had either negative or statistically insignificant results, and despite how much better our new version felt, we thought the odds of hitting a home run on the first pitch were pretty low. We would have been happy with breaking even- at which point we would have been able to take advantage of the more maintainable codebase, and focus on optimizing.
 
 When the first A/B test came back, we were floored. Conversion rate was up by about 5 *points*. Out of the gate, this hack was immediately worth tens of millions of dollars a year for Vistaprint. And we had done *zero* optimization.
@@ -123,19 +138,16 @@ Also: even though I had come up with the core idea for the new Studio, it was ba
 
 What's more, none of the engineering work I did was groundbreaking or mindblowing. I just synthesized some disparate ideas, from both inside and outside Vistaprint, and glued it all together with some (fairly decent) JavaScript and C#. I was just the right person, at the right place, at the right moment, with the right idea.
 
-Humility aside, I still occasionally catch myself thinking back to this achievement. It's hard to imagine how Vistaprint could had any semblance of the success they did if they had tried to continue with the original Studio architecture. 
+Even so, I still occasionally catch myself dwelling pridefully on this achievement. It's hard to imagine an alternate universe where I never joined Vistaprint, where they tried to incrementally improve the old Studio architecture. I don't see how they could have had the success that they did in *this* universe; the difference might be measured in billions of dollars at this point.
 
-I don't know how likely it will be that I'll play such a pivotal role in building a multi-billion dollar company in the future.
-
-:::tip
-In this case, I feel a great deal of gratitude to Wendy for having taken a risk in empowering me. It was a truly formative experience, and I feel lucky that the work I did had such a lasting effect on a great company.
-:::
-
-Bullets for what Wendy did to set the culture
+I don't know how likely it is that I'll play such a pivotal role in building a multi-billion dollar company in the future.
 
 ## Innovation comes from individuals
 
-Coming back to my original thesis, I think it's important to remember that innovation is almost always the product of *individuals*, not organizations. Managers who want to promote innovation have to work indirectly, through building a culture of empowerment and risk-taking, and fostering individuals with vision.
+Remembering this episode in my career has been useful to remind myself that impact, especially via innovation, is ultimately driven by individual contributors. This is really important to remember for those of us who've chosen to optimize our careers around the joy of being a technologist, especially when the social and financial pressures to advance our careers through management are so potent.
 
+My contrarian thesis aside, I have to acknowledge the complex interrelationship between ICs and managers when it comes to innovation. Technology leaders play their part to drive innovation by actively building a culture of empowerment and risk-taking, and being willing to make big bets on individuals with vision.
 
+Perhaps it was only implied in my story, but this is exactly what Wendy had done for Vistaprint, long before I had arrived. She built an amazing team, and fostered a culture where engineers felt supported, trusted, and safe enough to invest their time where they thought opportunities existed.
 
+I feel a great deal of gratitude to Wendy for having taken a risk in empowering me. It was a truly formative experience, and I still cant believe how lucky I was that the work I did had such a lasting effect on a great company.
