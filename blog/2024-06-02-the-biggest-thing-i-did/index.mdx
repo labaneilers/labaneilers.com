@@ -1,0 +1,141 @@
+---
+slug: that-one-time-i-did-something-important
+title: That one time I did something important
+tags: [leadership, storytime]
+draft: true
+---
+
+One of the truisms we hear in software engineering leadership is that managers have a much bigger potential for impact on a business than an individual contributor. This is certainly a credible argument, given that a great manager can have a huge impact on a team. They're responsible for recruiting the right people, steering the culture, and making the biggest decisions about what risks to take, what opportunities to pursue, etc. Ultimately, they're accountable for what the team delivers.
+
+And of course, a big team can deliver bigger outcomes, with bigger impact, than any individual contributor could on their own. Given this leverage, its no wonder that it's very rare for companies to have pay scales for individual contributors that match that of managers, especially into senior management. For those of us who find happiness and fulfillment in working directly with technology, our decision to avoid management can come with a significant economic penalty.
+
+## The penalty for following your heart
+
+I made the explicit decision a few years ago that I would leave management in order to get back to the things that originally drew me to this industry. While I still think of what I do as leadership, I've come to terms with the fact that for the remainder of my career, I'm going to watch my former peers surpass me in titles, power, and especially in compensation. 
+
+At the beginning, this was a little hard on my ego, but over the past few years, I've come to a place of contentment. The amount I look forward to any given day of work is directly proportionate to the amount of uninterrupted time I have to work on engineering problems. I've decided my goal should be optimizing my career for happiness, so this tradeoff works for me.
+
+But I want to push back a little on the idea that management is categorically more impactful than individual contribution. The concept is a bit of a tautology, because managers take credit for the innovation and impact of the individual contributors they hire. And because of the nature of software, a single person with the right idea, at the right time, can manifest that idea into the world without a ton of infrastructure or support.
+
+I'd like to tell you the story of the most impactful thing I've ever done, which was as an individual contributor. Even though though this was 18 years ago, I honestly don't know if I'll have another chance to do something with quite such a big effect.
+
+## Do you remember Web 2.0?
+
+Back in 2006, I joined Vistaprint to work on the team that owned its "Studio" application. Studio is Vistaprint's "PhotoShop in the browser", where customers can customize and edit designs that will then be used on custom printed products (most famously business cards, but they also have hundreds of other products). This was a client-side web app, written in JavaScript/CSS, with a backend built (at the time I joined) in VB.NET.
+
+Let me just set the stage, and remind my readers what the web was like in 2006: Microsoft absolutely dominated the browser space since winning the so-called "browser wars" back in the late nineties. Chrome didn't exist. Firefox had been around for 4 years, but it held a fraction of the market share of IE (version 7 at the time), and had virtually no appreciable advantages in user experience over IE. JavaScript was widely regarded as a toy language, and both IE and Firefox had done virtually no innovation in their browsers' JavaScript engines, which were painfully slow. Honestly, none of us ever imagined JavaScript *could* be faster.
+
+There was nothing like modern web frameworks like React or Vue. Even frameworks now considered legacy, such as jQuery, YUI, and MooTools, wouldn't have their first releases until later that year. The leading JavaScript frameworks at the time were Prototype and Dojo. Flash was still considered *the* technology for interactive web applications.
+
+:::info[Comparison]
+There are now lots of apps that allow users to do really sophisticated design in the browser (e.g. Canva, Figma). We didn't have any of the browser technologies back then that make this possible today: the `canvas` tag, WebAssembly, WebGL, or even half-decent JavaScript engines.
+
+We were building web apps with mud, sticks, and gumption.
+:::
+
+One thing that had happened the year before, however, was the initial release of Google Maps. While scrappy browser hackers had done some really cool and innovative stuff before, the effect of the launch of Maps was like a bomb going off in the web development world. It felt legitimately groundbreaking, and it was obvious at the time that this app was going to change the world.
+
+I'm just putting that picture in your mind so you'll have a sense of what we even thought was possible at the time.
+
+## The origin of Vistaprint's studio
+
+Vistaprint's first Studio had been built back around 2001, by a [brilliant hacker](https://www.linkedin.com/in/businessintel/) who embodied the type of contrarian scrappiness that was required to do anything on the web at the time. Despite the primitive browsers of the era, he was able to use a number of techniques, moderately well-known at the time (but not widely used), to do the kinds of things that web developers would later do with AJAX. 
+
+The most important of these hacks was to use multiply-nested `iframe`s (and a makeshift protocol that looked a little like JSONP) to communicate with the server without requiring a navigation on the main page. This allowed him to effectively simulate AJAX requests before browsers even had the capability.
+
+What's even crazier about this is that the client-side code for Studio was used in an insane (but also brilliant) hack, where they loaded instances of IE *server-side* in order to measure text bounding boxes, so that they could render documents for manufacturing. It turns out text rendering engines are really freaking complex, and given the fact that we relied on IE for text layout on the client, the most reliable way to ensure that customers' printed products were faithful to their browser renderings was to use the browser to render them.
+
+:::tip[Hat tip]
+Despite all this hackery, I'm never going to criticize the folks that built what became a multi-billion dollar company. You do what you have to do to get a business off the ground, and Vistaprint's early team did incredibly creative and audacious stuff. 
+:::
+
+## Studio in 2006
+
+By the time I arrived in 2006, Vistaprint had built a very successful business on Studio, and had recently had their IPO, after delivering revenues of about $90MM in 2005. Studio was considered one of their major strategic "pillars", along with their novel manufacturing capabilities.
+
+I spent the first couple months working on Studio, trying to get my bearings, and wrap my head around what had become a pretty nasty mess of spaghetti over the past few years. Around that time, the team lead had decided to move away to follow his girlfriend out-of-state, and I was left in charge of an app I barely understood. It wasn't just me, though- my colleagues admitted that none of them had any confidence they could make any significant changes to the application without breaking things.
+
+This is, as a matter of fact, exactly what happened... repeatedly. Vistaprint was growing its product portfolio, as well as trying to iterate to improve usability, and there had been a series of disastrous attempts to add new features to Studio to support this, each followed by an emergency rollback.
+
+Beyond the maintainability challenges, you have to understand what the user experience for Studio was actually like. Because of all the complexity required to make the multiple-iframe communication mechanism work, along with years of features being layered on top, the user interface took a *minimum* of 60 seconds to load, even on a fast internet connection. About 20% of the time, something would fail (usually due to race conditions) and require a reload.
+
+The app was deliberately styled to look like a Windows 95 desktop app, with CSS that had been carefully crafted to match the beveled edges, corporate grays, button styles, and fonts. 
+
+Studio only worked in IE. If you were unlucky enough to be using Firefox, Opera, or Konqueror, or you were on a Mac, you'd get redirected to a very limited, server-side, form-based page where you couldn't do any customization to your document other than edit the text.
+
+The user interface was rife with bugs. We didn't have any real observability, but anecdotally, users would experience a blocking bug in at least 15% of sessions.
+
+What's more, it was becoming less and less reliable to depend on IE do to server-side rendering, since over time, IE's text engine became more and more influenced by settings on Windows, graphics drivers, etc. We had a certain amount of documents that just got printed completely wrong, and had to be manually modified, by humans in our manufacturing plants.
+
+## Hitting rock bottom
+
+It wasn't long before I caused my first major production incident by attempting a bug fix in Studio, despite having been through what felt like a very meticulous QA cycle. After the rollback, we calculated the losses from the incident at about $20K, and I felt pretty deflated. My boss helped to put things in perspective, noting that these kind of losses were common in Studio, and my predecessor had caused many such incidents.
+
+I spent a couple days feeling sorry for myself, and then resolve set in. I was having none of this. This was not OK.
+
+## Kindling and a spark
+
+Around this time, a couple engineers had been working on Vistaprint's document rendering technologies, and had been working on a new set of server-side text rendering services that we could use for simpler products that didn't require Studio. I saw a demo that they'd built, and found myself unable to stop thinking about it for several days. One evening, while trying to get to sleep, I had a crazy idea.
+
+What if we could build a brand-new Studio from scratch, where the document's elements would be composed of a set of server-rendered images? The client-side code would just be an interface for moving, resizing, end opening an editor for these elements, which from the perspective of the client, would just be rectangles with a set of properties. These elements would be the same types of elements users could edit in the legacy studio (e.g. text boxes, images, vector shapes, etc), but we'd build server-side rendering services for each one, which would output transparent PNG images.
+
+The user could then just double click on any of the rectangles to open an element-specific editor. So for text boxes, this would open a simple text-box editor, which would allow the user to type, and then we'd debounce the keypress events to trigger a refresh of the server-rendered text. This way, the documents we produced client-side could be faithfully rendered server-side using the same text-layout engine.
+
+## The pitch
+
+The next day, I spent some time with the engineers who had done the text rendering work, and we started working through the details of the idea. Once we felt like we had something viable, we brought my boss, [Satish](https://www.linkedin.com/in/satishpai/), into the conversation. Having a shared experience of pain with Studio, he immediately arranged a meeting with [Wendy](https://www.linkedin.com/in/wendy-cebula-166a311/), Vistaprint's head of "Capabilities Development" (I don't remember the exact org chart at the time, but she was effectively the CTO).
+
+I explained the idea to her over the next half hour, and left with permission to suspend feature development on Studio, and to work with one of the rendering guys for a few weeks to build a prototype.
+
+:::info[Why not Flash?]
+In the weeks that followed, I had to address a lot of questions from folks about why I had decided to use pure HTML/Javascript instead of Flash. It wasn't obvious at the time the Flash's days were numbered.
+
+The real reason was, similar to with the IE text rendering engine, that we didn't want to build another server-side renderer that was dependent on Flash's proprietary text engine. It also wasn't clear that it was possible to use Flash server-side, or that Adobe wouldn't do something at any point to break our whole system.
+:::
+
+## Building the new Studio
+
+Within a week, the two of us had a working version of Studio that could create a new document, and had some basic editing features, including text editing and drag/drop positioning for all document elements. The results were fairly stunning in contrast to the legacy studio: 
+
+* It loaded in just a couple seconds
+* It worked in IE, but also Firefox and Opera. It also worked on a Mac.
+* The feel of the text editing, which we were most worried would be weird, was totally fine.
+
+As soon as she saw the prototype, Wendy gave us the green light to go all in. I spent the next few months turning the prototype into a real replacement for the legacy Studio, adding support for each of the element types needed to support our most important products, including business cards and postcards. My colleagues on the rendering side worked on building a new version of the program that would transform Studio documents into press-ready PDFs, using the new server-side text rendering engine (and NOT using IE).
+
+We launched via an A/B test shortly thereafter. Most A/B tests run for changes to Studio for the last few years had either negative or statistically insignificant results, and despite how much better our new version felt, we thought the odds of hitting a home run on the first pitch were pretty low. We would have been happy with breaking even- at which point we would have been able to take advantage of the more maintainable codebase, and focus on optimizing.
+
+When the first A/B test came back, we were floored. Conversion rate was up by about 5 *points*. Out of the gate, this hack was immediately worth tens of millions of dollars a year for Vistaprint. And we had done *zero* optimization.
+
+## The results
+
+Over the next year, the effects of this success rippled throughout the company. A large number of engineers were redirected to execute changes throughout the system needed to replace the old IE-based document rendering with the new server-side rendering engine. A team was built around me to keep developing the new Studio, and we gradually added the features needed to support an increasing share of Vistaprint's product portfolio. 
+
+All this time, Vistaprint was growing like crazy. Each time we would move a product over to the new Studio, we'd see a huge jump in conversion rate. New core capabilities were being built on top the new Studio architecture, and enabled a ton of new design content, products, and features. Manufacturing could now be optimized much more efficiently given that we now had a reliable way to render documents that were faithful to the users' intentions.
+
+Every year we were growing revenue by hundreds of millions of dollars. It was an incredible ride.
+
+## Reflecting on this success 
+
+I want to be clear that Vistaprint's success was due to *many* critical innovations and an enormous amount of work by many, many people, in areas like manufacturing, content design tooling, marketing, ecommerce, etc. 
+
+Also: even though I had come up with the core idea for the new Studio, it was based on many of the ideas from the old Studio, which itself had required a lot of independent innovations. Beyond that, there's no way I could have come up with this idea, or had any hope of making it work, without the insight and skill of my teammates who had figured out the server-side rendering. 
+
+What's more, none of the engineering work I did was groundbreaking or mindblowing. I just synthesized some disparate ideas, from both inside and outside Vistaprint, and glued it all together with some (fairly decent) JavaScript and C#. I was just the right person, at the right place, at the right moment, with the right idea.
+
+Humility aside, I still occasionally catch myself thinking back to this achievement. It's hard to imagine how Vistaprint could had any semblance of the success they did if they had tried to continue with the original Studio architecture. 
+
+I don't know how likely it will be that I'll play such a pivotal role in building a multi-billion dollar company in the future.
+
+:::tip
+In this case, I feel a great deal of gratitude to Wendy for having taken a risk in empowering me. It was a truly formative experience, and I feel lucky that the work I did had such a lasting effect on a great company.
+:::
+
+Bullets for what Wendy did to set the culture
+
+## Innovation comes from individuals
+
+Coming back to my original thesis, I think it's important to remember that innovation is almost always the product of *individuals*, not organizations. Managers who want to promote innovation have to work indirectly, through building a culture of empowerment and risk-taking, and fostering individuals with vision.
+
+
+
