@@ -21,7 +21,7 @@ A commonly accepted notion in software engineering leadership is that managers h
 
 {/* truncate */}
 
-And of course, a big team can deliver bigger outcomes, with bigger impact, than any individual contributor could on their own. Given this leverage, its no wonder that it's very rare for companies to have pay scales for individual contributors that match that of managers, especially into senior management. For those of us who find happiness and fulfillment in working directly with technology, our decision to avoid management can come with a significant economic penalty.
+And of course, a big team can deliver bigger outcomes, with bigger impact, than any individual contributor could on their own. Given this leverage, its no wonder that it's very rare for companies to have pay scales for individual contributors that match that of managers, especially in senior management. For those of us who find happiness and fulfillment in working directly with technology, our decision to avoid management can come with a significant economic penalty.
 
 ## The penalty for optimizing your career for joy
 
@@ -29,20 +29,20 @@ I made an explicit decision a few years ago that I would leave management in ord
 
 At the beginning, this was a little hard on my ego, but over the past few years, I've come to a place of contentment. The amount I look forward to any given day of work is directly proportionate to the amount of uninterrupted time I have to work on engineering problems. I've decided my goal should be optimizing my career for happiness, so this tradeoff works for me.
 
-But I want to push back a little on the idea that management is categorically more impactful than individual contribution. The concept is a bit of a tautology, because managers take credit for the innovation and impact of the individual contributors they hire. And because of the nature of software, a single person with the right idea, at the right time, can manifest that idea into the world to great effect- sometimes without any organization supporting them at all.
+But I want to push back a little on the idea that management is categorically more impactful than individual contribution. The concept is a bit of a tautology; managers take credit for the innovation and impact of the individual contributors they hire. And because of the nature of software, a single person with the right idea, at the right time, can manifest that idea into the world to great effect- sometimes without any organization supporting them at all.
 
-I'd like to tell you the story of the most impactful thing I've ever done, which was as an individual contributor. Even though though this was 18 years ago, I honestly don't know if I'll have another chance to do something quite like it.
+I'd like to tell you the story of the most impactful thing I've ever done, which was as an individual contributor. Even though this was 18 years ago, I honestly don't know if I'll have another chance to do something quite like it.
 
 ## Do you remember Web 2.0?
 
-Back in 2006, I joined Vistaprint to work on the team that owned its "Studio" application. Studio is Vistaprint's "PhotoShop in the browser", where customers can customize and edit designs that will then be used on custom printed products (most famously business cards, but they also have hundreds of other products). This was a client-side web app, written in JavaScript/CSS, with a backend built (at the time I joined) in VB.NET.
+Back in 2006, I joined Vistaprint to work on the team that owned its "Studio" application. Studio is Vistaprint's "PhotoShop in the browser", where customers can customize and edit designs that will then be used on custom-printed products (most famously business cards, but they also have hundreds of other products). This was a client-side web app, written in JavaScript/CSS, with a backend built (at the time I joined) in VB.NET.
 
 Let me just set the stage, and remind my readers what the web was like in 2006: Microsoft absolutely dominated the browser space since winning the so-called "browser wars" back in the late nineties. Chrome didn't exist. Firefox had been around for 4 years, but it held a fraction of the market share of IE (version 7 at the time), and had virtually no appreciable advantages in user experience over IE. JavaScript was widely regarded as a toy language, and both IE and Firefox had done virtually no innovation in their browsers' JavaScript engines, which were painfully slow. Honestly, none of us ever imagined JavaScript *could* be faster.
 
 There was nothing like modern web frameworks like React or Vue. Even frameworks now considered legacy, such as jQuery, YUI, and MooTools, wouldn't have their first releases until later that year. The leading JavaScript frameworks at the time were Prototype and Dojo. Flash was still considered *the* technology for interactive web applications.
 
 :::info[Comparison]
-There are now lots of apps that allow users to do really sophisticated design in the browser (e.g. Canva, Figma). We didn't have any of the browser technologies back then that make this possible today: the `canvas` tag, SVG, WebAssembly, WebGL, or even half-decent JavaScript engines.
+There are now lots of apps that allow users to do sophisticated design in the browser (e.g. Canva, Figma). We didn't have any of the browser technologies back then that make this possible today: the `canvas` tag, SVG, WebAssembly, WebGL, or even half-decent JavaScript engines.
 
 We were building web apps with mud, sticks, and gumption.
 :::
@@ -67,7 +67,7 @@ Despite all this hackery, I'm never going to criticize the folks that built what
 
 By the time I arrived in 2006, Vistaprint had built a very successful business on Studio, and had recently had their IPO, after delivering revenues of about $90MM in 2005. Studio was considered one of their major strategic "pillars", along with their novel manufacturing capabilities.
 
-I spent the first couple months working on Studio, trying to get my bearings, and wrap my head around what had become a pretty nasty mess of spaghetti over the past few years. Around that time, the team lead had decided to move away to follow his girlfriend out-of-state, and I was left in charge of an app I barely understood. It wasn't just me, though- my colleagues admitted that none of them had any confidence they could make any significant changes to the application without breaking things.
+I spent the first couple of months working on Studio, trying to get my bearings, and wrap my head around what had become a pretty nasty mess of spaghetti over the past few years. Around that time, the team lead had decided to move away to follow his girlfriend out of state, and I was left in charge of an app I barely understood. It wasn't just me, though- my colleagues admitted that none of them had any confidence they could make any significant changes to the application without breaking things.
 
 This is, as a matter of fact, exactly what happened... repeatedly. Vistaprint was growing its product portfolio, as well as trying to iterate to improve usability, and there had been a series of disastrous attempts to add new features to Studio to support this, each followed by an emergency rollback.
 
@@ -79,7 +79,7 @@ Studio only worked in IE. If you were unlucky enough to be using Firefox, Opera,
 
 The user interface was rife with bugs. We didn't have any real observability, but anecdotally, users would experience a blocking bug in at least 15% of sessions.
 
-What's more, it was becoming less and less reliable to depend on IE do to server-side rendering, since over time, IE's text engine became more and more influenced by settings on Windows, graphics drivers, etc. We had a certain amount of documents that just got printed completely wrong, and had to be manually modified, by humans in our manufacturing plants.
+What's more, it was becoming less and less reliable to depend on IE to do server-side rendering, since over time, IE's text engine became more and more influenced by settings on Windows, graphics drivers, etc. We had a certain amount of documents that just got printed completely wrong, and had to be manually modified, by humans in our manufacturing plants.
 
 ## Hitting rock bottom
 
@@ -91,7 +91,7 @@ I spent a couple days feeling sorry for myself, and then resolve set in. I was h
 
 Around this time, a couple engineers had been working on a new set of server-side text rendering services that we could use for simpler products that didn't require Studio (this was especially appealing at the time, because the conversion rate in Studio was so terrible). I saw a demo that they'd built, and found myself unable to stop thinking about it for several days. One evening, while trying to get to sleep, I had a crazy idea.
 
-What if we could build a brand-new Studio from scratch, where the document's elements would be composed of a set of server-rendered images? The client-side code would just be an interface for moving, resizing, end opening an editor for these elements, which from the perspective of the client, would just be rectangles with a set of properties. These elements would be the same types of elements users could edit in the legacy studio (e.g. text boxes, images, vector shapes, etc), but we'd build server-side rendering services for each one, which would output transparent PNG images so they could be composited together on the client.
+What if we could build a brand-new Studio from scratch, where the document's elements would be composed of a set of server-rendered images? The client-side code would just be an interface for moving, resizing, and opening an editor for these elements, which from the perspective of the client, would just be rectangles with a set of properties. These elements would be the same types of elements users could edit in the legacy studio (e.g. text boxes, images, vector shapes, etc), but we'd build server-side rendering services for each one, which would output transparent PNG images so they could be composited together on the client.
 
 The user could then just double click on any of the rectangles to open an element-specific editor. So for text boxes, this would open a simple text-box editor, which would allow the user to type, and then we'd debounce the keypress events to trigger a refresh of the server-rendered text. 
 
@@ -143,17 +143,17 @@ Every year we were growing revenue by hundreds of millions of dollars. It was an
 
 I want to be clear that Vistaprint's success was due to *many* critical innovations and an enormous amount of work by many, many people, in areas like manufacturing, content design tooling, marketing, ecommerce, etc. 
 
-Also: even though I had come up with the core idea for the new Studio, it was based on many of the ideas from the old Studio, which itself had required a lot of independent innovations. Beyond that, there's no way I could have come up with this idea, or had any hope of making it work, without the insight and skill of my teammates who had figured out the server-side rendering. 
+Also: even though I had come up with the core idea for the new Studio, it was based on many of the ideas from the old Studio, which itself required a lot of independent innovations. Beyond that, there's no way I could have come up with this idea, or had any hope of making it work, without the insight and skill of my teammates who had figured out the server-side rendering. 
 
 What's more, none of the engineering work I did was groundbreaking or mindblowing. I just synthesized some disparate ideas, from both inside and outside Vistaprint, and glued it all together with some (fairly decent) JavaScript and C#. I was just the right person, at the right place, at the right moment, with the right idea.
 
-Even so, I still occasionally catch myself dwelling pridefully on this achievement. It's hard to imagine an alternate universe where I never joined Vistaprint, where they tried to incrementally improve the old Studio architecture. I don't see how they could have had the success that they did in *this* universe; the difference might be measured in billions of dollars at this point.
+Even so, I still occasionally catch myself dwelling pridefully on this achievement. I imagine an alternate universe where I never joined Vistaprint, where they tried to incrementally improve the old Studio architecture. I don't see how they could have had the success that they did in *this* universe; the difference might be measured in hundreds of millions (maybe billions?) of dollars at this point.
 
-I don't know how likely it is that I'll play such a pivotal role in building a multi-billion dollar company in the future.
+I don't know how likely it is that I'll ever play such a pivotal role in building a multi-billion dollar company in the future.
 
 ## Innovation comes from individuals
 
-Remembering this episode in my career has been useful to remind myself that impact, especially via innovation, is ultimately driven by individual contributors. This is really important to remember for those of us who've chosen to optimize our careers around the joy of being a technologist, especially when the social and financial pressures to advance our careers through management are so potent.
+Thinking back on this episode in my career has been useful to remind myself that impact, especially via innovation, is ultimately driven by individual contributors. This is really important to remember for those of us who've chosen to optimize our careers around the joy of being a technologist, especially when the social and financial pressures to advance our careers through management are so potent.
 
 My contrarian thesis aside, I have to acknowledge the complex interrelationship between ICs and managers when it comes to innovation. Technology leaders play their part to drive innovation by actively building a culture of empowerment and risk-taking, and being willing to make big bets on individuals with vision.
 
