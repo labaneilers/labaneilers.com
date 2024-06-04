@@ -106,9 +106,11 @@ The next day, I spent some time with the engineers who had done the text renderi
 I explained the idea to her over the next half hour, and left with permission to suspend feature development on Studio, and to work with one of the rendering guys for a few weeks to build a prototype.
 
 :::info[Why not Flash?]
-In the weeks that followed, I had to address a lot of questions from folks about why I'd decided to use pure HTML/Javascript instead of Flash. It wasn't obvious at the time the Flash's days were numbered.
+In the following few years, I had to address a lot of questions from folks about why I'd decided to use pure HTML/Javascript instead of Flash. This was three years before the iPhone, and Steve Job's famous refusal to allow Flash to run on it. Flash was still considered by many to be the best choice for rich, interactive experiences.
 
-The real reason was, similar to with the IE text rendering engine, that we didn't want to build another server-side renderer that was dependent on Flash's proprietary text engine. It also wasn't clear that it was possible to use Flash server-side, or that Adobe wouldn't do something at any point to break our whole system.
+The real reason we didn't want to use Flash was that it would have made us dependent on Flash's proprietary text rendering engine (like we were on IE before it) for server-side rendering. It also wasn't clear that it was possible to use Flash server-side, or that Adobe wouldn't change something at any point that would break our whole system.
+
+This turned out to be another very fortunate decision.
 :::
 
 ## Building the new Studio
