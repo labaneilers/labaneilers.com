@@ -1,0 +1,168 @@
+---
+slug: knowledge-management
+title: Building culture is hard, sustaining it is harder
+tags: [leadership, storytime]
+image: ./aqueduct.jpg
+draft: true
+---
+
+:::tip[TL;DR]
+I experienced first-hand what it was like to work in a company that had a really strong culture of knowledge management, and watched what it took to build and sustain it. I also witnessed the factors that caused it to eventually crumble.
+:::
+
+import Aqueduct from './aqueduct.jpg';
+
+<img src={Aqueduct} className="blog-image" alt="A Roman aqueduct"/>
+
+My current company is struggling with some challenges that are pretty typical for a wildly successful startup that's rapidly grown into a medium-sized company. We've got the expected technical debt, organizational design challenges, and a seemingly infinite number of small systems that work great... until they catch fire as we hit new scaling limits.
+
+I've been through this a few times before, and none of this is worrisome to me. It's exactly where I'd expect a company be after a period of frenetic growth. In a lot of ways, this is a really fun stage; if you're someone who can tolerate a bit of chaos and ambiguity, there's tons of opportunities to shape the direction of a company.
+
+One one hand, at a startup, your priorities are dominated by survival and existential risk. But once you grow beyond a certain size, you begin to lose leverage as cultural inertia takes over. A scrappy, determined visionary can exert a lot of leverage during the awkward teenage years of a mid-sized company.
+
+I want to tell a story about how I watched such a visionary person solve a particular problem around knowledge management, and how he drove a really compelling, sustained, positive cultural change. 
+
+Yeah, and also how it eventually collapsed, and why. 
+
+{/* truncate */}
+
+## Someone should go ask Rob why this one button is purple
+
+When I joined Vistaprint, it was already very successful and growing rapidly. It'd been a few years since I'd hopped jobs, so I was a bit nervous and eager to dive in and start getting shit done. This turned out to be a bit of a longer process than I had hoped.
+
+While Vistaprint had a number of cultural virtues, one very annoying feature was how much it relied on oral tradition, and a few linchpin people who functioned as repositories of all knowledge. Seriously, there were like 5 or 6 people in the company that collectively held about 80% of the total knowledge, and it was getting increasingly hard for them to get any work done as the number of people whose questions they needed to answer was growing.
+
+Here's some of the kinds of things I'm talking about:
+
+* how to get your developer environment set up
+* what UI ideas had been tested, and if they had succeeded or failed
+* why a particular compiler flag was used
+* how you'd get a new feature toggle enabled for analytics
+* who the hell owns any particular piece of code
+
+It was also more than just technical knowledge. HR policies, business strategy docs, organizational charts, holiday schedules; if these things existed, they were stored as a Word doc on someone's share drive, and were impossible to discover unless you already knew what you were looking for.
+
+## Dan builds a wiki
+
+My colleague [Daniel Barrett](https://danieljbarrett.com/) (who you may know as a [prolific author](https://www.oreilly.com/pub/au/426) of some fantastic books on Linux and other topics) was already a veteran at Vistaprint when I joined, and was notably one of the "grownups" amidst a bunch of young upstarts. As part of his more general management duties, he had volunteered to figure out what how we were going to train the raging torrent of new hires that seemed to be showing up every day.
+
+Dan recognized that training was actually a subset of the larger problem of knowledge management, and convinced the technology leadership team that we needed a more fundamental solution. He got to work on on some ideas and started building a small prototype.
+
+One day not long afterwards, Dan presented at a technology team all-hands meeting, and introduced us all to a new wiki system (which at the time was called "TechWiki") that he'd built on top of [MediaWiki](https://github.com/wikimedia/mediawiki) (the software that powers Wikipedia). He had already seeded it with a straw-man categorization (based on his personal knowledge of the systems), and a number of stub pages. He explained his intention that we should all just start using it to write stuff down, and not worry so much about organization. He was going to work with teams to watch and learn how it was being used, and help coordinate efforts as it evolved.
+
+There was a lot of skepticism across a number of fronts. Here are a few of the major objections that I remember:
+
+* Everyone had full access to edit any page, at any time. How would we prevent people from screwing up each other's content?
+* Without a strict, hierarchical taxonomy, wouldn't everything just spiral into an unmaintainable mess?
+* Developers aren't particularly known to enjoy writing documentation. How are we going to get people to take time away from engineering to write stuff down?
+
+Dan had the wisdom to respond to these questions with the only correct answer: he didn't know. We were just going to try some stuff and see what happened.
+
+## The wiki takes off
+
+It took a few months, but we started to notice that adoption of the wiki seemed to be growing pretty quickly. Daniel would pop by to check on us, let us know he had been reading what we'd been writing, and had some tips on how to use the wiki more effectively. He'd give us suggestions on organization, tone, and some general style tips. 
+
+He also encouraged us to be less "precious" with the wiki. He said it was a great place to take meeting notes, add team-specific content, and that we should feel free to create stub pages for topics we wished existed (but didn't know much about ourselves). What's more, he said we should absolutely edit articles when we found missing or out-of-date information, regardless of whether we were the original author, or even if we didn't have any specific expertise or claim on the topic.
+
+In the beginning, I'd often get email notifications that Dan had made minor edits to pages I'd created, usually normalizing titles, fixing typos, or adding category tags. It wasn't very long until I started noticing other people editing my pages. At first, I'd look at every change with some suspicion, but I quickly came to trust that everyone editing my pages was actually doing a great job, genuinely improving and adding details I'd missed. Even if the content they added wasn't 100% right, it was at least useful for me to know what answers they actually wanted, so I could correct any errors.
+
+Meanwhile, while Dan continued his evangelization, he was also building a team that was driving improvements to the wiki software itself. We got more integrations with our other systems (e.g. JIRA integration, queries into our analytics database, links to shared drives, etc), and better search indexing.
+
+:::info Fun fact
+From this experience, Dan later wrote the [literal book on MediaWiki](https://danieljbarrett.com/books/mediawiki/).
+:::
+
+## Imagine a world where all the shit is written down
+
+This momentum built on itself, and accelerated exponentially. It wasn't that much longer before the wiki became the go-to place for *everything*. The most notable effect of this change was that when you found yourself with a question, instead of looking for the expert, the first thing you'd do is just look it up on the wiki. It was shocking how often you'd find the answer, and if you didn't, you'd go find the answer offline, and then go and *create a damn wiki page about it*.
+
+In stand-ups, team members would remind each other to update the wiki page for that system they just changed, process they added, or question they couldn't find the answer to yesterday. Managers would look at the volume (and quality) of wiki contributions when doing quarterly reviews (I remember one time I was the 2nd or 3rd biggest contributor, and was very proud).
+
+This success was so significant, that the rest of the company (outside of the technology team) took notice. There were originally concerns that MediaWiki's content editing interface, which required learning [Wikitext](https://www.mediawiki.org/wiki/Wikitext) (a content markup language similar to markdown) was going to be too much of a barrier for our non-technical colleagues. This turned out not to be a big deal, as it was pretty easy to learn just the small subset of features you needed to create to create most content. It wasn't much longer before "TechWiki" was rebranded to "VistaWiki", and was adopted across the whole company.
+
+For someone who hasn't spent time in a company with this level of knowledge management practice, it's hard to describe how positive it was. I have little doubt that the wiki provided us a real, tangible competitive advantage. Experienced new hires inevitably noted how useful the wiki was, and how much it contributed to their effectiveness. 
+
+The era of VistaWiki lasted for about a decade, across several transitions of leadership, and through a period of really huge growth. All the while, Dan was working in the background to keep this culture alive and healthy.
+
+## Entropy affects culture too
+
+A few years before I left, I noticed that something had changed. The wiki was still there, and Dan and his team were still plugging away, but it became increasingly obvious that employees, more and more, had started taking the wiki for granted. As employees turned over, the wiki culture was emphasized less and less to new hires, who became gradually more likely to try to find an experienced colleague instead of searching the wiki first.
+
+Unfortunately, our tech leadership at this time, who had inherited this culture but didn't fully grasp its significance, spent very little energy on maintaining it. Granted, they had a lot of other fires to fight, and its understandable that, like an increasing share of the population, they took it for granted too.
+
+About a year before I left, Dan popped over to let me know he had resigned, and was off to do something new. I was sad to see him go, but not particularly surprised. He'd been working tirelessly on this stuff for years, and was clearly exhausted trying to do this with eroding support from leadership. 
+
+After Dan left, the degradation accelerated. All the same factors that contributed to the exponential adoption seemed to be working in reverse. At one point I remember someone sending me a Word doc on Slack for something that would have 100% been a wiki article a few years before. It turns out, while this person had used the wiki, they weren't sure how to create an article, and didn't know if anyone would ever look for it there.
+
+This moment reminded me of stories of medieval Britons, walking past the ruins of Roman aqueducts, wondering where these strange, huge structures had come from, and what kind of people could have built such grand, otherworldly things. Maybe they had been built by giants?
+
+## Tips for building your own culture of knowledge management
+
+I think about this experience as a data point in my broader understanding about what it takes to build (or change) a company's culture. I think a lot of this stuff applies to building culture in general.
+
+I'll try to stick to my point specifically around knowledge management, though. Here's the lowdown:
+
+### Minimize friction for contributors
+
+The experience for contributors needs to be as frictionless as possible. Every barrier you put in front of a potential contributor (having to create a PR, having to follow specific procedures, feeling like they have to ask permission) gets multiplied across every person in the organization. 
+
+Culture change is always an uphill battle; don't add more unnecessary weight to your pack.
+
+### Access control is counter-productive
+
+Don't fool yourself into thinking that locking your shit down is going to improve quality. Access controls are some of the worst kind of friction; they incentivize information silos, and discourage potential contributors that approach content with an outsider's perspective. 
+
+:::tip Diversity of perspective is a thing
+Don't underestimate the power of an outsider perspective: these are the people that will point out your implicit assumptions and opaque jargon, missing details, and errors that accumulate over time- especially when you're documenting an evolving system like software.
+:::
+
+Empower everyone to edit everything. In any reasonably healthy organization, the number of people creating good, quality content will vastly outnumber the people messing stuff up. 
+
+Either way, if you have employees deliberately producing bad edits, you've got bigger problems than knowledge management.
+
+:::warning OK, fine.
+OK, so some content legitimately requires access controls (e.g. HR/legal policies). Sure, lock that down. Just be really careful not to slide down that slippery slope and start locking down content because you have abstract notions of ownership or quality control.
+:::
+
+### Don't be precious with content
+
+Avoid imposing implicit, social friction. Encourage contributors not to worry about taxonomy and organization; it creates unnecessary stress which discourages contribution. A pristine taxonomy is worthless without good content.
+
+Also, don't be too pedantic about style, structure, or tone. If you're successful with adoption, you'll have too much content to ever have manually reviewed, so quality is something that inevitably will have to be addressed via culture (and not by creating speed bumps). If you get it right, people will *want* to write good content by virtue of social incentives, and because they get positive feedback from their peers and managers... or because they want the content for their own team or future selves.
+
+In this situation, coaching and continuous feedback is much more effective than gatekeeping.
+
+### Prefer a single source of truth
+
+From the perspective of information consumers, you really want the knowledge repository to feel like a single system. You don't want users to have to ponder which of 7 different intranet portals to visit, depending on the type of info. If you don't have an actual unified knowledge management system, a good solution might be a unified search portal.
+
+While a single source of truth isn't necessarily as important for contributors, I haven't yet seen a system with multiple sources of documentation that doesn't result the fragmentation discouraging contributors. That said, I'd be curious if there's something that could be done with a federated system (e.g. a central system that scrapes individual sources, but generates content that contains links to edit the source).
+
+### You need a jump-start to get critical mass
+
+Knowledge management culture has a chicken/egg paradox component: consumers won't use it if you don't have sufficient content, and its hard to incentivize contributors to create content unless they believe it will be used by consumers. You need to find a way to prime the system and get it to become self-sustaining.
+
+This probably requires a few different strategies deployed in parallel:
+
+* Recruit key, influential people (probably the people who are already information bottlenecks) to start creating content
+* Practice sustained engagement with teams. Use this to help encourage content creation, remove implicit barriers, and identify sources of friction or stress.
+* Consider ways to seed the new system with content pulled (probably via automation) from existing sources. Even if this isn't perfect, there's something about seeing incomplete content that gets people to want to fill in the details.
+
+And probably a bunch of other you'll need to discover incrementally along the way. Much like [developer experience is a product](/developer-experience-is-a-product), so is content contributor experience. 
+
+### You need a team to sustain and nurture it
+
+Probably most importantly, you'll need someone (and probably a team) championing and driving the culture change. Some companies refer to this role as a "Librarian", but I think it's a lot more than that title evokes. While it is important that this person/team has good instincts around information architecture, it's much more about being an effective evangelist and relationship builder. It's fundamentally about changing the behavior of a large group of people, and that's *legitimately hard*.
+
+This ongoing battle to sustain culture has two fronts:
+
+* **Grassroots**: contributors have to fully buy in, and understand that the effort they put in to creating content benefits them in short order.
+* **Managing up**: If upper management doesn't understand the value of a knowledge culture, it's going to be very hard to sustain it. The management hierarchy, at every level, has to be reminded how much they're getting out of the culture, and that they're responsible for keeping it alive.
+
+## Let's extrapolate
+
+It might be worth making extrapolating a more general principle here about culture change: a great company culture can be a major driver for business success, but culture is a delicate, fickle thing. It can wither and die just as quickly as it was grown.
+
+As leaders, we make decisions all the time about where to direct our limited resources. If there are aspects of your company culture that you believe really matter, take stock of what investment you're actually putting into it. I'm talking real, tangible resources. If you're not making real tradeoffs to sustain it, then you're choosing to let entropy take over.
+
+You may one day wake up and find that your teams don't know how to use your wiki. Perhaps they're wondering where it came from, why it was built, and by whom. Maybe it was giants.
