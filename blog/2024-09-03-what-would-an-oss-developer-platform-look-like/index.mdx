@@ -1,0 +1,218 @@
+---
+slug: what-would-an-oss-developer-platform-look-like
+title: What would an OSS developer platform even look like?
+tags: [devops, platform-engineering, kubernetes]
+image: ./toolbox.jpg
+draft: true
+---
+
+:::tip[TL;DR]
+My team has built a developer platform that our developers really like, and is providing a ton of value for my company. I'm looking for advice on options we might have to open-source it (either all or in parts).
+:::
+
+import Toolbox from './toolbox.jpg';
+
+<img src={Toolbox} className="blog-image" alt="A toolbox"/>
+
+As a platform engineer, I enjoy the benefits of working in a field with a vibrant ecosystem of open source infrastructure and developer tools. I've spent much of the last decade building developer platforms by curating and assembling these tools, and after a number of iterations, I seem to have hit on something that's working really well for my current company (SimpliSafe).
+
+As our platform's adoption has grown, we've gotten more and more frequent, really positive, heartwarming feedback from our developers who really like it. This is *absolutely freaking delightful*, and honestly never stops surprising me. 
+
+A common followup is the question about open-sourcing it. I inevitably spend some cycles entertaining the idea, but I usually don't get very far before the idea seems unworkable.
+
+This post is an experiment in thinking in public; I'd like to brain dump my thoughts on the challenges of building an open-source developer PaaS, in the hopes that the platform engineering community might provide some insight to get me past this block.
+
+{/* truncate */}
+
+## So, tell me more about this platform
+
+Our platform is named "dex/EKS", which is (an admittedly awkward) combination of the name of the client tool, "dex", with the AWS service the server-side is built on (EKS: AWS's managed Kubernetes service). Unsurprisingly, developers tend to just call the whole thing "dex".
+
+In the spirit of the "Platform Engineering" buzzword, dex/EKS encapsulates our company's collective opinions, policies, and best-practices for building, deploying, and operating apps. I like to think of it as a PaaS that we've curated and glued together out of a bunch of open-source and vendor tools.
+
+:::info
+
+`dex` (the client tool itself) is a CLI tool for interacting with the platform. Picture the `flyctl`, `vercel`, or `heroku` CLI.
+
+`dex` is intentionally lowercase, or as I like to call it: "hipster-case". Or maybe camelCase without the humps? I dunno. It's a thing.
+:::
+
+In addition to the client tooling, we also have a fairly sophisticated Kubernetes "distribution", which consists of a bunch of curated cluster-side components, combined and configured to work well together. Our clusters are built using a Terraform project, which we use (via Github Actions), which manages many dozens of EKS clusters. Beyond that, there's integrations with a bunch of third-party SaaS providers, including AWS services and other vendors.
+
+Just to give you a sense of the ingredients that comprise the platform, here's a partial list:
+
+* [Kubernetes (AWS EKS)](https://kubernetes.io/)
+* [Docker](https://www.docker.com/)/[BuildKit](https://github.com/moby/buildkit)
+* [Github Enterprise](https://github.com/enterprise) (with [Github Actions](https://github.com/features/actions))
+* [Okta](https://www.okta.com/)
+* [Artifactory](https://jfrog.com/artifactory/)
+* [Grafana Cloud](https://grafana.com/products/cloud/)
+* [Honeycomb](https://www.honeycomb.io/)
+* [OpenSearch](https://opensearch.org/) (for logs)
+* A bunch of AWS services (ECR, S3, SSM, SecretManager, Route53, ACM, WAF, etc)
+
+Here's a few of the tools (from the Kubernetes ecosystem) we use in our EKS configuration:
+
+* [aws-load-balancer-controller](https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/)
+* [ingress-nginx](https://github.com/kubernetes/ingress-nginx)
+* [Karpenter](https://karpenter.sh/)
+* [external-dns](https://kubernetes-sigs.github.io/external-dns/v0.14.0/)
+* [external-secrets](https://external-secrets.io/latest/)
+* [Fluent Bit](https://fluentbit.io/)
+* [OTEL (OpenTelemetry) collectors](https://opentelemetry.io/docs/collector/)
+* [KEDA](https://keda.sh/)
+* [Kyverno](https://kyverno.io/)
+* [Velero](https://velero.io/)
+
+The CLI tool abstracts all these infrastructure decisions and exposes them through a simplified, declarative set of configuration and CLI commands. Some of the things it handles:
+
+* Configuration management (what settings your app gets in different environments)
+* Secrets management
+* Cross-platform and multi-platform container image builds
+* User authentication (i.e. SAML auth via Okta, to Kubernetes, AWS, and Artifactory)
+* AWS IAM integration (allows you to assign AWS permissions to your app)
+* Kubernetes manifest management (imagine a simplified version of helm)
+* Ingress management (load balancers, certs, and DNS)
+* Security scanning
+* CI/CD integration (Github Actions)
+* Telemetry pipeline integration
+* Docker/Kubernetes-based integration testing framework
+
+One of the key metrics we hold ourselves to is that developers have to be able to get a new "hello world" service up and running in less than 10 minutes, at which point they can turn their focus to business problems. As they get closer to production, they have a few more decisions to make about autoscaling, observability, etc, but for the most part, the platform narrows down the choices to just a few fully-baked, meticulously documented, well-trodden paths.
+
+:::tip dex works off-road too
+dex has some other extensibility mechanisms for more advanced use cases, such as the ability to author custom commands with arbitrary TypeScript, which can re-compose existing dex commands and any of it's constituent APIs.
+
+Teams sometimes use this extensibility to explore the frontier of what's possible. If they find a new pattern to be useful, we will often incorporate it into the platform.
+
+For example, dex's multi-region DNS configuration support was originally built by another team, who then contributed it upstream, so everyone else in the company could use it.
+:::
+
+Teams at SimpliSafe has moved the majority of our services to dex/EKS, and most teams are planning on moving their remaining services over in the next year or so. This has happened with close to zero pressure from management; teams are moving their services to the platform because they're much happier with it than without it.
+
+Suffice to say, I'm very proud of it, and it seems to be providing a lot of value.
+
+## Implementation details have to reflect a company's unique culture
+
+dex was born out of my experience at my past 2 jobs, where I built successive versions of this same concept. Each time I iterated on this pattern, I was able to carry forward and evolve lot of ideas from the previous version. Config management, secrets management, and container image builds, in particular, pretty much just got better and better along a linear trajectory.
+
+Other aspects have evolved in an entirely non-linear way; they're reflections of the unique combination of constraints, culture, and pre-existing opinions of the company I've built it for. Some of these aspects become *deeply* embedded in the design and usability of the platform tools.
+
+Here's an example, which shows how the implementation of an important feature: **ephemeral developer environments** was implemented in companies with very different cultures and infrastructure opinions.
+
+### Ephemeral environments in a bank
+
+At my previous job (at a bank), we had pre-existing OpenShift clusters, one per environment (dev, qa, prd) in an on-prem environment, and 3, parallel newer OpenShift clusters we built in AWS. These were multi-tenant clusters, so access was granted to teams via pre-provisioned namespaces.
+
+Another important detail: as a small/medium sized bank, we had fairly modest load (especially compared to my previous experience in e-commerce). 
+
+As a result, we made some specific design choices for the platform:
+
+* **Isolation**: The client tool needed to enforce strict naming conventions for all Kubernetes resources it created, in order to allow them to exist in the same namespace without colliding. This naming convention enabled developer and feature branch ephemeral environments to be quickly created/destroyed.
+* **Ingress**: We had a single, large HAProxy-based ingress controller per cluster. All services in the cluster would then share the capacity of the HAProxy instance(s). We used this for both static and ephemeral environments.
+* **DNS**: For DNS in static environments, the client library would separately register DNS via an in-house API (which was backed by some horrible "enterprise" DNS management solution). For ephemeral environments, we'd use a wildcard DNS entry (with a completely different domain name, to avoid concerns about wildcard certs getting pwned) with a naming convention based on a combination of the app name, git branch name, and/or developer name.
+* **TLS Certs**: Certificates for the static environments needed to be provisioned manually, through a ServiceNow ticket, since that's just how this bank rolled. The client library did the best it could to help, by creating the ticket with all the right boilerplate, and helping import the certificate once it was issued. Wildcard certs for the ephemeral environment naming convention were pre-installed into the HAProxy controller.
+
+In general, the platform at the bank was far more constrained by infrastructure choices I inherited, and had limited ability to change. 
+
+:::warning The irony of security theater
+A lot of the constraints at the bank, which were originally intended to implement security controls, limited our ability to make the platform as secure as it could have been if we had had the freedom to design holistically.
+
+Sad trombone.
+:::
+
+### Ephemeral environments at an IoT home-security company
+
+At SimpliSafe (my current job), we have an architecture based on many AWS accounts (one per team, per environment), with one or more EKS clusters per account. We have extensive terraform-based automation to create, manage, and upgrade the clusters, and keep them consistent. We value these granularly-provisioned AWS accounts as both security boundaries and vehicles for team autonomy. 
+
+We also handle orders of magnitude more traffic than at the bank.
+
+Given this, we made some completely different choices around the platform design:
+
+* **Isolation**: Since we already had EKS separate clusters for teams, we designed environment isolation around Kubernetes namespaces, and set permissions up to allow developers to create/delete namespaces liberally. Ephemeral environments are isolated via namespaces, just like static ones. No specific naming conventions for objects within the namespace are needed.
+* **Ingress**: We use the [aws-load-balancer-controller](https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/) for Ingress for static environments, since the load requirements of our services couldn't be as easily handled by a shared Ingress controller like HAProxy. For ephemeral environments, we use [ingress-nginx](https://github.com/kubernetes/ingress-nginx), since we this allows us to provision Ingresses more or less instantly (compared the AWS load balancers, which take a few minutes to provision).
+* **DNS**: In static environments, we use [external-dns](https://github.com/kubernetes-sigs/external-dns) with Route53 to provision DNS records for services, while we use a wildcard DNS entry (pointing to our ingress-nginx controller) in ephemeral environments. For ephemeral environments (similarly to at the bank) we use a pre-provisioned Route53 wildcard DNS record, pointed at the cluster's nginx-ingress controller (using a domain name unrelated to our business name).
+* **TLS Certs**: For static environments, our client library provisions certificates using AWS Certificate Manager, and assigns them to load balancers via an annotation on the Ingress. For ephemeral environments, a pre-baked wildcard certificate (matching the ephemeral environment wildcard subdomain) is installed into the ALB in front of our ingress-nginx controller.
+
+Compared to the bank, I had a huge amount of freedom to make infrastructure choices at SimpliSafe, though to be fair, most of the pre-existing choices were pretty reasonable, and for the most part, the platform just incorporated them as-is, and systematized them a bit better. This allows for an overall simpler, smoother, and more elegant developer experience.
+
+:::tip Actually giving a shit about security
+Frankly, we do much better at security at SimpliSafe than we did at the bank. Not only do we have a very smart and collaborative InfoSec team, our culture is built around everyone *actually giving a shit* about our customers security, which makes it a lot easier to think holistically.
+:::
+
+### Let's squint at this
+
+There's an even more fundamental set of opinions that dex is built upon. While these are fairly well subscribed, they're by no means universal:
+
+* Microservices are a good way for a large team to build a big system
+* Teams should have a good deal of autonomy, and be accountable for operating the systems they build
+* Continuous deployment is a good thing
+* A central team should own cross-cutting concerns like telemetry pipelines and observability backend tools, auth, infrastructure provisioning, etc
+* Infrastructure should be represented as code and managed through automation
+
+There's a bunch of others, but you get the picture.
+
+## What would this look like open-sourced?
+
+Given the two examples of companies with different infrastructure opinions, let's think through the possible flavors of open-sourcing a developer platform like dex:
+
+### Option 1: A hyper-opinionated "PaaS in a box"
+
+This option assumes that the infrastructure decisions we've made at SimpliSafe would be a good fit for at least a bunch of other companies, with minimal modification. We'd provide the whole thing, end-to-end, including the EKS cluster configuration and terraform, all the cluster-side system components, and the dex client-side tool.
+
+I find this option hard to imagine for a few reasons:
+
+- While I'm very confident we've got a great solution for SimpliSafe, I think it's virtually impossible that any other company would be happy with *all* our opinions (the bank certainly wouldn't have been). Our platform glues together *scores* of specific OSS products (and a number of SaaS vendor tools), and the odds that *every one of them* lines up with another company's preferences is close to zero. 
+- A platform engineering team using this version of the platform would be signing up to build expertise and support every OSS production we've chosen.
+- An out-of-the-box platform might be good for a startup, but our platform is certainly NOT the the right choice for a startup. It's designed around supporting many teams, and allowing a central platform engineering team to manage infrastructure underneath teams' apps- which is not the problem engineers at a startup should be worrying about.
+- Among the opinions encapsulated in our platform are some we're not happy about. We have a few compromises based on legacy infrastructure choices that are hard to change, and some choices which are an intermediate phase between where we are and where we want to go. For example, we're currently using the telegraf-operator to collect metrics for lots of our services, but we'd prefer to be using OTEL SDKs and/or Prometheus libraries. 
+
+I actually can't imagine myself choosing to use someone else's OSS platform if it were built on this philosophy.
+
+
+### Option 2: A whole platform, but pluggable
+
+In this variant, we'd provide also provide the whole platform, but allow users to bring their own infrastructure opinions via a plugin API.
+
+I also see some big disadvantages here:
+
+- Abstraction layers add complexity. Part of the value of dex is that the code is relatively simple, straightforward, and hackable. We often get a PR or feature request, and end up cutting a new release within hours. This would not remain the case if we started adding abstraction layers everywhere. 
+- Testing and maintaining compatibility with all possible plugins would be a huge burden. Right now, dex's integration tests are both comprehensive and fast, and it would be virtually impossible to maintain this level of coverage if we had to test against an ecosystem of plugins.
+- It's *really hard* to build good abstraction layers, even for simple things. And these infrastructure components are *definitely not simple*. We'd be constantly expanding and modifying the APIs to support additional opinions, and the abstractions would inevitably leak.
+- Many of the infrastructure choices we've made allow us to simplify the design of the platform, and these simplifying assumptions wouldn't be valid if we allowed arbitrary plugins. Tight coupling, in this case, is part of the special sauce for creating a really streamlined and cohesive developer experience.
+- Comprehensive documentation would be much more complicated and far less useful, since docs would have to simultaneously support the perspective both of the platform developer as well as the end-user developer. dex has lots of docs based on developer use cases, and it wouldn't be possible to provide these if the whole experience were built on plugins.
+- Kubernetes APIs already provide so much power and extensibility, and especially when you throw in Operators, CRDs, and custom controllers, it's hard to imagine how I could provide APIs that would support all the flexibility Kubernetes offers.
+
+I think realistically, this solution would start as option 1 and then abstractions would be gradually added by contributors to support their particular infrastructure choices, so it's probably best to think of this option as a spectrum with more or less pluggability.
+
+### Option 3. A toolkit for building your own platform
+
+Another option is to factor out individual components of the platform as standalone libraries, and let people build their own platform. I could imagine some of dex's components being useful for someone who wants to build a different opinionated platform.
+
+One example of a generally useful component is our config system: 
+
+* Our config schema is defined as a tree of TypeScript classes, which can be used to generate a JSON schema, which can be used by other tooling to provide instant validation (e.g. via VSCode's JSON schema integration), to validate at runtime, an also to generate documentation. 
+* The config system supports defining arbitrary target environments, which can use inheritance (and other mechanisms) to share common settings, and override them as needed. 
+* It has a mechanism for declaring dynamic config values (e.g. a value from a Parameter Store secret, or based on the current git branch name, etc).
+* The config loader returns a config tree object which is built out of JavaScript Proxy objects, which allows us to do very smart validation, with user friendly error messages, and play to TypeScript's strengths.
+
+That said, turning this config module into a separate npm package would have some tradeoffs:
+
+* The inherent packaging tax: working with multiple npm packages is more complex to develop, debug, and test locally.
+* It's abstractions would feel leaky to a user. For example, JSON schema generation requires some special build configuration, and this would appear a bit finicky if it was intended to be used off the shelf.
+* There's some other aspects of our config system that are currently tightly coupled with other parts of the platform. This is all just code, so of course we could figure out how to decouple it, but there would be a decent amount of net-new complexity as a result.
+
+More generally, I think the challenge with this approach is that most of the value of the platform stems not from the individual components, but from *their integration*. For example:
+
+* dex's packaging/distribution mechanism (a stable CLI + a fast-moving, versioned library) has many moving parts
+* dex's own build system is very sophisticated, and has a lot of features around building canary releases, and enabling debugging in a sample host project 
+* dex also has a suite of integration tests are fairly involved and comprehensive
+* The documentation of dex's UI (both its command line interface and config interface) is a *huge* factor in dex's success at SimpliSafe, and would have to be built from scratch for a new platform.
+
+## A plea for help
+
+So I'm sitting on this great set of tooling, which is providing a ton of value for my company. It's built on OSS, public cloud, and SaaS services, and there's no proprietary magic or novel intellectual property we're trying to protect. It solves a problem that a huge number of medium-large technology companies would have to tackle. 
+
+Why can't I see a way to share this with the world? Maybe I'm just not being imaginative enough. I'm 100% certain this isn't a novel situation.
+
+What do you think?
