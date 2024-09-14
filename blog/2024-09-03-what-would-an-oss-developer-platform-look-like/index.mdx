@@ -18,7 +18,7 @@ As a platform engineer, I enjoy the benefits of working in a field with a vibran
 
 As our platform's adoption has grown, we've gotten more and more frequent, really positive, heartwarming feedback from our developers who really like it. This is *absolutely freaking delightful*, and honestly never stops surprising me. 
 
-A common followup is the question about open-sourcing it. I inevitably spend some cycles entertaining the idea, but I usually don't get very far before the idea seems unworkable.
+I often get asked by our developers if we should consider open-sourcing the platform. I've spent some cycles entertaining the idea, but I usually don't get very far before it seems unworkable.
 
 This post is an experiment in thinking in public; I'd like to brain dump my thoughts on the challenges of building an open-source developer PaaS, in the hopes that the platform engineering community might provide some insight to get me past this block.
 
@@ -37,7 +37,9 @@ In the spirit of the "Platform Engineering" buzzword, dex/EKS encapsulates our c
 `dex` is intentionally lowercase, or as I like to call it: "hipster-case". Or maybe camelCase without the humps? I dunno. It's a thing.
 :::
 
-In addition to the client tooling, we also have a fairly sophisticated Kubernetes "distribution", which consists of a bunch of curated cluster-side components, combined and configured to work well together. Our clusters are built using a Terraform project, which we use (via Github Actions), which manages many dozens of EKS clusters. Beyond that, there's integrations with a bunch of third-party SaaS providers, including AWS services and other vendors.
+### Our Kubernetes distribution
+
+In addition to the client tooling, we also have a fairly sophisticated Kubernetes "distribution", which consists of a bunch of curated cluster-side components, combined and configured to work well together. Our cluster configuration is defined with Terraform, and we use it with Github Actions to manage many dozens of EKS clusters. Beyond that, there's integrations with a bunch of third-party SaaS providers, including AWS services and other vendors.
 
 Just to give you a sense of the ingredients that comprise the platform, here's a partial list:
 
@@ -64,7 +66,10 @@ Here's a few of the tools (from the Kubernetes ecosystem) we use in our EKS conf
 * [Kyverno](https://kyverno.io/)
 * [Velero](https://velero.io/)
 
-The CLI tool abstracts all these infrastructure decisions and exposes them through a simplified, declarative set of configuration and CLI commands. Some of the things it handles:
+
+### dex: the CLI tool
+
+The CLI tool abstracts and integrates the APIs of these infrastructure components and exposes them through a simplified, declarative set of configuration and CLI commands. Some of the things it handles:
 
 * Configuration management (what settings your app gets in different environments)
 * Secrets management
@@ -73,7 +78,7 @@ The CLI tool abstracts all these infrastructure decisions and exposes them throu
 * AWS IAM integration (allows you to assign AWS permissions to your app)
 * Kubernetes manifest management (imagine a simplified version of helm)
 * Ingress management (load balancers, certs, and DNS)
-* Security scanning
+* Vulnerability scanning
 * CI/CD integration (Github Actions)
 * Telemetry pipeline integration
 * Docker/Kubernetes-based integration testing framework
@@ -88,61 +93,15 @@ Teams sometimes use this extensibility to explore the frontier of what's possibl
 For example, dex's multi-region DNS configuration support was originally built by another team, who then contributed it upstream, so everyone else in the company could use it.
 :::
 
+### The impact of dex at SimpliSafe
+
 Teams at SimpliSafe has moved the majority of our services to dex/EKS, and most teams are planning on moving their remaining services over in the next year or so. This has happened with close to zero pressure from management; teams are moving their services to the platform because they're much happier with it than without it.
 
 Suffice to say, I'm very proud of it, and it seems to be providing a lot of value.
 
 ## Implementation details have to reflect a company's unique culture
 
-dex was born out of my experience at my past 2 jobs, where I built successive versions of this same concept. Each time I iterated on this pattern, I was able to carry forward and evolve lot of ideas from the previous version. Config management, secrets management, and container image builds, in particular, pretty much just got better and better along a linear trajectory.
-
-Other aspects have evolved in an entirely non-linear way; they're reflections of the unique combination of constraints, culture, and pre-existing opinions of the company I've built it for. Some of these aspects become *deeply* embedded in the design and usability of the platform tools.
-
-Here's an example, which shows how the implementation of an important feature: **ephemeral developer environments** was implemented in companies with very different cultures and infrastructure opinions.
-
-### Ephemeral environments in a bank
-
-At my previous job (at a bank), we had pre-existing OpenShift clusters, one per environment (dev, qa, prd) in an on-prem environment, and 3, parallel newer OpenShift clusters we built in AWS. These were multi-tenant clusters, so access was granted to teams via pre-provisioned namespaces.
-
-Another important detail: as a small/medium sized bank, we had fairly modest load (especially compared to my previous experience in e-commerce). 
-
-As a result, we made some specific design choices for the platform:
-
-* **Isolation**: The client tool needed to enforce strict naming conventions for all Kubernetes resources it created, in order to allow them to exist in the same namespace without colliding. This naming convention enabled developer and feature branch ephemeral environments to be quickly created/destroyed.
-* **Ingress**: We had a single, large HAProxy-based ingress controller per cluster. All services in the cluster would then share the capacity of the HAProxy instance(s). We used this for both static and ephemeral environments.
-* **DNS**: For DNS in static environments, the client library would separately register DNS via an in-house API (which was backed by some horrible "enterprise" DNS management solution). For ephemeral environments, we'd use a wildcard DNS entry (with a completely different domain name, to avoid concerns about wildcard certs getting pwned) with a naming convention based on a combination of the app name, git branch name, and/or developer name.
-* **TLS Certs**: Certificates for the static environments needed to be provisioned manually, through a ServiceNow ticket, since that's just how this bank rolled. The client library did the best it could to help, by creating the ticket with all the right boilerplate, and helping import the certificate once it was issued. Wildcard certs for the ephemeral environment naming convention were pre-installed into the HAProxy controller.
-
-In general, the platform at the bank was far more constrained by infrastructure choices I inherited, and had limited ability to change. 
-
-:::warning The irony of security theater
-A lot of the constraints at the bank, which were originally intended to implement security controls, limited our ability to make the platform as secure as it could have been if we had had the freedom to design holistically.
-
-Sad trombone.
-:::
-
-### Ephemeral environments at an IoT home-security company
-
-At SimpliSafe (my current job), we have an architecture based on many AWS accounts (one per team, per environment), with one or more EKS clusters per account. We have extensive terraform-based automation to create, manage, and upgrade the clusters, and keep them consistent. We value these granularly-provisioned AWS accounts as both security boundaries and vehicles for team autonomy. 
-
-We also handle orders of magnitude more traffic than at the bank.
-
-Given this, we made some completely different choices around the platform design:
-
-* **Isolation**: Since we already had EKS separate clusters for teams, we designed environment isolation around Kubernetes namespaces, and set permissions up to allow developers to create/delete namespaces liberally. Ephemeral environments are isolated via namespaces, just like static ones. No specific naming conventions for objects within the namespace are needed.
-* **Ingress**: We use the [aws-load-balancer-controller](https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/) for Ingress for static environments, since the load requirements of our services couldn't be as easily handled by a shared Ingress controller like HAProxy. For ephemeral environments, we use [ingress-nginx](https://github.com/kubernetes/ingress-nginx), since we this allows us to provision Ingresses more or less instantly (compared the AWS load balancers, which take a few minutes to provision).
-* **DNS**: In static environments, we use [external-dns](https://github.com/kubernetes-sigs/external-dns) with Route53 to provision DNS records for services, while we use a wildcard DNS entry (pointing to our ingress-nginx controller) in ephemeral environments. For ephemeral environments (similarly to at the bank) we use a pre-provisioned Route53 wildcard DNS record, pointed at the cluster's nginx-ingress controller (using a domain name unrelated to our business name).
-* **TLS Certs**: For static environments, our client library provisions certificates using AWS Certificate Manager, and assigns them to load balancers via an annotation on the Ingress. For ephemeral environments, a pre-baked wildcard certificate (matching the ephemeral environment wildcard subdomain) is installed into the ALB in front of our ingress-nginx controller.
-
-Compared to the bank, I had a huge amount of freedom to make infrastructure choices at SimpliSafe, though to be fair, most of the pre-existing choices were pretty reasonable, and for the most part, the platform just incorporated them as-is, and systematized them a bit better. This allows for an overall simpler, smoother, and more elegant developer experience.
-
-:::tip Actually giving a shit about security
-Frankly, we do much better at security at SimpliSafe than we did at the bank. Not only do we have a very smart and collaborative InfoSec team, our culture is built around everyone *actually giving a shit* about our customers security, which makes it a lot easier to think holistically.
-:::
-
-### Let's squint at this
-
-There's an even more fundamental set of opinions that dex is built upon. While these are fairly well subscribed, they're by no means universal:
+While it may appear that dex is just a set of choices about tools and services that have been manifested in glue code, it also reflects SimpliSafe's values and organizational culture. While most of these values and cultural properties fairly well subscribed, they're by no means universal:
 
 * Microservices are a good way for a large team to build a big system
 * Teams should have a good deal of autonomy, and be accountable for operating the systems they build
@@ -151,6 +110,38 @@ There's an even more fundamental set of opinions that dex is built upon. While t
 * Infrastructure should be represented as code and managed through automation
 
 There's a bunch of others, but you get the picture.
+
+These values deeply inform the design of dex, and it's interesting to reflect on the iterations of platforms that I've built at different companies with different values, and how they were reflected in the design of the platforms.
+
+
+## Example: ephemeral environments
+
+Ephemeral developer environments are a feature I 100% know is a huge win for developers, regardless of your company culture. But for me, there have been big differences in design, features, and implementation details when I've built this feature at different companies.
+
+### What are ephemeral environments?
+
+Here's the gist: I want to be able to deploy an ephemeral environment from my local machine into Kubernetes, with a single command, so I can iterate, tweak, and test ideas in a production-like environment. I want a URL I can hit to I can play with usability, do manual testing, attach a debugger, troubleshoot config, etc. Then I want another command to tear the whole thing down.
+
+I also want every feature branch I push to Github (or Gitlab, Bitbucket, etc) to trigger a CI job which deploys an ephemeral environment with the same properties, and have my automated tests run against
+
+
+### Ephemeral environments in a financial institution
+
+At my last job, in a commercial bank, we had a very small number of multi-tenant Kubernetes (OpenShift) clusters. As you might imagine in a highly-regulated industry, the creation of Kubernetes namespaces (and the associated access controls) was tightly controlled and managed by a central team.
+
+Since we wanted to give developers the benefits of creating dynamic, isolated environments, we worked within the static structure of centrally managed namespaces by using strict naming conventions for any generated Kubernetes objects (e.g. prefixing all resources with the name of the developer or feature branch). 
+
+This design decision trickled into many other aspects of the system. For instance, we designed our client tooling to maintain pretty tight control over rendering the objects, and the relationship of objects via names, labels, and selectors.
+
+### Ephemeral environments at an IoT security company
+
+At SimpliSafe, the company's culture and preexisting architecture enabled a very different approach: we implement ephemeral environments by letting developers create (and destroy) Kubernetes namespaces dynamically. 
+
+Because we have per-team AWS accounts, and our Kubernetes clusters are highly isolated, we're comfortable giving developers the power to manage namespaces in our non-production environments. This removes a lot of the need for strict control over object relationships in Kubernetes, and gives developers more flexibility to mess with the underlying objects more directly.
+
+### Different tradeoffs, different design
+
+So even with the same feature, providing pretty similar benefits to developers, we had to make very different tradeoff decisions, and ended up with design differences which significantly impact the architecture, features, and feel of the rest of the platform.
 
 ## What would this look like open-sourced?
 
@@ -164,7 +155,7 @@ I find this option hard to imagine for a few reasons:
 
 - While I'm very confident we've got a great solution for SimpliSafe, I think it's virtually impossible that any other company would be happy with *all* our opinions (the bank certainly wouldn't have been). Our platform glues together *scores* of specific OSS products (and a number of SaaS vendor tools), and the odds that *every one of them* lines up with another company's preferences is close to zero. 
 - A platform engineering team using this version of the platform would be signing up to build expertise and support every OSS production we've chosen.
-- An out-of-the-box platform might be good for a startup, but our platform is certainly NOT the the right choice for a startup. It's designed around supporting many teams, and allowing a central platform engineering team to manage infrastructure underneath teams' apps- which is not the problem engineers at a startup should be worrying about.
+- While out-of-the-box, opinionated platform might be good for a startup, our platform is certainly NOT the the right choice for a startup. It's designed around supporting many teams, and to allow a central platform engineering team to manage infrastructure underneath teams' apps... which is not the problem engineers at a startup should be worrying about.
 - Among the opinions encapsulated in our platform are some we're not happy about. We have a few compromises based on legacy infrastructure choices that are hard to change, and some choices which are an intermediate phase between where we are and where we want to go. For example, we're currently using the telegraf-operator to collect metrics for lots of our services, but we'd prefer to be using OTEL SDKs and/or Prometheus libraries. 
 
 I actually can't imagine myself choosing to use someone else's OSS platform if it were built on this philosophy.
