@@ -126,17 +126,19 @@ Additionally, for every feature branch they push to Github (or Gitlab, Bitbucket
 
 ### Ephemeral environments in a financial institution
 
-At my last job, in a commercial bank, we had a very small number of tightly controlled, multi-tenant Kubernetes (OpenShift) clusters. As you might imagine in a highly-regulated industry, the creation of Kubernetes namespaces (and the associated access controls) was subject to security controls, approvals, and needed leave an audit trail, and it was managed by a central team.
+At my last job, in a commercial bank, we had a very small number of tightly controlled, multi-tenant Kubernetes (OpenShift) clusters. As you might imagine in a highly-regulated industry, the creation of Kubernetes namespaces (and the associated access controls) was governed by security controls, required approvals, and needed to leave an audit trail. The process was managed by a central team.
 
-Since we wanted to give developers the benefits of creating dynamic, isolated environments, we worked within the static structure of centrally managed namespaces by generating Kubernetes objects using strict naming conventions for(e.g. prefixing all resources with the name of the developer or feature branch). This naming convention allowed the tooling to manage the objects as a unit, avoid collisions, and ensure that the objects were cleaned up when the developer was done.
+To allow creation of dynamic, isolated environments, we worked within the static structure of centrally managed namespaces by designing our tooling to generate Kubernetes objects using strict naming conventions (e.g. prefixing all resources with the name of the developer or feature branch). This allowed the tooling to manage the objects as a unit, avoid collisions, and ensure that the objects were cleaned up when the developer was done.
 
 This design decision trickled into many other aspects of the system. For instance, we designed our client tooling to maintain pretty tight control over rendering the objects, and the relationship of objects via names, labels, and selectors.
 
 ### Ephemeral environments at an IoT security company
 
-At SimpliSafe, the company's culture and preexisting architecture enabled a very different approach: we implement ephemeral environments by letting developers create (and destroy) Kubernetes namespaces dynamically.
+At SimpliSafe, the company's culture and preexisting architecture enabled a very different approach: ephemeral environments are implemented via Kubernetes namespaces, and the client tooling can create (and destroy) namespaces dynamically.
 
-Because we have per-team AWS accounts, and our Kubernetes clusters are highly isolated, we're comfortable giving developers the power to manage namespaces in our non-production environments. This removes a lot of the need for strict control over object relationships in Kubernetes, and gives developers more flexibility to mess with the underlying objects more directly.
+Because we have per-team AWS accounts, and our Kubernetes clusters already provide strong isolation, we're comfortable giving developers the power to manage namespaces in our non-production environments. This removes a lot of the need for strict control over object relationships in Kubernetes, and gives developers more flexibility to mess with the underlying objects more directly.
+
+This additional power is a reflection of SimpliSafe's culture of autonomy and trust in developers.
 
 ### Different tradeoffs, different design
 
