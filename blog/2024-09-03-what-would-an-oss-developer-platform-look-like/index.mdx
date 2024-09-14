@@ -7,7 +7,7 @@ draft: true
 ---
 
 :::tip[TL;DR]
-My team has built a developer platform that our developers really like, and is providing a ton of value for my company. I'm looking for advice on options we might have to open-source it (either all or in parts).
+My team has built a developer platform that our developers really like, and is providing a ton of value for my company. But I'm struggling to figure out if and how we might open-source it. I'm looking for advice from you.
 :::
 
 import Toolbox from './toolbox.jpg';
@@ -95,17 +95,17 @@ For example, dex's multi-region DNS configuration support was originally built b
 
 ### The impact of dex at SimpliSafe
 
-Teams at SimpliSafe has moved the majority of our services to dex/EKS, and most teams are planning on moving their remaining services over in the next year or so. This has happened with close to zero pressure from management; teams are moving their services to the platform because they're much happier with it than without it.
+Teams at SimpliSafe have migrated the majority of our services to dex/EKS, and most teams are planning on moving their remaining services over in the next year or so. This has happened with close to zero pressure from management; teams are moving their services to the platform because they're much happier with it than without it.
 
-Suffice to say, I'm very proud of it, and it seems to be providing a lot of value.
+Suffice to say, I'm very proud of this outcome, and dex seems to be providing a lot of value.
 
-## Implementation details have to reflect a company's unique culture
 
+## A platform design reflects a company's culture
 While it may appear that dex is just a set of choices about tools and services that have been manifested in glue code, it also reflects SimpliSafe's values and organizational culture. While most of these values and cultural properties fairly well subscribed, they're by no means universal:
 
+* Teams should have a great deal of autonomy to choose tools, languages, frameworks, and processes, and they should be accountable for operating the systems they build
+* Continuous delivery is better than big-bang releases
 * Microservices are a good way for a large team to build a big system
-* Teams should have a good deal of autonomy, and be accountable for operating the systems they build
-* Continuous deployment is a good thing
 * A central team should own cross-cutting concerns like telemetry pipelines and observability backend tools, auth, infrastructure provisioning, etc
 * Infrastructure should be represented as code and managed through automation
 
@@ -116,14 +116,13 @@ These values deeply inform the design of dex, and it's interesting to reflect on
 
 ## Example: ephemeral environments
 
-Ephemeral developer environments are a feature I 100% know is a huge win for developers, regardless of your company culture. But for me, there have been big differences in design, features, and implementation details when I've built this feature at different companies.
+Ephemeral developer environments are a feature I 100% know is a huge win for developers, regardless of your company culture. But there have been big differences in design, features, and implementation details when I've built this feature at different companies.
 
 ### What are ephemeral environments?
 
-Here's the gist: I want to be able to deploy an ephemeral environment from my local machine into Kubernetes, with a single command, so I can iterate, tweak, and test ideas in a production-like environment. I want a URL I can hit to I can play with usability, do manual testing, attach a debugger, troubleshoot config, etc. Then I want another command to tear the whole thing down.
+Here's the gist: A developer should be able to deploy their app into an isolated, temporary environment from my local machine into Kubernetes, with a single command, so they can iterate, tweak, and test ideas in a production-like environment. They'll need a URL to access the app, so they can play with usability, do manual testing, attach a debugger, troubleshoot config, etc. When they're done, they use another command to tear the whole thing down.
 
-I also want every feature branch I push to Github (or Gitlab, Bitbucket, etc) to trigger a CI job which deploys an ephemeral environment with the same properties, and have my automated tests run against
-
+Additionally, for every feature branch they push to Github (or Gitlab, Bitbucket, etc), a CI job will deploy an ephemeral environment with the same properties, run automated tests, and tear it all down when complete (or after a specified period of time).
 
 ### Ephemeral environments in a financial institution
 
