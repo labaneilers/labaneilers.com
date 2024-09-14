@@ -111,7 +111,7 @@ While it may appear that dex is just a set of choices about tools and services t
 
 There's a bunch of others, but you get the picture.
 
-These values deeply inform the design of dex, and it's interesting to reflect on the iterations of platforms that I've built at different companies with different values, and how they were reflected in the design of the platforms.
+These values deeply inform the design of dex, and it's interesting to look back on the iterations of platforms that I've built at different companies with different values, and how they were reflected in the design of the platforms.
 
 
 ## Example: ephemeral environments
@@ -120,21 +120,21 @@ Ephemeral developer environments are a feature I 100% know is a huge win for dev
 
 ### What are ephemeral environments?
 
-Here's the gist: A developer should be able to deploy their app into an isolated, temporary environment from my local machine into Kubernetes, with a single command, so they can iterate, tweak, and test ideas in a production-like environment. They'll need a URL to access the app, so they can play with usability, do manual testing, attach a debugger, troubleshoot config, etc. When they're done, they use another command to tear the whole thing down.
+Here's the gist: A developer should be able to deploy their app into an isolated, temporary environment from their local machine into Kubernetes, with a single command, so they can iterate, tweak, and test ideas in a production-like environment. They'll need a URL to access the app, so they can play with usability, do manual testing, attach a debugger, troubleshoot config, etc. When they're done, they use another command to tear the whole thing down.
 
 Additionally, for every feature branch they push to Github (or Gitlab, Bitbucket, etc), a CI job will deploy an ephemeral environment with the same properties, run automated tests, and tear it all down when complete (or after a specified period of time).
 
 ### Ephemeral environments in a financial institution
 
-At my last job, in a commercial bank, we had a very small number of multi-tenant Kubernetes (OpenShift) clusters. As you might imagine in a highly-regulated industry, the creation of Kubernetes namespaces (and the associated access controls) was tightly controlled and managed by a central team.
+At my last job, in a commercial bank, we had a very small number of tightly controlled, multi-tenant Kubernetes (OpenShift) clusters. As you might imagine in a highly-regulated industry, the creation of Kubernetes namespaces (and the associated access controls) was subject to security controls, approvals, and needed leave an audit trail, and it was managed by a central team.
 
-Since we wanted to give developers the benefits of creating dynamic, isolated environments, we worked within the static structure of centrally managed namespaces by using strict naming conventions for any generated Kubernetes objects (e.g. prefixing all resources with the name of the developer or feature branch). 
+Since we wanted to give developers the benefits of creating dynamic, isolated environments, we worked within the static structure of centrally managed namespaces by generating Kubernetes objects using strict naming conventions for(e.g. prefixing all resources with the name of the developer or feature branch). This naming convention allowed the tooling to manage the objects as a unit, avoid collisions, and ensure that the objects were cleaned up when the developer was done.
 
 This design decision trickled into many other aspects of the system. For instance, we designed our client tooling to maintain pretty tight control over rendering the objects, and the relationship of objects via names, labels, and selectors.
 
 ### Ephemeral environments at an IoT security company
 
-At SimpliSafe, the company's culture and preexisting architecture enabled a very different approach: we implement ephemeral environments by letting developers create (and destroy) Kubernetes namespaces dynamically. 
+At SimpliSafe, the company's culture and preexisting architecture enabled a very different approach: we implement ephemeral environments by letting developers create (and destroy) Kubernetes namespaces dynamically.
 
 Because we have per-team AWS accounts, and our Kubernetes clusters are highly isolated, we're comfortable giving developers the power to manage namespaces in our non-production environments. This removes a lot of the need for strict control over object relationships in Kubernetes, and gives developers more flexibility to mess with the underlying objects more directly.
 
