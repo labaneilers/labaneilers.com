@@ -36,11 +36,11 @@ Even with all of this, we might have been fine... until we went big on Kubernete
 
 Kubernetes has been a huge win for us. But it gobbles up IP addresses like Pac-Man with a tapeworm.
 
-It's fairly straightforward math: In AWS EKS, with the VPC CNI integration (i.e. a network plugin for Kubernetes that allows it to integrate with AWS's networking APIs), here's what it requires:
+It's fairly straightforward math: in AWS EKS, with the VPC CNI integration (i.e. a network plugin for Kubernetes that allows it to integrate with AWS's networking APIs), here's what happens to all your IPs:
 
 * The EKS control plane requires at least 16 addresses (at least 6 per subnet) 
-* Every node (EC2 instance) requires at least one address, but depending on your CNI settings, they can eagerly allocate additional addresses to keep "warm" (to speed up pod creation)
-* Every pod on a node gets its own IP address. This includes not only user workloads, but also every daemonset pod. In our cluster, we have at about 8-10 daemonset pods per node.
+* Every node (EC2 instance) requires at least one address, but depending on your CNI settings, the CNI plugin can eagerly allocate additional addresses to keep "warm" (to speed up pod creation)
+* Every pod on a node gets its own IP address. This includes not only user workloads, but also **every daemonset pod**. In our cluster, we have at about 8-10 daemonset pods per node.
 
 This means, as we've migrated workloads to Kubernetes, we're increasing the number of IPs we're using by roughly **10x**.
 
@@ -139,12 +139,11 @@ func main() {
     // ...
 ```
 
-The same thing is true in .NET, Python, Rust, Java and probably most other languages that aren't doing something weird in their networking stack.
+The same thing is true in .NET, Python, Rust, Java and probably most other languages that aren't doing something weird in their networking implementation.
 
 Of course, most languages also have lower level networking APIs that are IP version specific. If you're doing more complicated things with sockets, you may have a little more work to do.
 
-
-## IPv6 cheat sheet
+## Unfortunately, not all apps use dual-stack by default
 
 Even though IPv6 support is readily available in most OSes and languages, it's not always enabled by default in every application. This was particularly annoying for us, because we use a lot of OSS and 3rd party container images as mock dependencies for integration tests, and supporting IPv6 meant we had to do add explicit configuration for in a lot of places where we previously just used the defaults.
 
@@ -153,6 +152,10 @@ In most cases, the trick is finding the magic CLI arg, environment variable, or 
 :::warning
 Some software (MongoDDB, Redis) goes out of their way to make `::` *not* be a dual-stack binding. In those cases, you have to configure both the IPv6 and IPv4 listeners separately.
 :::
+
+## IPv6 cheat sheet
+
+Here's a bunch of examples of various apps I've had to learn how to get working with IPv6:
 
 ### aws-load-balancer-controller
 
@@ -166,7 +169,7 @@ alb.ingress.kubernetes.io/target-type: ip
 alb.ingress.kubernetes.io/ip-address-type: dualstack
 ```
 
-The nice thing about this is that the load balancer itself will listen on IPv4 addresses (in addition to IPv6 addresses).
+The nice thing about this is that the load balancer itself will listen on IPv4 addresses (in addition to IPv6 addresses), which means IPv4 clients won't even know the app has been migrated.
 
 :::warning
 If you're using [external-dns](https://github.com/kubernetes-sigs/external-dns) to create Route53 entries for your load balancer Ingresses, keep in mind that it will create both A records (for the load balancer's IPv4 addresses) and AAAA records (for its IPv6 addresses). This will change the behavior of any IPv6-enabled clients making connections to that load balancer, such that they may prefer the load balancer's IPv6 addresses over its IPv4 addresses.
