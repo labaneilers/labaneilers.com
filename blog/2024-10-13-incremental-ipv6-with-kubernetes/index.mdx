@@ -1,0 +1,275 @@
+---
+slug: incremental-ipv6-with-kubernetes
+title: Incremental IPv6 with Kubernetes
+tags: [devops, platform-engineering, kubernetes]
+image: ./cars.jpg
+draft: true
+---
+
+:::tip[TL;DR]
+Due to looming IP address exhaustion, we've been migrating my company's Kubernetes workloads to IPv6. While IPv6 has its sharp edges, AWS EKS's new IPv6-only mode and better OSS ecosystem support has made it possible to adopt incrementally. 
+
+Here's a bunch of tricks I've picked up in the process.
+:::
+
+import Cars from './cars.jpg';
+
+<img src={Cars} className="blog-image" alt="An full parking lot"/>
+
+At my work, we've been struggling a bit over the past few years with decisions made (almost 10 years ago now) about our AWS network design. While we have a full class A private network (16,777,216 IPv4 addresses), we've managed to paint ourselves into the very sad corner of looming IP address exhaustion. 
+
+There's a few reasons:
+
+* Our integration with cell network carriers (to support our [home security systems](https://simplisafe.com/build-my-system)) requires a huge chunk of our IP space
+* Our decision to use a multi-account architecture in AWS, and that we chose to use a flat IP space across our accounts. This means our IP space is fragmented across accounts, regions, and availability zones, making a lot of that address space effectively unusable.
+
+Even with all of this, we might have been fine... until we went big on Kubernetes.
+
+{/* truncate */}
+
+## Kubernetes eats IPs for breakfast
+
+<figure className="blog-image">
+<a data-flickr-embed="true" href="https://www.flickr.com/photos/rsdreamphotos/3489532498/" title="So There&#x27;s Truth to This Whole &quot;Chipmunk Cheeks&quot; Thing..."><img src="https://live.staticflickr.com/3369/3489532498_47d124be37_w.jpg" width="400" alt="So There&#x27;s Truth to This Whole &quot;Chipmunk Cheeks&quot; Thing..."/></a>
+<figcaption>Kubernetes eating all my IPs</figcaption>
+</figure>
+
+Kubernetes has been a huge win for us. But it gobbles up IP addresses like Pac-Man with a tapeworm.
+
+It's fairly straightforward math: In AWS EKS, with the VPC CNI integration (i.e. a network plugin for Kubernetes that allows it to integrate with AWS's networking APIs), here's what it requires:
+
+* The EKS control plane requires at least 16 addresses (at least 6 per subnet) 
+* Every node (EC2 instance) requires at least one address, but depending on your CNI settings, they can eagerly allocate additional addresses to keep "warm" (to speed up pod creation)
+* Every pod on a node gets its own IP address. This includes not only user workloads, but also every daemonset pod. In our cluster, we have at about 8-10 daemonset pods per node.
+
+This means, as we've migrated workloads to Kubernetes, we're increasing the number of IPs we're using by roughly **10x**.
+
+This adds up quick. We've had a few close calls with IPv4 exhaustion during high traffic events where we had to scramble to temporarily kill non-critical workloads to free up IPs, rebalance across availability zones, or provision new subnets to make sure customers weren't affected.
+
+## Actually, IPv6 is a thing
+
+Unlike IPv4, IPv6 address space so incomprehensibly large that it's effectively unlimited. For example, a typical IPv6 *private subnet* would have a `/64` IPv6 CIDR, which is **18,446,744,073,709,551,616** addresses. 
+
+:::tip fun fact
+Apparently a number with that many digits is caled a "vigintillion". Numbers this large can only be discussed using your best Carl Sagan voice.
+:::
+
+import Carl from './carl.webp';
+
+<figure className="blog-image">
+<img src={Carl} alt="Trillions and Trillions of IPs"/>
+<figcaption>Trillions and Trillions of IPs</figcaption>
+</figure>
+
+IPv6 has been a standard for like 25 years, but is still not widely adopted (for a lot of reasons, including backward-incompatibility, lack of ecosystem support, and ISPs squabbling and dragging their feet).
+
+It's legitimately really difficult to migrate a large distributed architecture like ours to IPv6, because, historically, it would require simultaneous changes across many different systems, along with some scary big-bang moments. It also requires reconsidering of a lot of assumptions built into your network design and security strategy. 
+
+It's been hard to figure out how to untangle that knot.
+
+## Enter EKS IPv6 mode
+
+Given the scarcity (and price) of public IPv4 addresses, and to support the increasing scale of its customers, AWS has been under a lot of pressure to provide more viable paths to adopting IPv6. In one of the smartest moves I've seen from them in a while, they've used Kubernetes's built-in IPv6 support to build a new [IPv6 mode for EKS](https://aws.github.io/aws-eks-best-practices/networking/ipv6/).
+
+Here's the core of the hack: *While each node continues to get an IPv4 address, pods get **only** IPv6 addresses.*
+
+Inside the cluster, all traffic is via IPv6, but traffic to and from the cluster gets NATed through the nodes' IPv4 addresses. From the perspective of anything outside the cluster, connections appear to be coming from the nodes' IPv4 addresses. This means only the software *inside* the cluster has to be modified to use IPv6. 
+
+This translation of IP version between inside and outside the cluster has allowed us to migrate our workloads incrementally, which has made the whole process much more tractible.
+
+Migrating only EKS workloads, alone, looks like it's going to allow us to reduce IPv4 address usage significantly, perhaps enough to solve our IPv4 exhaustion without any further network changes. Even if not, it should buy us years of additional runway before we hit that point.
+
+## What does migrating an EKS cluster to IPv6 require?
+
+Unfortunately, you can't enable IPv6 mode on an existing EKS cluster; you have to create a new cluster and migrate your workloads over. There have been a bunch of specific challenges around this (mostly just minutae around Terraform wrangling and executing DNS cutovers), but now that we've found all the sharp edges, the proces is pretty mechanical.
+
+The bulk of the remaining work is around making any code or configuration changes necessary in the individual workloads to get them to bind to IPv6 addresses. 
+
+## A few basics
+
+I've been a programmer for like 30 years, and I had never done anything with IPv6 before this migration. There were a few embarrasingly basic things I had to learn about IPv6: 
+
+* The IPv6 "all interfaces" address is `::`, which is equivalent to `0.0.0.0` in IPv4. 
+* The IPv6 loopback address is `::1`, equivalent to `127.0.0.1` in IPv4.
+* URLs that use an IPv6 address as the hostname need the address enclosed in square brackets, e.g. `http://[2001:db8::1]:8080` so the colons in the address don't get confused with the port delimiter.
+* [Happy Eyeballs](https://en.wikipedia.org/wiki/Happy_Eyeballs) is an algorithm (implemented by most network clients) that allows apps (including browsers) to efficiently decide whether to use an IPv6 or IPv4 address when both are advertised via DNS.
+
+## Your OS and language probably supports IPv6
+
+One cool thing is that almost all modern OSes (Linux, Mac, Windows) support "dual-stack": they can listen on a port on both IPv6 and IPv4 from a single socket.
+
+On top of this, most high-level programming languages (and their standard libraries) utilize this feature, so if you bind to the `::` (all interfaces) address, you'll be able to listen on both IPv4 and IPv6 at the same time.
+
+For example, in node.js:
+
+```javascript
+const http = require('http');
+
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Hello World!\n');
+});
+
+// binds to port 8080 on all IPv6 and IPv4 interfaces by default!
+server.listen(8080);
+```
+
+Or you can do it explicitly: 
+
+```javascript
+// Or you can do the same thing explicitly:
+server.listen(8080, '::');
+```
+
+Here's the same basic thing in Go:
+
+```go
+package main
+
+import (
+    "net"
+)
+
+func main() {
+    // Binds to all IPv6 and IPv4 interfaces.
+    // Note the square brackets around the address, since the 
+    // interface is a subset of a URL.
+    listener, err := net.Listen("tcp", "[::]:8080")
+
+    // ...
+```
+
+The same thing is true in .NET, Python, Rust, Java and probably most other languages that aren't doing something weird in their networking stack.
+
+Of course, most languages also have lower level networking APIs that are IP version specific. If you're doing more complicated things with sockets, you may have a little more work to do.
+
+
+## IPv6 cheat sheet
+
+Even though IPv6 support is readily available in most OSes and languages, it's not always enabled by default in every application. This was particularly annoying for us, because we use a lot of OSS and 3rd party container images as mock dependencies for integration tests, and supporting IPv6 meant we had to do add explicit configuration for in a lot of places where we previously just used the defaults.
+
+In most cases, the trick is finding the magic CLI arg, environment variable, or config file setting that controls the host to bind to, and setting it to `::`.
+
+:::warning
+Some software (MongoDDB, Redis) goes out of their way to make `::` *not* be a dual-stack binding. In those cases, you have to configure both the IPv6 and IPv4 listeners separately.
+:::
+
+### MongoDB
+
+Mongo binds to IPv4 only by default. You can get it listening to IPv6/IPv4 (dual-stack) interfaces with the following command override:
+
+```
+mongod --auth --ipv6 --bind_ip ::,0.0.0.0
+```
+
+Here's an example of a docker-compose file:
+
+```yaml title="docker-compose.yml"
+services:
+  mongodb:
+    image: mongo:8
+    container_name: mongodb
+    command: mongod --ipv6 --bind_ip ::,0.0.0.0
+    ports:
+      - "27017:27017"
+```
+
+More info: https://www.mongodb.com/docs/manual/core/security-mongodb-configuration/
+
+### Redis
+
+Redis binds to IPv4 only by default. You can change it to bind to all interfaces with the following command override:
+
+```
+redis-server --bind "0.0.0.0 ::"
+```
+
+Here's an example of a docker-compose file:
+
+```yaml title="docker-compose.yml"
+services:
+  redis:
+    image: redis:5.0.6-alpine
+    container_name: redis
+    command: redis-server --bind "::"
+    ports:
+      - "6379:6379"
+```
+
+### MariaDB
+
+MariaDB 5.5+ already listens on `::` by default, so no additional configuration is needed.
+
+### LocalStack
+
+[LocalStack](https://localstack.cloud/) currently [doesn't support IPv6](https://docs.localstack.cloud/references/network-troubleshooting/). However, I've opened a [PR to add IPv6 support](https://github.com/localstack/localstack/pull/11601). If that PR gets merged, then you'll be able to use an IPv6 address in the `GATEWAY_LISTEN` env variable:
+
+```
+GATEWAY_LISTEN=[::]:4566
+```
+
+### RabbitMQ
+
+RabbitMQ listens on `::` by default, so no additional configuration is needed.
+
+:::warning
+Note that while the `rabbitmq:management` image binds automatically to the main amqp port (5672) on IPv6, the management API (port 15672) does NOT bind to IPv6.
+:::
+
+### nginx
+
+The `nginx` image's default config listens on both IPv4 and IPv6 by default.
+
+If you're authoring your own `nginx.conf`, you need to add listeners for IPv6 and IPv4 separately. Here's an example of binding port 3001 on both IPv6 and IPv4:
+
+```nginx title="nginx.conf"
+listen       3001; # IPv4
+listen  [::]:3001; # IPv6
+```
+
+### OTEL collector
+
+The [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/) config accepts the `::` (all interfaces) address any place you could specify an IP address. For example:
+
+```yaml
+config:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "[::]:4317"
+```
+
+
+### Jaeger
+
+Jaeger already listens on `::` by default, so no additional configuration is needed.
+
+### WireMock
+
+[WireMock](https://github.com/wiremock/wiremock) already listens on `::` by default, so no additional configuration is needed.
+
+### Gradio
+
+[Gradio](https://www.gradio.app/) binds to `127.0.0.1` by default. You can use the `server_name` property to set up an IPv6 binding in the `launch()` method in the [Blocks](https://www.gradio.app/docs/gradio/blocks) object:
+
+```python
+blocks.launch(inline=False, server_port=5112, share=False, server_name="[::]")
+```
+
+### Uvicorn
+
+[Uvicorn](https://www.uvicorn.org/) will bind to all IPv4/6 interfaces if you set `host='::'` in the `Config` object:
+
+```python
+ip_config = Config(app=_fastapi_server, host="::", port=8080)
+return Server(ip_config)
+```
+
+[More info](https://github.com/encode/uvicorn/discussions/1529#discussioncomment-3061823)
+
+## More IPv6 cheat sheet examples, please!
+
+I'll be adding more IPv6/dual-stack configuration examples as I encounter them.
+
+Do you have more? Leave them in the comments and I'll add them to the list!
