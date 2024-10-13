@@ -154,24 +154,64 @@ In most cases, the trick is finding the magic CLI arg, environment variable, or 
 Some software (MongoDDB, Redis) goes out of their way to make `::` *not* be a dual-stack binding. In those cases, you have to configure both the IPv6 and IPv4 listeners separately.
 :::
 
+### aws-load-balancer-controller
+
+You don't need to configure the [aws-load-balancer-controller](https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/) itself any differently for IPv6, but when creating Ingresses that use it, they need to have the following annotations to support IPv6:
+
+```yaml
+# Tells the controller to create target groups of pod IP(v6) addresses. 
+# The "instance" target type won't work on IPv6.
+alb.ingress.kubernetes.io/target-type: ip
+# Tells the controller to create a load balancer with IPv6 enabled
+alb.ingress.kubernetes.io/ip-address-type: dualstack
+```
+
+The nice thing about this is that the load balancer itself will listen on IPv4 addresses (in addition to IPv6 addresses).
+
+:::warning
+If you're using [external-dns](https://github.com/kubernetes-sigs/external-dns) to create Route53 entries for your load balancer Ingresses, keep in mind that it will create both A records (for the load balancer's IPv4 addresses) and AAAA records (for its IPv6 addresses). This will change the behavior of any IPv6-enabled clients making connections to that load balancer, such that they may prefer the load balancer's IPv6 addresses over its IPv4 addresses.
+
+This may be fine, but it is one way in which the "only IPv6 inside the cluster" model leaks. For example, if you have security groups on the load balancer, you'll need to make sure you're adding IPv6 versions of any rules.
+:::
+
+### ingress-nginx
+
+In the helm values for [ingress-nginx](https://github.com/kubernetes/ingress-nginx), you need to set the `ipFamilies` value to include `IPv6`:
+
+```yaml
+controller:
+  service:
+    ipFamilies:
+      - IPv6
+```
+
 ### MongoDB
 
 Mongo binds to IPv4 only by default. You can get it listening to IPv6/IPv4 (dual-stack) interfaces with the following command override:
 
 ```
-mongod --auth --ipv6 --bind_ip ::,0.0.0.0
+mongod --ipv6 --bind_ip ::,0.0.0.0
 ```
 
-Here's an example of a docker-compose file:
+Here's an example of a Kubernetes pod:
 
-```yaml title="docker-compose.yml"
-services:
-  mongodb:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mongo
+spec:
+  containers:
+  - name: mongo
     image: mongo:8
-    container_name: mongodb
-    command: mongod --ipv6 --bind_ip ::,0.0.0.0
+    command:
+    - mongod 
+    - --ipv6
+    - --bind_ip 
+    - "::,0.0.0.0"
     ports:
-      - "27017:27017"
+    - containerPort: 27017
+      protocol: TCP
 ```
 
 More info: https://www.mongodb.com/docs/manual/core/security-mongodb-configuration/
@@ -184,16 +224,24 @@ Redis binds to IPv4 only by default. You can change it to bind to all interfaces
 redis-server --bind "0.0.0.0 ::"
 ```
 
-Here's an example of a docker-compose file:
+Here's an example of a Kubernetes pod:
 
-```yaml title="docker-compose.yml"
-services:
-  redis:
-    image: redis:5.0.6-alpine
-    container_name: redis
-    command: redis-server --bind "::"
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis
+spec:
+  containers:
+  - name: redis
+    image: redis:5
+    command:
+    - redis-server 
+    - --bind
+    - "0.0.0.0 ::"
     ports:
-      - "6379:6379"
+    - containerPort: 6379
+      protocol: TCP
 ```
 
 ### MariaDB
@@ -240,6 +288,7 @@ config:
           endpoint: "[::]:4317"
 ```
 
+Other OTEL collector components will automatically use IPv6. For example, the Prometheus receiver correctly uses IPv6 pod addresses when scraping metrics.
 
 ### Jaeger
 
