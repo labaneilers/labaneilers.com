@@ -42,16 +42,16 @@ It's fairly straightforward math: in AWS EKS, with the VPC CNI integration (i.e.
 * Every node (EC2 instance) requires at least one address, but depending on your CNI settings, the CNI plugin can eagerly allocate additional addresses to keep "warm" (to speed up pod creation)
 * Every pod on a node gets its own IP address. This includes not only user workloads, but also **every daemonset pod**. In our cluster, we have at about 8-10 daemonset pods per node.
 
-This means, as we've migrated workloads to Kubernetes, we're increasing the number of IPs we're using by roughly **10x**.
+This means, as we've migrated workloads to Kubernetes, we've increased the number of IPs we're using by roughly **10x**.
 
-This adds up quick. We've had a few close calls with IPv4 exhaustion during high traffic events where we had to scramble to temporarily kill non-critical workloads to free up IPs, rebalance across availability zones, or provision new subnets to make sure customers weren't affected.
+This adds up quickly. We've had a few close calls with IPv4 exhaustion during high traffic events where we had to scramble to temporarily kill non-critical workloads to free up IPs, rebalance across availability zones, or provision new subnets to make sure customers weren't affected.
 
 ## Actually, IPv6 is a thing
 
-Unlike IPv4, IPv6 address space so incomprehensibly large that it's effectively unlimited. For example, a typical IPv6 *private subnet* would have a `/64` IPv6 CIDR, which is **18,446,744,073,709,551,616** addresses. 
+Unlike IPv4, IPv6 address space is so incomprehensibly large that it's effectively unlimited. For example, a typical IPv6 *private subnet* would have a `/64` IPv6 CIDR, which is **18,446,744,073,709,551,616** addresses. 
 
 :::tip fun fact
-Apparently a number with that many digits is caled a "vigintillion". Numbers this large can only be discussed using your best Carl Sagan voice.
+Apparently a number with that many digits is called a "vigintillion". Numbers this large can only be discussed using your best Carl Sagan voice.
 :::
 
 import Carl from './carl.webp';
@@ -63,7 +63,7 @@ import Carl from './carl.webp';
 
 IPv6 has been a standard for like 25 years, but is still not widely adopted (for a lot of reasons, including backward-incompatibility, lack of ecosystem support, and ISPs squabbling and dragging their feet).
 
-It's legitimately really difficult to migrate a large distributed architecture like ours to IPv6, because, historically, it would require simultaneous changes across many different systems, along with some scary big-bang moments. It also requires reconsidering of a lot of assumptions built into your network design and security strategy. 
+It's legitimately really difficult to migrate a large distributed architecture like ours to IPv6, because, historically, it would require simultaneous changes across many different systems, along with some scary big-bang moments. It also requires reconsidering a lot of assumptions built into your network design and security strategy. 
 
 It's been hard to figure out how to untangle that knot.
 
@@ -75,19 +75,19 @@ Here's the core of the hack: *While each node continues to get an IPv4 address, 
 
 Inside the cluster, all traffic is via IPv6, but traffic to and from the cluster gets NATed through the nodes' IPv4 addresses. From the perspective of anything outside the cluster, connections appear to be coming from the nodes' IPv4 addresses. This means only the software *inside* the cluster has to be modified to use IPv6. 
 
-This translation of IP version between inside and outside the cluster has allowed us to migrate our workloads incrementally, which has made the whole process much more tractible.
+This translation of IP version between inside and outside the cluster has allowed us to migrate our workloads incrementally, which has made the whole process much more tractable.
 
 Migrating only EKS workloads, alone, looks like it's going to allow us to reduce IPv4 address usage significantly, perhaps enough to solve our IPv4 exhaustion without any further network changes. Even if not, it should buy us years of additional runway before we hit that point.
 
 ## What does migrating an EKS cluster to IPv6 require?
 
-Unfortunately, you can't enable IPv6 mode on an existing EKS cluster; you have to create a new cluster and migrate your workloads over. There have been a bunch of specific challenges around this (mostly just minutae around Terraform wrangling and executing DNS cutovers), but now that we've found all the sharp edges, the proces is pretty mechanical.
+Unfortunately, you can't enable IPv6 mode on an existing EKS cluster; you have to create a new cluster and migrate your workloads over. There have been a bunch of specific challenges around this (mostly just minutiae around Terraform wrangling and executing DNS cutovers), but now that we've found all the sharp edges, the process is pretty mechanical.
 
 The bulk of the remaining work is around making any code or configuration changes necessary in the individual workloads to get them to bind to IPv6 addresses. 
 
 ## A few basics
 
-I've been a programmer for like 30 years, and I had never done anything with IPv6 before this migration. There were a few embarrasingly basic things I had to learn about IPv6: 
+I've been a programmer for like 30 years, and I had never done anything with IPv6 before this migration. There were a few embarrassingly basic things I had to learn about IPv6: 
 
 * The IPv6 "all interfaces" address is `::`, which is equivalent to `0.0.0.0` in IPv4. 
 * The IPv6 loopback address is `::1`, equivalent to `127.0.0.1` in IPv4.
@@ -145,7 +145,7 @@ Of course, most languages also have lower level networking APIs that are IP vers
 
 ## Unfortunately, not all apps use dual-stack by default
 
-Even though IPv6 support is readily available in most OSes and languages, it's not always enabled by default in every application. This was particularly annoying for us, because we use a lot of OSS and 3rd party container images as mock dependencies for integration tests, and supporting IPv6 meant we had to do add explicit configuration for in a lot of places where we previously just used the defaults.
+Even though IPv6 support is readily available in most OSes and languages, it's not always enabled by default in every application. This was particularly annoying for us, because we use a lot of OSS and 3rd party container images as mock dependencies for integration tests, and supporting IPv6 meant we had to add explicit configuration for in a lot of places where we previously just used the defaults.
 
 In most cases, the trick is finding the magic CLI arg, environment variable, or config file setting that controls the host to bind to, and setting it to `::`.
 
