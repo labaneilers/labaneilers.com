@@ -87,7 +87,7 @@ Migrating only EKS workloads, alone, looks like it's going to allow us to reduce
 
 ## What does migrating an EKS cluster to IPv6 require?
 
-Unfortunately, you can't enable IPv6 mode on an existing EKS cluster; you have to create a new cluster and migrate your workloads over. There have been a bunch of specific challenges around this (mostly just minutiae around Terraform wrangling and executing DNS cutovers), but now that we've found all the sharp edges, the process is pretty mechanical.
+Unfortunately, you can't enable IPv6 mode on an existing EKS cluster; you have to create a new cluster and migrate your workloads over. There have been a bunch of specific challenges around this (mostly just minutiae around Terraform wrangling and executing DNS cutovers), but now that we've found most of the corner cases, the process is pretty mechanical.
 
 The bulk of the remaining work is around making any code or configuration changes necessary in the individual workloads to get them to bind to IPv6 addresses. 
 
