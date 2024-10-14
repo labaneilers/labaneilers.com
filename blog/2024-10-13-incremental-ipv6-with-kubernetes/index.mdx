@@ -77,6 +77,10 @@ Here's the core of the hack: *While each node continues to get an IPv4 address, 
 
 Inside the cluster, all traffic is via IPv6, but traffic to and from the cluster gets NATed through the nodes' IPv4 addresses. From the perspective of anything outside the cluster, connections appear to be coming from the nodes' IPv4 addresses. This means only the software *inside* the cluster has to be modified to use IPv6. 
 
+:::info
+Note that if a host outside the cluster is IPv6-enabled, pods may just communicate directly with it over IPv6, and bypass the IPv4 NAT.
+:::
+
 This translation of IP version between inside and outside the cluster has allowed us to migrate our workloads incrementally, which has made the whole process much more tractable.
 
 Migrating only EKS workloads, alone, looks like it's going to allow us to reduce IPv4 address usage significantly, perhaps enough to solve our IPv4 exhaustion without any further network changes. Even if not, it should buy us years of additional runway before we hit that point.
