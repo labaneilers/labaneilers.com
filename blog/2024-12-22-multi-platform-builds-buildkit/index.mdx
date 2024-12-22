@@ -1,0 +1,157 @@
+---
+slug: buildkit-farm
+title: Multi-platform container builds with Buildkit
+tags: [devops, platform-engineering, kubernetes]
+image: ./polar-bear.jpg
+draft: true
+---
+
+:::tip[TL;DR]
+We wanted to take advantage of the cost savings and performance improvements of AWS's Graviton processors (ARM64), but wanted to do it incrementally. We ended up building an autoscaling, docker-compatible build service using Buildkit, which could build multi-platform container images, and then using Karpenter to auto-provision Graviton-based nodes.
+
+This is paying off- we're seeing the expected 30% better performance per EC2 dollar spent, as well as some suprising benefits to developer productivity.
+:::
+
+import Bear from './polar-bear.jpg';
+
+<img src={Bear} className="blog-image" alt="A polar bear using an ARM64 laptop"/>
+
+
+AWS's Graviton is a 64 bit ARM-based CPU which is available only on EC2. Why, you ask, would one want to use Graviton-based instances when trusty old x86 instances have served us so well in the past?
+
+Well, for one, you'd see a roughly **30% improvement in price/performance** versus instances with x86 chips. This performance difference is even more pronounced at higher utilization, especially when the memory bus gets saturated, because unlike x86 chips, a Graviton vCPU is an *actual* CPU core, NOT a hyperthread. 
+
+{/* truncate */}
+
+
+While you wont, as an AWS customer, directly see the correspondingly significant reduction in power consumption and carbon emissions, you can be assured it correlates directly with cost savings. You can save money whilst congratulating yourself for being a dedicated protector of the environment. Bonus!
+
+At SimpliSafe, we decided that yes, we do enjoy saving money, and that we should probably look at how hard it would be to migrate our workloads to Graviton instances.
+
+## How hard could recompiling everything be?
+
+At SimpliSafe, we've got a heterogenous fleet of microservices built with a bunch of different languages. While we were eager to take advantage of the cost savings of Graviton instances, we weren't about to plunge headlong before we'd incrementally built some experience and confidence with it. We needed an approach that would support both ARM64 and AMD64 for some period, so that we could run a reasonable bake-off.
+
+Another wrinkle: we'd been gradually replacing our developer laptops (Macbooks) with newer models with Apple Silicon (ARM) processors for about a year at this point, so we had a mix of developers using ARM and Intel chips. We knew that within about 2 years, all our developers would be on ARM, as their laptops were refreshed.
+
+We believe strongly that developers need be able to build, test, and debug locally on their laptops, in an environment that's as close as possible to production. Whatever solution we came up with had to work for both Intel and ARM, both in AWS and on developer laptops.
+
+## Options for multi-platform builds
+
+The first problem we had to solve was building cross-platform (or better yet, multi-platform) container images. Here's some of the options we considered:
+
+### Docker Desktop with QEMU/Rosetta emulation
+
+Docker Desktop (which we use for local development on our Macbooks) has features to enable CPU emulation for the internal Linux VM it uses to build and run containers (using either QEMU or Rosetta). It *usually* works pretty well, but it's far from perfect. There's a number of cases we ran into, especially with Rust and .NET builds, where the compiler would choke when run under emulation.
+
+Even if emulation had been reliable, the performance hit when running under emulation varied from slightly annoying (e.g. node.js, Python) to mildly aggrivating (Go, .NET), to unbearably slow (Rust).
+
+### Cross compilation
+
+Many modern languages support cross-compilation (i.e. you can compile a binary for a different architecture than the one the compiler is running on). We toyed around with this option, but quickly realized what a mess it would be, given the breadth of languages/toolchains we use.
+
+To make this work, you have to build in a container running on the host's architecture, and then copy the artifacts into another container with the target architecture. This would be a huge step down from the elegance of multi-stage Dockerfiles, in which you can encapsulate an arbitrarily complex build toolchain and produce a final image from a single Dockerfile and single build command. From the perspective of CI/CD and our developer tools, cross-compilation would require different strategies for different languages, where it had previously been opaque to the tooling. 
+
+On top of all this, cross-compilation *still* requires emulation to build the final output image, even if compilation isn't actually occurring via emulation. We'd have to make sure our CI/CD runners were available on both ARM and AMD, and that each app's image was built on the right type of runner.
+
+We also had to support developers building locally from *either* ARM or Intel laptops, which means we'd need to invert the build steps' target platforms depending on the architecture of the laptop.
+
+Yuck.
+
+## Multi-platform container images
+
+With either of these options, we *still* haven't gained the capability to build multi-platform images. With traditional Docker builds, you can only build single-architecture images. We really wanted to run per-service canary deployments to manage the risk of migration, and having to manage two separate per-architecture tagging schemes would have added a lot of additional complexity.
+
+:::tip What are multi-platform container images?
+Multi-platform container images are a pretty neat hack in the [OCI spec](https://github.com/opencontainers/distribution-spec/blob/v1.1.0/spec.md#listing-referrers) in which a specific image tag/digest points to a multi-platform "image index" instead of the manifest (list of layers) you'd get with a single-architecture image. This index is an additional layer of indirection: a list of digests pointing to manifests for different architectures. This allows a container runtime (e.g. Docker, containerd, cri-o, etc) to automatically choose the right image for the architecture it's running on.
+:::
+
+Luckily, there's a number of container build tools available (e.g [buildah/podman](https://github.com/containers), [kaniko](https://github.com/GoogleContainerTools/kaniko)) that do support multi-platform builds. 
+
+Given that we were already pretty invested in Docker as our build tool (both locally and in CI/CD), we took a look at Docker's [BuildKit](https://github.com/moby/buildkit)- which as it turned out, solved all these problems in one fell swoop.
+
+### Buildkit builders? What is this sorcery?
+
+Docker has been rearchitecting its build engine for a few years now, replacing its legacy build engine with [BuildKit](https://github.com/moby/buildkit), and extending the client interface with the [buildx](https://docs.docker.com/reference/cli/docker/buildx/) subcommand. Docker now has the ability to orchestrate build using different drivers, allowing you to use one or more [builders](https://docs.docker.com/build/builders/) running on a potentially separate host. You define a builder with some docker commands, giving the docker client the info it needs to utilize the (possibly remote) builder running BuildKit.
+
+The `docker buildx build` command establishes a network connection with the BuildKit instance, passes container registry auth info, copies the build context (source files, etc), executes builds for any number of platforms in parallel, pushes the output image to a registry, and interleaves the output streams from the builders back to the `docker` client.
+
+Remote builders support the **full feature set of Docker**; there's no loss of functionality. We were a little worried we wouldn't be able to use some of the more advanced features, like secret mounts or ssh-agent sockets... but it turns out it worked 100% seamlessly.
+
+After some experimentation, we found we could define a pair of builders (for ARM64 and AMD64), and construct a `docker buildx build` command that would reliably produce multi-platform images, without relying on either emulation or cross-compilation; all with only slightly longer build times than building a single, native-architecture image locally. All this could be done with a single Dockerfile!
+
+:::tip Multi-platform Dockerfiles
+It turns out it required very few changes to our Dockerfiles to support multi-platform builds. If your `FROM` declarations use tags pointing to multi-platform base images, BuildKit automatically detects and pulls the image for the correct architecture.
+
+If like us, you pin your base images in `FROM` declarations to a specific digest, you just need to make sure the digest points to the multi-platform index (not the digest for a platform-specific manifest). Here's a quick docker CLI command to get that:
+
+```bash
+docker buildx imagetools inspect <image-name>:<tag>
+```
+
+The very first digest in the output is for the multi-platform index.
+:::
+
+## Trying out the kubernetes driver
+
+Our first iteration used Docker's [kubernetes driver](https://docs.docker.com/build/builders/drivers/kubernetes/), which given a kubeconfig context and a few other settings (e.g. resource requests/limits), will spin up BuildKit pods, and exec into them to run builds.
+
+We discovered some limitations to this approach; most notably:
+
+* developers (and CI/CD) needed to authenticate to a Kubernetes cluster to execute builds, which added some complexity and new surface area from a security perspective.
+* the driver doesn't do any intelligent load balancing between the builders; the only available load balancing algorithms are `random` and `sticky`, neither of which do much to prevent a single builder from being overwhelmed.
+* there's no autoscaling capability. We would have had to choose between wasting money on over-provisioning builders, or risk builds failing due to lack of capacity.
+
+Not ideal.
+
+## Creating a central builder service
+
+We quickly pivoted and tried a different approach: using Docker's [remote driver](https://docs.docker.com/build/builders/drivers/remote/) with a centralized deployment of BuildKit pods behind a network load balancer. 
+
+This worked amazingly well; it solved all the scaling and auth problems we'd had with the kubernetes driver, drastically simplifying the client build tooling in the process.
+
+:::warning BuildKit autoscaling is little tricky
+To get autoscaling working reliably, we did have to customize the `buildkitd` image to handle graceful shutdowns (i.e. we added a `prestop` hook to delay termination until all builds on a particular pod were complete).
+:::
+
+When this was all done, we could use a single command in our developer tooling to build multi-platform images, regardless of the platform of the host laptop or CI/CD runner.
+
+Great success!
+
+## So you decided you didn't need layer caching?
+
+The astute reader will have guessed that Docker's *extremely valuable* layer caching feature probably wouldn't work when running a build on a different host, especially one that's randomly selected by a load balancer. That was very clever of you to notice!
+
+Luckily, BuildKit has a feature called [registry-based layer caching](https://docs.docker.com/build/cache/backends/registry/) that allows you to cache layers in a external container registry. This works just like traditional layer caching, but the cache layers are stored in a specially formatted OCI image in the registry (we're using Amazon ECR).
+
+This required some additional complexity to our build tooling to make sure we were tagging and pushing cache images with the right settings (e.g. using the `max` mode to support multi-stage builds), but once that was done it was completely invisible to developers.  
+
+## Putting this all together
+
+We now had a reliable way to build multi-platform images built into our existing developer tooling, but we still needed a way to configure our pods to run on Graviton instances.
+
+It turns out this was pretty trivial with [Karpenter](../karpenter-you-complete-me/). We created a new `NodePool` and `EC2NodeClass` for Graviton instance types, and added a well-known taint and label (`kubernetes.io/arch`) our pod specs could target with a corresponding toleration and node selector. 
+
+:::tip A taint *and* a label?
+Yep, you need both. The taint/toleration prevents any AMD64 workloads from being scheduled on an ARM64 node, and the label/nodeSelector ensures that ARM64 workloads can *only* be scheduled on an ARM64 node.
+:::
+
+## Results
+
+In the end, we are generally seeing the savings/performance improvements we expected, though it varies slightly by workload. We definitely haven't encountered a workload that performs *worse* on Graviton than on Intel/AMD.
+
+Don't get me wrong, the savings have been really nice, but the improvement to developer productivity has actually been a lot bigger than I expected. 
+
+As more of our developers were getting refreshed to new Apple Silicon laptops, building with emulation was becoming an increasingly huge pain (since we were previously always building AMD64 images). Ironically, having the new remote builders allowed us to safely and incrementally convert our target architecture in production, which in turn allowed our developers to switch to running native ARM64 builds locally... and not use the remote builders.
+
+And damn, these new Macbooks run native builds *really fast*.
+
+We still use the build service for CI/CD builds, since our CI/CD runners are still all AMD64, but our developer build tooling can decide on remote vs local builds automatically by detecting the host and target architecture. We haven't seen any differences in the resulting artifacts between local and remote builds, thanks to the the fact that BuildKit works exactly the same locally vs remotely.
+
+So go out there, save some money, some carbon, and hopefully some penguins.
+
+## Special thanks
+
+Special thanks to [Liz Fong-Jones](https://www.linkedin.com/in/efong/?originalSubdomain=au), whose [awesome talk at AWS re:invent (2024)](https://www.youtube.com/watch?v=vSdScyCFsFI&ab_channel=AWSEvents) about migrating Honeycomb's Lambda-based architecture to Graviton inspired me to finally write this up.
+
+
