@@ -1,5 +1,5 @@
 ---
-slug: buildkit-farm
+slug: multi-platform-builds-buildkit
 title: Multi-platform container builds with Buildkit
 tags: [devops, platform-engineering, kubernetes]
 image: ./polar-bear.jpg
@@ -130,7 +130,7 @@ This required some additional complexity to our build tooling to make sure we we
 
 We now had a reliable way to build multi-platform images built into our existing developer tooling, but we still needed a way to configure our pods to run on Graviton instances.
 
-It turns out this was pretty trivial with [Karpenter](../karpenter-you-complete-me/). We created a new `NodePool` and `EC2NodeClass` for Graviton instance types, and added a well-known taint and label (`kubernetes.io/arch`) our pod specs could target with a corresponding toleration and node selector. 
+It turns out this was pretty trivial with [Karpenter](./karpenter-you-complete-me). We created a new `NodePool` and `EC2NodeClass` for Graviton instance types, and added a well-known taint and label (`kubernetes.io/arch`) our pod specs could target with a corresponding toleration and node selector. 
 
 :::tip A taint *and* a label?
 Yep, you need both. The taint/toleration prevents any AMD64 workloads from being scheduled on an ARM64 node, and the label/nodeSelector ensures that ARM64 workloads can *only* be scheduled on an ARM64 node.
