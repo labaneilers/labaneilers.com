@@ -1,0 +1,188 @@
+---
+slug: observability-2.0
+title: Thoughts on Observability 2.0
+tags: [devops, platform-engineering, kubernetes]
+image: ./bee.jpg
+draft: true
+---
+
+:::tip[TL;DR]
+Observability 2.0 is a vision of observability that seeks to replace the traditional "three pillars" of observability (metrics, logs, and traces) with a single source of truth: wide events. 
+
+This vision is compelling, but there are a number of obstacles that make it difficult to adopt in practice.
+:::
+
+import Bee from './bee.jpg';
+
+<img src={Bee} className="blog-image" alt="A bee looking through a telescope"/>
+
+At SimpliSafe, we manage a pretty large system of microservices. Because we're entrusted by our customers to protect their homes and families, we take reliability of our systems pretty seriously. Observability is an essential part of building and maintaining a system like this, and over the last couple years, we've been actively investing in our capabilities.
+
+As of last year, we were using separate tools for each of the "three pillars": [Grafana Cloud](https://grafana.com/products/cloud/metrics/) for metrics, [Honeycomb](https://www.honeycomb.io/) for traces, and [Amazon OpenSearch Service](https://aws.amazon.com/opensearch-service/) for logs. Of these three, OpenSearch had become the biggest pain point (for soooo many reasons), and we were looking at some better alternatives. 
+
+Because we were already using Grafana Cloud for metrics, we decided to evaluate their [logs product](https://grafana.com/products/cloud/grafana-logs/) first, knowing that Grafana Labs has invested a lot in providing UIs that integrate observability signals. After an evaluation, we were pretty satisfied with Loki (it was certainly a lot better than OpenSearch), but we thought we should also check in with Honeycomb, who had recently introduced a [new logs product](https://www.honeycomb.io/log-analytics).
+
+In our conversation with Honeycomb, they ended up making a pretty interesting case that we should consider going all in on traces... *in lieu of logs*. We had up to this point been thinking very incrementally, and here was Honeycomb, coming in hot with a bold and revolutionary vision: Observability 2.0.
+
+{/* truncate */}
+
+### WTF is Observability 2.0?
+
+The term "[Observability 2.0](https://www.honeycomb.io/blog/one-key-difference-observability1dot0-2dot0
+)" was coined by Charity Majors (the CTO and co-founder of Honeycomb) as a shorthand for a new vision of observability, defined in opposition with the "three pillars" model. 
+
+:::tip charity.wtf
+If you're one of the 5 technology people on the internet that aren't already aware of [Charity's blog](https://charity.wtf/), you should really stop reading this drivel and head there immediately. She's a fountain of insight on technology, engineering management, observability, and many other topics.
+
+Also, I love her writing style, and her use of profanity as a persuasive device is fucking delightful.  
+:::
+
+Here's the gist of Observability 2.0:
+
+* Collect telemetry in the form "wide events" (i.e. structured logs/traces which can contain an arbitrary number of key/value pairs with high cardinality values)
+* Your backend should allow you to use these events to answer arbitrarily complex questions about your system
+
+In this vision, traditional metrics (i.e. timeseries emitted directly from your apps) are considerably less valuable, because they, by definition, are stripped of context when they're aggregated into timeseries. Since cardinality is the main driver of cost in a timeseries database, you have to choose which attributes you care about (ensuring they're low/moderate cardinality), and drop the rest. This means you also have to know what questions you'll want to ask of your system *in advance of deploying the code*. 
+
+With wide events, on the other hand, you keep all that rich, high-cardinality data, and then you get to slice and dice it in ways you couldn't have predicted you'd need in advance. You can use wide events to derive new metrics on the fly, and use the rich attributes to dig into specific anomalies in ways that are impractical with pre-aggregated timeseries data.
+
+Furthermore, in Observability 2.0, logs become somewhat redundant with traces, too. Traces are an ideal superset of logs: structured events, but with additional conventions around how they represent units of work and their relationships (i.e. spans with durations, parents, siblings, and children). 
+
+This is a pretty compelling vision: one universal source of truth for all your observability data. You don't have to suffer the cost of 3 pillars when you can derive all the same value from wide events, and you get to simplify your whole practice around a smaller, more powerful set of tools.
+
+Rock and roll! This sounds amazing! Sign me up!
+
+### The gap between vision and reality
+
+To be fair, the idea of Observability 2.0 is something my colleagues at SimpliSafe and I been thinking about for a while now. Charity has written and spoken a whole lot about it, and because of the elegance of the idea (and her fantastic writing), we already understood the core ideas, and had experience with Honeycomb, so we were primed to consider something a bit more forward thinking.
+
+When Honeycomb came back to us with a concrete plan, we realized it was finally time to take off our incrementalist hats and start considering what it would really mean to go all in on traces as the source of truth.
+
+It didn't take long for us to start enumerating concerns.
+
+### In defense of traditional metrics 
+
+I may have oversimplified the argument against metrics; Charity's actual words are a bit nuanced. For instance, she still sees value in using metrics to monitor infrastructure (especially 3rd party infra); it's just that for the code that you're writing yourself- at the core of your business- and is changing all the time, metrics alone aren't sufficient to understand what's going on.
+
+:::info of course I'd prefer wide events!
+And lets just be clear, if money were no object, **of course** I'd rather have full-fidelity wide events than metrics for everything! 
+
+I'd also prefer to dine exclusively in restaurants with Michelin stars, but I don't have the means to do that either.
+::: 
+
+I may just be biased by the types of problems I've worked on, but I've found that there's a *lot* of aspects of the software I've written and maintained that are fairly constant over time. This is pretty self-evident if you consider the fact that we create alerts at all. For the most part, you know in advance what signals tell you when something's going off the rails.
+
+Even after responding to an alert, I've historically found myself leaning on metrics when I first start investigating a problem. Because we've spent time thinking about the important signals in advance, metrics-driven dashboards are quickest way to get a read on the general shape of the problem. Only after that do I start formulating hypotheses and digging into logs and traces to look for confirmation.
+
+:::tip metrics work better if you're doing CD
+I'm also biased by my experience with practicing continuous deployment. When you're already deploying services often, tweaking metrics instrumentation as you modify features is a pretty natural part of the process. 
+:::
+
+Yes- we could be deriving these same metrics from logs or traces, but there's few remaining big factors which make me reluctant to abandon traditional metrics:
+
+* Being forced to put thought into what an app's key metrics are- ahead of time- is actually a *pretty valuable exercise*. I find that when we rely on auto-instrumented spans, we tend to put less effort into thinking about how we're going to measure our core business concerns, and we end up not having spans in the right places when we need them.
+* Metrics are boring and simple. Incrementing a counter or using histograms generated from some middleware is really easy to reason about, and much less prone to error (especially if you're utilizing sampling to try to control the cost of traces).
+* Metrics are ubiquitous. Everything supports metrics. Most every tool in the cloud-native ecosystem exposes Prometheus metrics, and very few emit traces (though this is slowly changing). Cloud providers also expose telemetry primarily as metrics (e.g. CloudWatch, Azure Monitor, etc).
+
+There's all that... and then there's the cost difference.
+
+### The cost discrepancy
+
+Metrics, while less flexible than logs/traces, are *extraordinarily cheap*. Like a *fraction* of the cost of logs or traces.
+
+With metrics, the biggest factor in your cost growth is the number of unique metric producing instances (e.g. pods, compute instances, FaaS instances). If you handle 10x the number of requests without increasing the number of pods/instances, you're still producing the same number of time series- the aggregate values will just be higher per data point. This would have no additional cost.
+
+:::info Injest-time aggregation is a thing!
+There's now a number of new, ingest-time aggregation tools (e.g. like Grafana Cloud's Adaptive Metrics or Chronosphere's aggregation rules), which can drastically reduce active series by aggregating away unneeded high-cardinality labels.
+:::
+
+With traces and logs, costs will scale with *the number of operations you have instrumented* (i.e. traffic), because you'll be producing spans/events for *every request*. This is a big difference, because vendors charge by the span/event (or by number of bytes) ingested. It also makes predicting your costs a lot harder.
+
+### Parents, have you talked to your kids about sampling traces?
+
+In order to make traces affordable, a lot of people utilize sampling. Sampling is a whole topic in itself; it's built into the OpenTelemetry spec, and there's some tooling available to do [tail sampling](https://opentelemetry.io/docs/concepts/sampling/#tail-sampling) (we use Honeycomb's [Refinery](https://github.com/honeycombio/refinery) for this). Honeycomb also does a nice job of extrapolating sampled values at query time based on the sample ratio, so it feels pretty opaque to a user- sometimes you forget you're working with sampled spans.
+
+We're currently sampling at a 30/1 ratio, which, at our volume, is generally sufficient to get valid aggregate measurements.
+
+:::warning What's your sampling ratio?
+I had dinner recently at an Observability community event, and met a nice guy in a similar position to mine. When I found out he was using Honeycomb too, I asked him what sampling ratio they were using. 
+
+After I asked, I suddenly felt awkward, like maybe that was too personal a question to ask someone I'd just met.
+:::
+
+import Awkward from './awkward.png';
+
+<img src={Awkward} alt="Asking someone what sampling ratio they use with Honeycomb"/>
+
+But sampling is complicated... and error-prone. All it takes is one programmer in one service to make a mistake with an attribute that controls sampling behavior, and you can end up with whole classes of missing traces, or conversely, accidentally disabling sampling and blowing up your bill. We've had both of these happen, and in a couple cases, we've had queries return *very* misleading results.
+
+Luckily, in these cases, we had traditional metrics available that directly contradicted the wrong conclusions we were drawing from the traces, and saved us from making some pretty bad decisions.
+
+:::info Mea culpa
+Just to be clear, these misleading results weren't Honeycomb's fault- it was errors on our side related to the subtleties of OTEL sampling configuration.
+:::
+
+### Sampling breaks forensic use cases
+
+The other big problem with sampling is that it makes it virtually impossible to rely on traces for forensic/diagnostic use cases. If you're trying to diagnose an issue for a specific customer, client device, or other specific request, the chances of having a trace available is slim.
+
+For example, imagine trying to investigate a potential security breach with anything other than 100% of logs/traces.
+
+For this reason, we end up relying on logs a whole lot more than we would otherwise. This has been one of the biggest poison pills for us in the Observability 2.0 vision.
+
+### Logs vs traces
+
+Traditional structured logs, despite the overlap with traces, have their own virtues:
+
+* Logs are simple and ubiquitous. Everything writes logs. Also all OSS/3rd party infra produce logs, and very few produce traces.
+* The developer experience for logs is great by default. Use `printf()`, start your app from a terminal, and watch the logs flow through stdout. It's a beautiful thing.
+
+And then there's just the straight-up maturity and battle-tested quality of logs. As someone recently pointed out to me when I was talking through the prospect of going all in on traces: 
+
+> Where are you going to look for stack traces when your app crashes?
+
+Oh, yeah... OTEL instrumentation isn't going to politely wrap up the current span and flush its buffer when my app panics. Maybe there's some solution to this, but it's not obvious to me.
+
+### The path forward for Observability 2.0
+
+I'm not writing this to dump on either tracing, or the overall vision of Observability 2.0. I'm still a huge fan of the idea of simplifying signals down to minimize telemetry sprawl, and I've experienced the benefits of tracing and wide events firsthand. 
+
+Honeycomb is indeed a fucking *pleasure* to use- it's super fast, very powerful, and intuitive to use. Honeycomb's existence has prompted a virtual tidal wave of innovation across the observability space as competitors struggle to react to its power and elegance.
+
+But despite how enamored I am with Observability 2.0, when it came time to make a bold decision to go all in... we equivocated, put our incrementalist hats back on, and decided to continue with the three pillars for the time being. Observability 2.0 is just a *bit* too cutting edge at the moment.
+
+I suspect these obstacles that prevented us from saying "yes" today are all solvable in time. I hear there are companies that have gone all in on Observability 2.0, and I've got to believe its possible.
+
+To close the gap for a company like SimpliSafe, here's the gaps we'd need to close:
+
+#### Affordability 
+
+We've got to make wide events more cost efficient and affordable. Until we can get the costs down, sampling will continue to be necessary- which breaks diagnostic and forensic use cases. This makes the whole idea of discarding the other two pillars a non-starter. From my perspective, **sampling and Observability 2.0 are fundamentally incompatible**.
+
+I'm seeing some pretty exciting things happening to make logs/traces more efficient, such as columnar databases like [Clickhouse](https://github.com/ClickHouse/ClickHouse), as well as other tracing projects like [Grafana Tempo](https://grafana.com/oss/tempo/) and [QuickWit](https://quickwit.io/). 
+
+And I'm certainly not going to count out Honeycomb- they may have a few more tricks up their sleeve that could make a big difference in cost.
+
+#### Developer experience
+
+The developer tools available for tracing are legitimately a lot more complex than those available for logs. We'll need ubiquitous tracing developer tools that approach the ease of use of `printf()` debugging, and that make it just as easy to that validate your tracing instrumentation is working the way you intended.
+
+The developer experience for OTEL SDK configuration for tracing is still... a work in progress. I hope to see more projects that package up OTEL SDKs and provide easier installation and configuration. Or who knows, maybe some of the SDK owners will decide that 200 lines of boilerplate before you can send a single span is a bit much.
+
+And we've got to find ways to deal with the edge cases (e.g capturing diagnostic data from crashes/panics) which OTEL tracing isn't currently handling.
+
+#### Ecosystem and maturity
+
+As long as most infrastructure and 3rd party tools are emitting only logs and metrics, it's going to be hard to go all in on tracing. It's possible that OpenTelemetry's trajectory will continue, and more and more OSS tools will start emitting traces, but there's a lot of ground to cover to hit critical mass.
+
+As a litmus test: an Observability 2.0 product would need some sort of drop-in Kubernetes monitoring solution similar to what you can get out-of-the-box with DataDog/NewRelic, or at least something comparable to the [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator).
+
+## Being comfortable with incrementalism
+
+Throughout my career, I've generally thought of incrementalism as a good thing. Perhaps Observability 2.0 isn't something we should aim to achieve in short order, but a longer journey, in which we can discover our way, step-by-step.
+
+Right now, we're thinking about how to better use the three pillars we have:
+* Seek out tools that integrate and visualize data from across multiple pillars 
+* Look for ways to reduce the waste of overlapping, duplicate pillars 
+* Try to utilize each pillar for its strengths
+* Trying to find sustainable ways to manage costs
