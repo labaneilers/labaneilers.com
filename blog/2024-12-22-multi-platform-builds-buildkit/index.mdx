@@ -7,9 +7,11 @@ draft: true
 ---
 
 :::tip[TL;DR]
-We wanted to take advantage of the cost savings and performance improvements of AWS's Graviton processors (ARM64), but wanted to do it incrementally. We ended up building an autoscaling, docker-compatible build service using Buildkit, which could build multi-platform container images, and then using Karpenter to auto-provision Graviton-based nodes.
+At SimpliSafe, we wanted to take advantage of the cost savings and performance improvements of AWS's Graviton processors (ARM64), but wanted to do it incrementally to manage risk. 
 
-This is paying off- we're seeing the expected 30% better performance per EC2 dollar spent, as well as some suprising benefits to developer productivity.
+We ended up building an autoscaling, docker-compatible build service using BuildKit, which could build multi-platform container images, and then using Karpenter to auto-provision Graviton-based nodes.
+
+This is paying off- we're seeing the expected 30% better performance per EC2 dollar spent, as well as some surprising benefits to developer productivity.
 :::
 
 import Bear from './polar-bear.jpg';
@@ -17,9 +19,9 @@ import Bear from './polar-bear.jpg';
 <img src={Bear} className="blog-image" alt="A polar bear using an ARM64 laptop"/>
 
 
-AWS's Graviton is a 64 bit ARM-based CPU which is available only on EC2. Why, you ask, would one want to use Graviton-based instances when trusty old x86 instances have served us so well in the past?
+AWS's Graviton is a 64 bit ARM-based CPU available on EC2. Why, you ask, would one want to use Graviton-based instances when trusty old x86 instances have served us so well in the past?
 
-Well, for one, you'd see a roughly **30% improvement in price/performance** versus instances with x86 chips. This performance difference is even more pronounced at higher utilization, especially when the memory bus gets saturated, because unlike x86 chips, a Graviton vCPU is an *actual* CPU core, NOT a hyperthread. 
+Well, for one, you'ds see a roughly **30% improvement in price/performance** versus instances with x86 chips. This performance difference is even more pronounced at higher utilization, because unlike x86 chips, a Graviton vCPU is an *actual* CPU core, NOT a hyperthread you're sharing on a core with some rando. 
 
 {/* truncate */}
 
@@ -40,15 +42,17 @@ We believe strongly that developers need be able to build, test, and debug local
 
 The first problem we had to solve was building cross-platform (or better yet, multi-platform) container images. Here's some of the options we considered:
 
-### Docker Desktop with QEMU/Rosetta emulation
+### Docker with QEMU emulation
 
-Docker Desktop (which we use for local development on our Macbooks) has features to enable CPU emulation for the internal Linux VM it uses to build and run containers (using either QEMU or Rosetta). It *usually* works pretty well, but it's far from perfect. There's a number of cases we ran into, especially with Rust and .NET builds, where the compiler would choke hard (e.g. segfault!) when run under emulation.
+Docker has features to enable CPU emulation of ARM chips on x86 hosts, or vice versa. On Linux, it uses QEMU, while on a Mac (using a Linux VM managed by Docker Desktop) it can additionally use Rosetta. 
+
+It *usually* works pretty well, but it's far from perfect. There's a number of cases we ran into, especially with Rust and .NET builds, where the compiler would choke hard (segfault) when run under emulation.
 
 Even if emulation had been reliable, the performance hit when running under emulation varied from slightly annoying (e.g. node.js, Python) to mildly aggravating (Go, .NET), to unbearably slow (Rust, C++).
 
 ### Cross compilation
 
-Many modern languages support cross-compilation (i.e. you can compile a binary for a different architecture than the one the compiler is running on). We toyed around with this option, but quickly realized what a mess it would be, given the breadth of languages/toolchains we use.
+Many modern language compilers support cross-compilation (i.e. you can compile a binary for a different architecture than the one the compiler is running on). We toyed around with this option, but quickly realized what a mess it would be, given the breadth of languages/toolchains we use.
 
 To make this work, you have to build in a container running on the host's architecture, and then copy the artifacts into another container with the target architecture. This would be a huge step down from the elegance of multi-stage Dockerfiles, in which you can encapsulate an arbitrarily complex build toolchain and produce a final image from a single Dockerfile and single build command. From the perspective of CI/CD and our developer tools, cross-compilation would require different strategies for different languages, where it had previously been opaque to the tooling. 
 
@@ -63,10 +67,12 @@ Yuck.
 With either of these options, we *still* haven't gained the capability to build multi-platform images. With traditional Docker builds, you can only build single-architecture images. We really wanted to run per-service canary deployments to manage the risk of migration, and having to manage two separate per-architecture tagging schemes would have added a lot of additional complexity.
 
 :::tip What are multi-platform container images?
-Multi-platform container images are a pretty neat hack in the [OCI spec](https://github.com/opencontainers/distribution-spec/blob/v1.1.0/spec.md#listing-referrers) in which a specific image tag/digest points to a multi-platform "image index" instead of the manifest (list of layers) you'd get with a single-architecture image. This index is an additional layer of indirection: a list of digests pointing to manifests for different architectures. This allows a container runtime (e.g. Docker, containerd, cri-o, etc) to automatically choose the right image for the architecture it's running on.
+Multi-platform container images are a pretty neat hack in the [OCI spec](https://github.com/opencontainers/distribution-spec/blob/v1.1.0/spec.md#listing-referrers) in which a specific image tag/digest points to a multi-platform "image index" instead of the manifest (list of layers) you'd get with a single-architecture image. 
+
+This index is an additional layer of indirection: a list of digests pointing to manifests for different architectures. It allows a container runtime (e.g. Docker, containerd, cri-o, etc) to automatically choose the right image for the architecture it's running on.
 :::
 
-Luckily, there's a number of container build tools available (e.g [buildah/podman](https://github.com/containers), [kaniko](https://github.com/GoogleContainerTools/kaniko)) that do support multi-platform builds. 
+Luckily, there's a number of container build tools available (e.g [Buildah/Podman](https://github.com/containers), [Kaniko](https://github.com/GoogleContainerTools/kaniko)) that do support multi-platform builds. 
 
 Given that we were already pretty invested in Docker as our build tool (both locally and in CI/CD), we took a look at Docker's [BuildKit](https://github.com/moby/buildkit)- which as it turned out, solved all these problems in one fell swoop.
 
