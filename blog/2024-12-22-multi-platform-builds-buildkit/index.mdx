@@ -24,9 +24,9 @@ Well, for one, you'd see a roughly **30% improvement in price/performance** vers
 {/* truncate */}
 
 
-While you wont, as an AWS customer, directly see the correspondingly significant reduction in power consumption and carbon emissions, you can be assured it correlates directly with cost savings. You can save money whilst congratulating yourself for being a dedicated protector of the environment. Bonus!
+While you won't, as an AWS customer, directly see the correspondingly significant reduction in power consumption and carbon emissions, you can be assured it correlates directly with cost savings. You can save money whilst congratulating yourself for being a dedicated protector of the environment. Bonus!
 
-At SimpliSafe, we decided that yes, we do enjoy saving money, and that we should probably look at how hard it would be to migrate our workloads to Graviton instances.
+I had a conversation with my team, and we decided that yes, we do enjoy saving money, and that we should probably look at how hard it would be to migrate our workloads to Graviton instances.
 
 ## How hard could recompiling everything be?
 
@@ -42,9 +42,9 @@ The first problem we had to solve was building cross-platform (or better yet, mu
 
 ### Docker Desktop with QEMU/Rosetta emulation
 
-Docker Desktop (which we use for local development on our Macbooks) has features to enable CPU emulation for the internal Linux VM it uses to build and run containers (using either QEMU or Rosetta). It *usually* works pretty well, but it's far from perfect. There's a number of cases we ran into, especially with Rust and .NET builds, where the compiler would choke when run under emulation.
+Docker Desktop (which we use for local development on our Macbooks) has features to enable CPU emulation for the internal Linux VM it uses to build and run containers (using either QEMU or Rosetta). It *usually* works pretty well, but it's far from perfect. There's a number of cases we ran into, especially with Rust and .NET builds, where the compiler would choke hard (e.g. segfault!) when run under emulation.
 
-Even if emulation had been reliable, the performance hit when running under emulation varied from slightly annoying (e.g. node.js, Python) to mildly aggrivating (Go, .NET), to unbearably slow (Rust).
+Even if emulation had been reliable, the performance hit when running under emulation varied from slightly annoying (e.g. node.js, Python) to mildly aggravating (Go, .NET), to unbearably slow (Rust, C++).
 
 ### Cross compilation
 
@@ -70,9 +70,9 @@ Luckily, there's a number of container build tools available (e.g [buildah/podma
 
 Given that we were already pretty invested in Docker as our build tool (both locally and in CI/CD), we took a look at Docker's [BuildKit](https://github.com/moby/buildkit)- which as it turned out, solved all these problems in one fell swoop.
 
-### Buildkit builders? What is this sorcery?
+### BuildKit builders? What is this sorcery?
 
-Docker has been rearchitecting its build engine for a few years now, replacing its legacy build engine with [BuildKit](https://github.com/moby/buildkit), and extending the client interface with the [buildx](https://docs.docker.com/reference/cli/docker/buildx/) subcommand. Docker now has the ability to orchestrate build using different drivers, allowing you to use one or more [builders](https://docs.docker.com/build/builders/) running on a potentially separate host. You define a builder with some docker commands, giving the docker client the info it needs to utilize the (possibly remote) builder running BuildKit.
+Docker has been rearchitecting its build engine for a few years now, replacing its legacy build engine with [BuildKit](https://github.com/moby/buildkit), and extending the client interface with the [buildx](https://docs.docker.com/reference/cli/docker/buildx/) subcommand. Docker now has the ability to orchestrate builds using different drivers, allowing you to use one or more [builders](https://docs.docker.com/build/builders/) running on a potentially separate host. You define a builder with some docker commands, giving the docker client the info it needs to utilize the (possibly remote) builder running BuildKit.
 
 The `docker buildx build` command establishes a network connection with the BuildKit instance, passes container registry auth info, copies the build context (source files, etc), executes builds for any number of platforms in parallel, pushes the output image to a registry, and interleaves the output streams from the builders back to the `docker` client.
 
@@ -94,7 +94,7 @@ The very first digest in the output is for the multi-platform index.
 
 ## Trying out the kubernetes driver
 
-Our first iteration used Docker's [kubernetes driver](https://docs.docker.com/build/builders/drivers/kubernetes/), which given a kubeconfig context and a few other settings (e.g. resource requests/limits), will spin up BuildKit pods, and exec into them to run builds.
+Our first iteration used Docker's [kubernetes driver](https://docs.docker.com/build/builders/drivers/kubernetes/), which given a kubeconfig context and a few other settings (e.g. resource requests/limits), will spin up BuildKit pods, and use the Kubernetes API to exec into them and kick off processes with buildkit CLI commands.
 
 We discovered some limitations to this approach; most notably:
 
