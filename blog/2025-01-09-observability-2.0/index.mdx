@@ -29,10 +29,10 @@ In our conversation with Honeycomb, they ended up making a pretty interesting ca
 ### WTF is Observability 2.0?
 
 The term "[Observability 2.0](https://www.honeycomb.io/blog/one-key-difference-observability1dot0-2dot0
-)" was coined by Charity Majors (the CTO and co-founder of Honeycomb) as a shorthand for a new vision of observability, defined in opposition with the "three pillars" model. 
+)" was coined by Charity Majors (the CTO and co-founder of Honeycomb) as a shorthand for a new vision of observability, defined in opposition to the "three pillars" model. 
 
 :::tip charity.wtf
-If you're one of the 5 technology people on the internet that aren't already aware of [Charity's blog](https://charity.wtf/), you should really stop reading this drivel and head there immediately. She's a fountain of insight on technology, engineering management, observability, and many other topics.
+If you're somehow one of the 5 technology people on the internet that isn't already aware of [Charity's blog](https://charity.wtf/), you should really stop reading this drivel and head there immediately. She's a fountain of insight on technology, engineering management, observability, and many other topics.
 
 Also, I love her writing style, and her use of profanity as a persuasive device is fucking delightful.  
 :::
@@ -40,7 +40,7 @@ Also, I love her writing style, and her use of profanity as a persuasive device 
 Here's the gist of Observability 2.0:
 
 * Collect telemetry in the form "wide events" (usually traces, but also maybe structured logs) which can contain an arbitrary number of key/value pairs with high cardinality values
-* Your backend should allow you to use these events to answer arbitrarily complex questions about your system
+* Your observability tooling should allow you to query these events to answer arbitrarily complex questions about your system
 
 In this vision, traditional metrics (i.e. timeseries emitted directly from your apps) are considerably less valuable, because they, by definition, are stripped of context when they're aggregated into timeseries. Since cardinality is the main driver of cost in a timeseries database, you have to choose which attributes you care about (ensuring they're low/moderate cardinality), and drop the rest. This means you also have to know what questions you'll want to ask of your system *in advance of deploying the code*. 
 
@@ -70,14 +70,13 @@ I may just be biased by the types of problems I've worked on, but I've found tha
 
 Being forced to put thought into what an app's key metrics are- ahead of time- is actually a *pretty valuable exercise for its own sake*. I find that when we rely on auto-instrumented spans, we tend to put less effort into thinking about how we're going to measure our core business concerns, and we end up realizing we don't have spans in the right places when we need them.
 
-
-Even when responding to an alert, I find myself leaning on metrics when I first start investigating a problem. Because we've spent time thinking about the important indicators in advance, and building dashboards/alerts based on them, metrics-driven dashboards are quickest way to get a read on the general shape of the problem. Only after that do I start formulating hypotheses and digging into logs and traces to look for confirmation.
-
 :::tip metrics work better if you're doing CD
 I'm also biased by my experience with practicing continuous deployment. When you're already deploying services often, tweaking metrics instrumentation as you modify features is a pretty natural part of the process. 
 :::
 
-Yes- we could be deriving these same metrics from logs or traces, but there's few remaining big factors, in practice, which it hard to imagine giving up traditional metrics entirely: 
+Even when responding to an alert, I find myself leaning on metrics when I first start investigating a problem. Because we've spent time thinking about the important indicators in advance, and building dashboards/alerts based on them, metrics-driven dashboards are quickest way to get a read on the general shape of the problem. Only after that do I start formulating hypotheses and digging into logs and traces to look for confirmation.
+
+Yes- we could be deriving these same metrics from logs or traces, but there's few remaining big factors, in practice, which make it hard to imagine giving up traditional metrics entirely: 
 
 * Metrics are boring and simple. Compared to the complexities of tracing, incrementing a counter or using histograms generated from some middleware is really easy to reason about, and much less prone to error (especially if you're utilizing sampling to try to control the cost of traces). This is valuable, if for no other reason than to have something to corroborate the metrics you derive dynamically from logs/traces.
 * Metrics are ubiquitous. Everything supports metrics. Most every tool in the cloud-native ecosystem exposes Prometheus metrics, and very few emit traces (though this is slowly changing). Cloud providers also expose telemetry primarily as metrics (e.g. CloudWatch, Azure Monitor, etc).
@@ -98,6 +97,8 @@ With metrics, the biggest factor in your cost growth is the number of unique met
 
 :::tip Injest-time aggregation is a thing!
 There's now a number of new, ingest-time aggregation tools (e.g. like [Grafana Cloud's Adaptive Metrics](https://grafana.com/docs/grafana-cloud/cost-management-and-billing/reduce-costs/metrics-costs/control-metrics-usage-via-adaptive-metrics/) or [Chronosphere's aggregation rules](https://docs.chronosphere.io/control/shaping/rules)) which can drastically reduce active series by aggregating away unneeded high-cardinality labels.
+
+Using these tools, you can often keep active series growth sublinear with respect to the growth of your actual traffic.
 :::
 
 With traces and logs, costs will scale with *the number of operations you have instrumented* (i.e. traffic), because you'll be producing spans/events for *every request*. This is a big difference, because vendors charge by the span/event (or by number of bytes) ingested. It also makes predicting your costs a lot harder.
@@ -174,7 +175,7 @@ And I'm certainly not going to count out Honeycomb- knowing them, they'll contin
 
 #### Developer experience
 
-The developer tools available for tracing are legitimately a lot more complex than those available for logs. We'll need ubiquitous tracing developer tools that approach the ease of use of `printf()` debugging, and that make it just as easy to that validate your tracing instrumentation is working the way you intended.
+The developer tools available for tracing are legitimately a lot more complex than those available for logs. We'll need ubiquitous tracing developer tools that approach the ease of use of `printf()` debugging, and that make it just as easy to validate that your tracing instrumentation is working the way you intended.
 
 The developer experience for OTEL SDK configuration is still... a work in progress. I hope to see more projects that package up OTEL SDKs and provide easier installation and configuration. Or who knows, maybe some of the SDK owners will decide that 200 lines of boilerplate before you can send a single span is a bit much.
 
@@ -190,7 +191,7 @@ As a litmus test: an Observability 2.0 product would need some sort of drop-in K
 
 Throughout my career, I've generally been biased towards incrementalism over revolutionary changes. I'm pretty stingy about my [innovation tokens](https://mcfunley.com/choose-boring-technology), and I tend to want to save them for things that will drive our core business strategy. Observability is something I want to keep boring and predictable.
 
-Perhaps Observability 2.0 isn't something we should aim to achieve in short order; rather, it's a philosophy we can apply in phases, in which we gradually get more and more value from our observability spend.
+Perhaps Observability 2.0 isn't something we should aim to achieve in short order. Rather, it's a philosophy we can apply in phases, in which we gradually get more and more value from our observability spend.
 
 Right now, we're thinking about how to better use the three pillars we have:
 
