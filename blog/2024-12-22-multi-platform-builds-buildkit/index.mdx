@@ -180,7 +180,7 @@ docker buildx build \
 A few notes:
 * The `--push` flag tells Docker to push the resulting image to the registry, since it can't necessarily store the multi-platform image in your local Docker daemon's cache (unless you have containerd enabled... long story).
 * The multiple `--cache-from` flags allow us to use the cache from a previous build from either the main branch or a feature branch. With `--pull`, Docker will pull both and automatically select the right one, and will also fail gracefully if one doesn't exist.
-* `--cache-to` tells Docker to store the resulting cache of this build. The `mode=max` attribute is very important here, since otherwise the cache would only contain the final build stage layers. 
+* `--cache-to` tells Docker to store the resulting cache of this build. The `mode=max` attribute is very important here, since otherwise the cache would only contain the final stage's layers. 
 * The `--builder` flag tells Docker to use the remote builder named `remote`, which is defined in a file created by our tooling at `~/.docker/buildx/instances/remote`, and looks like this:
 
 ```json
