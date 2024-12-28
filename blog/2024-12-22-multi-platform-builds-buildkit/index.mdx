@@ -1,6 +1,6 @@
 ---
 slug: multi-platform-builds-buildkit
-title: Multi-platform container builds with Buildkit
+title: Multi-platform container builds with BuildKit
 tags: [devops, platform-engineering, kubernetes]
 image: ./polar-bear.jpg
 draft: true
@@ -9,7 +9,7 @@ draft: true
 :::tip[TL;DR]
 At SimpliSafe, we wanted to take advantage of the cost savings and performance improvements of AWS's Graviton processors (ARM64), but wanted to do it incrementally to manage risk. 
 
-We ended up building an autoscaling, docker-compatible build service using BuildKit, which could build multi-platform container images, and then using Karpenter to auto-provision Graviton-based nodes.
+We built an autoscaling, docker-compatible build service using BuildKit, which could build multi-platform container images, and then used Karpenter to auto-provision Graviton-based nodes.
 
 This is paying off- we're seeing the expected 30% better performance per EC2 dollar spent, as well as some surprising benefits to developer productivity.
 :::
@@ -21,22 +21,22 @@ import Bear from './polar-bear.jpg';
 
 AWS's Graviton is a 64 bit ARM-based CPU available on EC2. Why, you ask, would one want to use Graviton-based instances when trusty old x86 instances have served us so well in the past?
 
-Well, for one, you'ds see a roughly **30% improvement in price/performance** versus instances with x86 chips. This performance difference is even more pronounced at higher utilization, because unlike x86 chips, a Graviton vCPU is an *actual* CPU core, NOT a hyperthread you're sharing on a core with some rando. 
+Well, for one, you'ds see a roughly **30% improvement in price/performance** versus instances with x86 chips. This performance difference is even more pronounced at higher utilization, because unlike x86 chips, a Graviton vCPU is an *actual* CPU core, NOT a hyperthread you're sharing on a core with some rando. This should allow you to scale down, increase CPU utilization more than would be safe with hyperthreads, and still handle the same load.
 
 {/* truncate */}
 
 
-While you won't, as an AWS customer, directly see the correspondingly significant reduction in power consumption and carbon emissions, you can be assured it correlates directly with cost savings. You can save money whilst congratulating yourself for being a dedicated protector of the environment. Bonus!
+While you won't, as an AWS customer, see the corresponding reduction in power consumption and carbon emissions *directly*, you can be assured it correlates directly with cost savings. You can save money whilst congratulating yourself for being a dedicated protector of the environment. Bonus!
 
 I had a conversation with my team, and we decided that yes, we do enjoy saving money, and that we should probably look at how hard it would be to migrate our workloads to Graviton instances.
 
 ## How hard could recompiling everything be?
 
-At SimpliSafe, we've got a heterogenous fleet of microservices built with a bunch of different languages. While we were eager to take advantage of the cost savings of Graviton instances, we weren't about to plunge headlong before we'd incrementally built some experience and confidence with it. We needed an approach that would support both ARM64 and AMD64 for some period, so that we could run a reasonable bake-off.
+At SimpliSafe, we've got a heterogenous fleet of microservices built with a bunch of different languages. While we were eager to take advantage of the cost savings of Graviton instances, we weren't about to plunge headlong before we'd incrementally built some confidence with it. We needed an approach that would support both ARM64 and AMD64 for some period, so that we could run a reasonable bake-off.
 
 Another wrinkle: we'd been gradually replacing our developer laptops (Macbooks) with newer models with Apple Silicon (ARM) processors for about a year at this point, so we had a mix of developers using ARM and Intel chips. We knew that within about 2 years, all our developers would be on ARM, as their laptops were refreshed.
 
-We believe strongly that developers need be able to build, test, and debug locally on their laptops, in an environment that's as close as possible to production. Whatever solution we came up with had to work for both Intel and ARM, both in AWS and on developer laptops.
+We believe strongly that developers need be able to build, test, and debug locally on their laptops, in an environment that's as close as possible to production. Whatever solution we came up with had to work for both x86 and ARM, both in AWS and on developer laptops.
 
 ## Options for multi-platform builds
 
@@ -64,7 +64,7 @@ Yuck.
 
 ## Multi-platform container images
 
-With either of these options, we *still* haven't gained the capability to build multi-platform images. With traditional Docker builds, you can only build single-architecture images. We really wanted to run per-service canary deployments to manage the risk of migration, and having to manage two separate per-architecture tagging schemes would have added a lot of additional complexity.
+With either of these options, we *still* haven't gained the capability to build multi-platform images. With traditional Docker builds, you can only build single-architecture images. We really wanted to run per-service canary deployments to manage the risk of migration, and having to manage two separate per-architecture tagging schemes would have leaked a lot of complexity from the build into the rest of our deployment system.
 
 :::tip What are multi-platform container images?
 Multi-platform container images are a pretty neat hack in the [OCI spec](https://github.com/opencontainers/distribution-spec/blob/v1.1.0/spec.md#listing-referrers) in which a specific image tag/digest points to a multi-platform "image index" instead of the manifest (list of layers) you'd get with a single-architecture image. 
@@ -160,4 +160,61 @@ So go out there, save some money, some carbon, and hopefully some penguins.
 
 Special thanks to [Liz Fong-Jones](https://www.linkedin.com/in/efong/?originalSubdomain=au), whose [awesome talk at AWS re:invent (2024)](https://www.youtube.com/watch?v=vSdScyCFsFI&ab_channel=AWSEvents) about migrating Honeycomb's Lambda-based architecture to Graviton inspired me to finally write this up.
 
+## Appendix
 
+An example `docker buildx` command for building a multi-platform image:
+
+```bash
+docker buildx build \
+    --builder remote \
+    --push \
+    --pull \
+    --platform 'linux/amd64,linux/arm64' \
+    --tag '111111111.dkr.ecr.us-east-1.amazonaws.com/my-app:some-tag' \
+    --cache-from 'type=registry,ref=111111111.dkr.ecr.us-east-1.amazonaws.com/my-app:some-tag-cache' \
+    --cache-from 'type=registry,ref=111111111.dkr.ecr.us-east-1.amazonaws.com/my-app:some-tag-cache' \
+    --cache-to 'type=registry,mode=max,ref=111111111.dkr.ecr.us-east-1.amazonaws.com/my-app:some-tag-cache,image-manifest=true' \
+    .
+```
+
+A few notes:
+* The `--push` flag tells Docker to push the resulting image to the registry, since it can't necessarily store the multi-platform image in your local Docker daemon's cache (unless you have containerd enabled... long story).
+* The multiple `--cache-from` flags allow us to use the cache from a previous build from either the main branch or a feature branch. With `--pull`, Docker will pull both and automatically select the right one, and will also fail gracefully if one doesn't exist.
+* `--cache-to` tells Docker to store the resulting cache of this build. The `mode=max` attribute is very important here, since otherwise the cache would only contain the final build stage layers. 
+* The `--builder` flag tells Docker to use the remote builder named `remote`, which is defined in a file created by our tooling at `~/.docker/buildx/instances/remote`, and looks like this:
+
+```json
+{
+    "Name": "remote",
+    "Driver": "remote",
+    "Nodes": [
+        {
+            "Name": "remote-arm64",
+            "Platforms": [
+                {
+                    "architecture": "arm64",
+                    "os": "linux"
+                }
+            ],
+            "Flags": null,
+            "DriverOpts": null,
+            "Endpoint": "tcp://arm.docker-builders.mycompany.com:3569",
+            "Files": null
+        },
+        {
+            "Name": "remote-amd64",
+            "Platforms": [
+                {
+                    "architecture": "amd64",
+                    "os": "linux"
+                }
+            ],
+            "Flags": null,
+            "DriverOpts": null,
+            "Endpoint": "tcp://amd.docker-builders.mycompany.com:3569",
+            "Files": null
+        }
+    ],
+    "Dynamic": false
+}
+```
