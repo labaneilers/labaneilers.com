@@ -118,6 +118,12 @@ This worked amazingly well; it solved all the scaling and auth problems we'd had
 
 :::warning BuildKit autoscaling is little tricky
 To get autoscaling working reliably, we did have to customize the `buildkitd` image to handle graceful shutdowns (i.e. we added a `prestop` hook to delay termination until all builds on a particular pod were complete).
+
+The key buildkit command to use to determine the status of all builds is:
+
+```bash
+buildctl debug histories
+```
 :::
 
 When this was all done, we could use a single command in our developer tooling to build multi-platform images, regardless of the platform of the host laptop or CI/CD runner.
