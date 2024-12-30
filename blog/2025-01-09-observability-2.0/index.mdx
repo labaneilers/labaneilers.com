@@ -142,13 +142,13 @@ import Awkward from './awkward.png';
 
 Theres a *lot* of moving parts required to make sampling work at scale. All it takes is one programmer in one service to make a mistake with an attribute that controls sampling behavior, and you can end up with whole classes of missing traces, or conversely, accidentally disabling sampling and blowing up your bill. We've had both of these happen, and in a couple cases, we've had queries return *very* misleading results.
 
-Luckily, in these cases, we had traditional metrics available that directly contradicted the wrong conclusions we were drawing from the traces, and saved us from making some pretty bad decisions.
-
-So if you're doing sampling on your wide events, traditional timeseries metrics are *extremely valuable* for corroborating results from your queries.
-
 :::info Mea culpa
 Just to be clear, these misleading results weren't Honeycomb's fault- it was errors on our side related to the subtleties of OTEL sampling configuration.
 :::
+
+Luckily, in these cases, we had traditional metrics available that directly contradicted the wrong conclusions we were drawing from the traces, and saved us from making some pretty bad decisions.
+
+So if you're doing sampling on your wide events, which you *almost certainly are to manage costs*, traditional timeseries metrics are *extremely valuable* for corroborating results from your queries against wide events.
 
 #### Sampling breaks forensic use cases
 
@@ -156,7 +156,7 @@ The other big problem with sampling is that it makes it virtually impossible to 
 
 Seriously, imagine trying to investigate a potential security breach with anything other than 100% of logs/traces.
 
-So for these forensic use cases, we end up relying on traditional structured logs, and not traces.
+So for these forensic use cases, we end up relying on traditional structured logs, and not traces. It's not looking good for Observability 2.0's reduction of duplicate pillars!
 
 
 ### The historical inertia of metrics
