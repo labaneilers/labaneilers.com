@@ -64,28 +64,36 @@ It didn't take long for us to start enumerating concerns.
 
 I may have oversimplified the argument against metrics; Charity's actual words are a bit nuanced. For instance, she still sees value in using metrics to monitor infrastructure (especially third party infra). It's just that for the code that you're writing yourself- at the core of your business- and is changing constantly, metrics alone aren't sufficient to understand what's going on.
 
-I'll start by admitting that yes- metrics alone are definitely insufficient to really understand the behavior of your system. You absolutely need high-cardinality data such as logs and traces to answer many types of questions. But I will argue that traditional metrics are still useful as a complement to high-cardinality data, and offer some advantages in practice.
+This is absolutely true. Metrics *alone* are insufficient to really understand the behavior of your system. You absolutely need high-cardinality data such as logs and traces to answer many types of questions. But I would argue that traditional metrics are still necessary as a *complement* to wide events.
 
-I may just be biased by the types of problems I've worked on, but I've found that there's a *lot* of aspects of the software I've written and maintained that are fairly constant over time, and are reasonably easy to create metrics for up-front. This is pretty self-evident if you consider the fact that even if we used metrics derived from logs/traces, we'd still generally create alert rules in advance of deployment. For the most part, as you write code, you also need to consider what signals tell you when something's going off the rails.
+Let's start with a challenge to the assumption that you can just collect *everything* as wide events, and then decide what questions you want to ask later. Regardless of which signal you're using, or how good your OTEL auto-instrumentation libraries are, you have important decisions to make about how to instrument your *domain-specific code*, and these decisions *always involve trade-offs*.
 
-Being forced to put thought into what an app's key metrics are- ahead of time- is actually a *pretty valuable exercise for its own sake*. I find that when we rely on auto-instrumented spans, we tend to put less effort into thinking about how we're going to measure our core business concerns, and we end up realizing we don't have spans in the right places when we need them.
+* With metrics, you get an incredibly simple, concentrated, ready-to-consume signal that costs *very, very little* (more on why this is important in a bit). The tradeoff is that you lose context of the individual events from which the aggregate measurement was derived.
+* With traces, on the other hand, you get all the context for each individual event, but at at a cost of generating a *lot more data*: data you have to generate, encode, buffer, and transmit, and ultimately store. 
 
-:::tip metrics work better if you're doing CD
-I'm also biased by my experience with practicing continuous deployment. When you're already deploying services often, tweaking metrics instrumentation as you modify features is a pretty natural part of the process. 
-:::
+#### High-frequency events
+When you're talking about instrumenting very high-volume/high-frequency events, the fundamental overhead of logs/traces can make them impractical in terms of computation, network, or storage.
 
-Even when responding to an alert, I find myself leaning on metrics when I first start investigating a problem. Because we've spent time thinking about the important indicators in advance, and building dashboards/alerts based on them, metrics-driven dashboards are quickest way to get a read on the general shape of the problem. Only after that do I start formulating hypotheses and digging into logs and traces to look for confirmation.
+For example: imagine an operation that happens 1000 times per second. You can instrument this with a single histogram metric, at the cost of a few active series. With traces, you're producing *1000 spans per second* for the same operation.
 
-Yes- we could be deriving these same metrics from logs or traces, but there's few remaining big factors, in practice, which make it hard to imagine giving up traditional metrics entirely: 
+#### Instrumentation granularity
 
-* Metrics are boring and simple. Compared to the complexities of tracing, incrementing a counter or using histograms generated from some middleware is really easy to reason about, and much less prone to error (especially if you're utilizing sampling to try to control the cost of traces). This is valuable, if for no other reason than to have something to corroborate the metrics you derive dynamically from logs/traces.
+Even putting high-frequency events aside, you have choices to make up front about the granularity of your instrumentation. Given the overhead (and cost) of emitting spans, you have to be a lot more judicious about when you use them compared to metrics, which are so cheap that you can afford to use them much more liberally.
+
+Having the ability to choose the most effective signal for a given use-case can give you a lot more flexibility to find a good balance between the richness of telemetry data and its cost.
+
+#### The historical inertia of metrics
+
+There's a couple other *eminently practical* reasons which make it hard to imagine giving up traditional metrics entirely: 
+
+* Metrics are boring, simple, tried and true. This is valuable, if for no other reason than to have something to corroborate the metrics you derive dynamically from logs/traces.
 * Metrics are ubiquitous. Everything supports metrics. Most every tool in the cloud-native ecosystem exposes Prometheus metrics, and very few emit traces (though this is slowly changing). Cloud providers also expose telemetry primarily as metrics (e.g. CloudWatch, Azure Monitor, etc).
 
-There's all that... and then there's the cost difference.
+I've hinted at cost being a big difference between metrics and traces/logs, but let's take another minute to consider just how important this is.
 
-### The cost discrepancy
+### Let's talk a bit more about the cost discrepancy
 
-Metrics, while less flexible than logs/traces, are *extraordinarily cheap*. Like a *fraction* of the cost of logs or traces.
+Metrics are *extraordinarily cheap*. Like a *fraction* of the cost of logs or traces, and the comparison gets more and more one-sided as you scale up.
 
 :::info wide events, caviar, and private islands
 And lets just be clear, if money were no object, **of course** I'd rather have full-fidelity wide events than metrics for everything! 
@@ -93,15 +101,23 @@ And lets just be clear, if money were no object, **of course** I'd rather have f
 I'd also prefer to dine exclusively in restaurants with Michelin stars, but I don't have the means to do that either.
 ::: 
 
-With metrics, the biggest factor in your cost growth is the number of unique metric producing instances (e.g. pods, compute instances, FaaS instances). If you handle 10x the number of requests without increasing the number of pods/instances, you're still producing the same number of time series- the aggregate values will just be higher per data point. This would have no additional cost.
+With metrics, cost is driven by the number of timeseries you're producing: unique combinations of label/value pairs (e.g. `pod`, `request_path`, `response_code`). These pairs get stored once, and then the rest of the cost is basically just a number stored every interval (30 seconds or so).
 
-:::tip Injest-time aggregation is a thing!
-There's now a number of new, ingest-time aggregation tools (e.g. like [Grafana Cloud's Adaptive Metrics](https://grafana.com/docs/grafana-cloud/cost-management-and-billing/reduce-costs/metrics-costs/control-metrics-usage-via-adaptive-metrics/) or [Chronosphere's aggregation rules](https://docs.chronosphere.io/control/shaping/rules)) which can drastically reduce active series by aggregating away unneeded high-cardinality labels.
+If you handle 10x the number of requests without increasing the number unique combinations of labels you're measuring, you're still producing the same number of time series- the aggregate values will just be higher per data point. This would have no additional cost.
 
-Using these tools, you can often keep active series growth sublinear with respect to the growth of your actual traffic.
+:::tip Ingest-time aggregation is a thing!
+There's now a number of new, ingest-time aggregation tools (e.g. [Grafana Cloud's Adaptive Metrics](https://grafana.com/docs/grafana-cloud/cost-management-and-billing/reduce-costs/metrics-costs/control-metrics-usage-via-adaptive-metrics/) or [Chronosphere's aggregation rules](https://docs.chronosphere.io/control/shaping/rules)) which can drastically reduce active series by aggregating away unneeded high-cardinality labels.
+
+For example, if you only cared about the aggregate request count across all instances (and not *per instance*), you could aggregate away the `instance` label, and you'd suddenly have *one single series* to track all instances for a given operation.
 :::
 
-With traces and logs, costs will scale with *the number of operations you have instrumented* (i.e. traffic), because you'll be producing spans/events for *every request*. This is a big difference, because vendors charge by the span/event (or by number of bytes) ingested. It also makes predicting your costs a lot harder.
+Traces and logs are fundamentally a more heavyweight signal, since each event is basically its own bag of string attributes. This is a lot more expensive than a metric series consisting of an initial bag of attributes, followed by only a number every interval. 
+
+Vendors charge for each span/event (or by number of bytes) ingested, and so costs are based on the sum of all events you produce across all instances, over time. But unlike metrics, there's no aggregation, so there's nothing to bend the curve in your favor as your load increases.
+
+This all adds up to make your CFO very unhappy with the idea of replacing metrics with another signal that's *an order of magnitude more expensive* and has a much more unpredictable growth curve.
+
+Luckily, we have a way to control cost growth for traces: *sampling*.
 
 ### Parents, have you talked to your kids about sampling traces?
 
@@ -119,7 +135,9 @@ import Awkward from './awkward.png';
 
 <img src={Awkward} alt="Asking someone what sampling ratio they use with Honeycomb"/>
 
-But sampling is complicated... and error-prone. All it takes is one programmer in one service to make a mistake with an attribute that controls sampling behavior, and you can end up with whole classes of missing traces, or conversely, accidentally disabling sampling and blowing up your bill. We've had both of these happen, and in a couple cases, we've had queries return *very* misleading results.
+#### Sampling is complicated and error prone
+
+Theres a *lot* of moving parts required to make sampling work at scale. All it takes is one programmer in one service to make a mistake with an attribute that controls sampling behavior, and you can end up with whole classes of missing traces, or conversely, accidentally disabling sampling and blowing up your bill. We've had both of these happen, and in a couple cases, we've had queries return *very* misleading results.
 
 Luckily, in these cases, we had traditional metrics available that directly contradicted the wrong conclusions we were drawing from the traces, and saved us from making some pretty bad decisions.
 
@@ -127,11 +145,11 @@ Luckily, in these cases, we had traditional metrics available that directly cont
 Just to be clear, these misleading results weren't Honeycomb's fault- it was errors on our side related to the subtleties of OTEL sampling configuration.
 :::
 
-### Sampling breaks forensic use cases
+#### Sampling breaks forensic use cases
 
 The other big problem with sampling is that it makes it virtually impossible to rely on traces for forensic/diagnostic use cases. If you're trying to diagnose an issue for a specific customer, client device, or other specific request, the chances of having a trace available is slim.
 
-For example, imagine trying to investigate a potential security breach with anything other than 100% of logs/traces.
+Seriously, imagine trying to investigate a potential security breach with anything other than 100% of logs/traces.
 
 For this reason, we end up relying on logs a whole lot more than we would otherwise. This has been one of the biggest poison pills for us in the Observability 2.0 vision.
 
@@ -141,12 +159,9 @@ Traditional structured logs, despite the overlap with traces, have their own vir
 
 * Logs are simple and ubiquitous. Everything writes logs. Also all OSS/third-party infra produce logs, and very few produce traces.
 * The developer experience for logs is dead simple, and great by default. Use `printf()`, start your app from a terminal, and watch the logs flow through stdout. It's a beautiful thing.
+* Compared to traces, logs are a much more natural way to model events which aren't tied to requests made across services (e.g. lifecycle events, background jobs, etc).
 
-And then there's just the straight-up maturity and battle-tested nature of logs. As someone recently pointed out to me when I was talking through the prospect of going all in on traces: 
-
-> Where are you going to look for stack traces when your app crashes?
-
-Oh, yeah... OTEL instrumentation isn't going to politely wrap up the current span and flush its buffer when my app panics. Maybe there's some solution to this, but it's not obvious to me.
+And then there's just the sheer maturity and battle-tested nature of logs. For example, if you've gone all in on traces, where would you look to diagnose an app crashing? OTEL instrumentation isn't going to politely wrap up the current span and flush its buffer when my app panics. You're just going to lose any record of the cause of the panic.
 
 ### The path forward for Observability 2.0
 
@@ -154,7 +169,7 @@ I'm not writing this to dump on either tracing, or the overall vision of Observa
 
 Honeycomb is indeed a fucking *pleasure* to use- it's super fast, very powerful, and intuitive. Honeycomb's mere existence has prompted a virtual tidal wave of innovation across the observability space as competitors struggle to react to its power and elegance.
 
-But despite how enamored I am with Observability 2.0, when it came time to make a bold decision to go all in... we equivocated, put our incrementalist hats back on, and decided to continue with the three pillars for the time being. Observability 2.0 is just a *bit too cutting edge* at the moment.
+But despite how seductive the vision of Observability 2.0 is, when it came time to make a bold decision to go all in... we equivocated, put our incrementalist hats back on, and decided to continue with the three pillars for the time being. Observability 2.0 is just a *bit too cutting edge* at the moment.
 
 I suspect these obstacles that prevented us from saying "yes" today are all solvable in time. I hear there are companies that have gone all in on Observability 2.0, and I've got to believe its possible.
 
@@ -165,7 +180,7 @@ To close the gap for a company like SimpliSafe, here's the problems we'd need so
 We've got to make wide events more cost efficient and affordable. Until we can get the costs down, sampling will continue to be necessary, and sampling undermines the idea that we can discard the three-pillars model:
 
 * Sampling traces makes them useless for diagnostic and forensic use cases
-* The complexity of sampling traces makes it more important to retain traditional metrics to corroborate results 
+* The complexity of sampling traces makes it more important to retain traditional metrics to corroborate results
 
 From my perspective, **sampling and Observability 2.0 are fundamentally incompatible**.
 
@@ -195,9 +210,9 @@ Perhaps Observability 2.0 isn't something we should aim to achieve in short orde
 
 Right now, we're thinking about how to better use the three pillars we have:
 
-* Seek out tools that integrate and visualize data from across multiple pillars 
+* Seek out tools that integrate and visualize data from across multiple pillars (e.g. using exemplars to link metrics to traces)
 * Look for ways to reduce the waste of overlapping, duplicate pillars 
-* Try to utilize each pillar for its strengths, with tooling that uses them to compliment each other
+* Try to utilize each pillar for its strengths, with tooling that uses them to complement each other
 * Look for more sustainable ways to manage costs
 
-Hopefully in a few years, the ecosystem will have evolved around the  Observability 2.0 vision, and we'll be in a position to be a bit braver about our next steps.
+Hopefully in a few years, the ecosystem will have evolved around the Observability 2.0 vision, and we'll be in a position to be a bit braver about our next steps.
