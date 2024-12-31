@@ -192,7 +192,13 @@ We've got to make wide events more cost efficient and affordable. Until we can g
 
 From my perspective, **sampling and Observability 2.0 are fundamentally incompatible**.
 
-I'm seeing some pretty exciting things happening to make logs/traces more cost-efficient, such as columnar databases like [Clickhouse](https://github.com/ClickHouse/ClickHouse), as well as other tracing projects like [Grafana Tempo](https://grafana.com/oss/tempo/) and [QuickWit](https://quickwit.io/). 
+:::warning Just to be clear
+I think that sampling traces is actually a great tradeoff. You get most of the value, and you pay a fraction of the cost. 
+
+But I'm only OK with this tradeoff because I have *metrics and logs to cover the gaps*.
+:::
+
+I'm seeing some pretty exciting things happening to make logs/traces more cost-efficient, such as products based on OSS columnar databases like [Clickhouse](https://github.com/ClickHouse/ClickHouse), as well as other tracing projects like [Grafana Tempo](https://grafana.com/oss/tempo/) and [QuickWit](https://quickwit.io/). 
 
 And I'm certainly not going to count out Honeycomb- knowing them, they'll continue to chip away at inefficiencies and find more ways to make their product more and more affordable, especially as they gain greater economies of scale.
 
