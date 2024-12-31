@@ -16,13 +16,11 @@ import Bee from './bee.jpg';
 
 <img src={Bee} className="blog-image" alt="A bee looking through a telescope"/>
 
-At SimpliSafe, we manage a pretty large system of microservices. Because we're entrusted by our customers to protect their homes and families, we take reliability of our systems pretty seriously. Observability is an essential part of building and maintaining a system like this, and over the last couple years, we've been actively investing in our capabilities.
+At SimpliSafe, we manage a pretty large system of microservices. Because we're entrusted by our customers to protect their homes and families, we take reliability of our systems pretty seriously, so observability is pretty important to us.
 
-As of last year, we were using separate tools for each of the "three pillars": [Grafana Cloud](https://grafana.com/products/cloud/metrics/) for metrics, [Honeycomb](https://www.honeycomb.io/) for traces, and [Amazon OpenSearch Service](https://aws.amazon.com/opensearch-service/) for logs. Of these three, OpenSearch had become the biggest pain point (for soooo many reasons), and we were looking at some better alternatives. 
+Like most companies today, our observability strategy is built around the "three pillars" approach: metrics, logs, and traces. Of the three, we're currently the most dissatisfied with our logging tooling, and have been working on finding a better product.
 
-Because we were already using Grafana Cloud for metrics, we decided to evaluate their [logs product](https://grafana.com/products/cloud/grafana-logs/) first, knowing that Grafana Labs has invested a lot in providing UIs that integrate observability signals. After an evaluation, we were pretty satisfied with Loki (it was certainly a lot better than OpenSearch), but we thought we should also check in with Honeycomb, who had recently introduced a [new logs product](https://www.honeycomb.io/log-analytics).
-
-In our conversation with Honeycomb, they ended up making a pretty interesting case that we should consider going all in on traces... *in lieu of logs*. We had up to this point been thinking very incrementally, and here was Honeycomb, coming in hot with a bold and revolutionary vision: Observability 2.0.
+We're already a Honeycomb customer, and in our conversation with them, they ended up making a pretty interesting case that we should consider a new approach: ditch the three pillars and *make traces the center of our strategy*. We had up to this point been thinking very incrementally, and here was Honeycomb, coming in hot with a bold and revolutionary vision: Observability 2.0.
 
 {/* truncate */}
 
@@ -62,11 +60,11 @@ It didn't take long for us to start enumerating concerns.
 
 ### In defense of traditional metrics 
 
-I may have oversimplified the argument against metrics; Charity's actual words are a bit nuanced. For instance, she still sees value in using metrics to monitor infrastructure (especially third party infra). It's just that for the code that you're writing yourself- at the core of your business- and is changing constantly, metrics alone aren't sufficient to understand what's going on.
+I may have oversimplified the argument against metrics; [Charity's actual words](https://charity.wtf/2022/04/13/the-truth-about-meh-trics/#bmetrics_and_observability_have_different_use_casesb) are a bit nuanced. For instance, she still sees value in using metrics to monitor infrastructure (especially third party infra). It's just that for the code that you're writing yourself- at the core of your business- and is changing constantly, metrics alone aren't sufficient to understand what's going on.
 
 This is absolutely true. Metrics *alone* are insufficient to really understand the behavior of your system. You absolutely need high-cardinality data such as logs and traces to answer many types of questions. 
 
-But I would argue that traditional metrics are still necessary as a *complement* to wide events due to the huge and fundamental cost discrepancy between the two.
+But I would argue that traditional metrics are still necessary as a *complement* to wide events due to the *huge and fundamental cost discrepancy* between the two.
 
 ### Let's talk about cost
 
@@ -114,7 +112,6 @@ But wait, you ask: there are plenty of other companies happily using tracing- ho
 
 Yep- they're probably doing what we're doing with our traces: *sampling*.
 
-
 ### Parents, have you talked to your kids about sampling traces?
 
 Sampling is a whole topic in itself; the gist is that you randomly select one out of every N traces, and rely on statistical extrapolation when you run queries. The attributes necessary to do sampling are actually built into the OpenTelemetry spec. 
@@ -153,7 +150,6 @@ Seriously, imagine trying to investigate a potential security breach with anythi
 
 So for these forensic use cases, we end up relying on traditional structured logs, and not traces. It's not looking good for Observability 2.0's reduction of duplicate pillars!
 
-
 ### The historical inertia of metrics
 
 I'll finish up my defense of metrics with a couple other *eminently practical* reasons which make it hard to imagine giving up traditional metrics entirely: 
@@ -186,7 +182,7 @@ To close the gap for a company like SimpliSafe, here's the problems we'd need so
 
 #### Affordability 
 
-We've got to make wide events more cost efficient and affordable. Until we can get the costs down, sampling will continue to be necessary, and sampling undermines the idea that we can discard the three-pillars model:
+If we actually want to discard the three pillars model, we've *got to make wide events more cost efficient and affordable*. Until we can get the costs down, sampling will continue to be necessary, and sampling undermines the idea that we can discard the three-pillars model:
 
 * Sampling traces makes them useless for diagnostic and forensic use cases, requiring you to retain logs
 * The complexity of sampling traces makes it more important to retain traditional metrics to corroborate results
