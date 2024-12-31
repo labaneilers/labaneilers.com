@@ -91,7 +91,7 @@ For example: imagine you have 10 pods which each handle 100 requests per second.
 * With metrics, you have 100 active timeseries. Using [list pricing for Grafana Cloud](https://grafana.com/pricing/) of $8 for 1K series, this will cost **80 cents per month**.
 * With traces, you're producing *1000 spans per second*. Using [list pricing for Honeycomb](https://www.honeycomb.io/pricing) of 100M events for $130, this will cost **~$3300 per month**.
 
-Now let's imagine you find a bottleneck, optimize this code to be 10x faster. Now each of your 10 pods can handle 1000 requests per second. 
+Now let's imagine you find a bottleneck, and optimize this code to be 10x faster. Now each of your 10 pods can handle 1000 requests per second. Awesome! Let's scale up our marketing spend and 10x traffic: 
 
 * With metrics, you'll still have 100 active timeseries, at **80 cents per month**.
 * With traces, you're now producing *10,000 spans per second*, which will cost **~$33K per month**.
@@ -163,13 +163,14 @@ I'll finish up my defense of metrics with a couple other *eminently practical* r
 
 ### Logs vs traces
 
-While Charity's Observability 2.0 vision of wide events technically includes structured logs, they generally play second fiddle to traces. Let's quickly enumerate some of the reasons why logs are still valuable:
+While Charity's Observability 2.0 vision of wide events technically includes structured logs, they generally play second fiddle to traces. Either way, it's worth a quick tangent to enumerate reasons why logs are still valuable:
 
 * Logs are simple and ubiquitous. Everything writes logs. Also all OSS/third-party infra produce logs, and very few produce traces.
 * The developer experience for logs is dead simple, and great by default. Use `printf()`, start your app from a terminal, and watch the logs flow through stdout. It's a beautiful thing.
 * Compared to traces, logs are a much more natural way to model events which aren't tied to requests made across services (e.g. lifecycle events, background jobs, etc).
+* Logs are mature and battle-tested. They've been used since the dawn of computing.
 
-And then there's just the sheer maturity and battle-tested nature of logs. For example, if you've gone all in on traces, where would you look to diagnose an app crashing? OTEL instrumentation isn't going to politely wrap up the current span and flush its buffer when my app panics. You're just going to lose any record of the cause of the panic.
+Here's a fun example: If you're using traces *only*, and are not saving logs, where would you look to diagnose an app crashing? OTEL instrumentation isn't going to politely wrap up the current span and flush its buffer when your app panics. You're just going to lose any record of the cause of the panic.
 
 ### The path forward for Observability 2.0
 
