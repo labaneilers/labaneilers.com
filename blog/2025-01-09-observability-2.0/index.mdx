@@ -96,17 +96,21 @@ Now let's imagine you find a bottleneck, and optimize this code to be 10x faster
 
 I wasn't kidding, right? And this is only the cost from Honeycomb; you're also paying the cost in terms of runtime overhead for creating all those spans.
 
-:::tip Ingest-time aggregation is a thing!
+:::tip Ingest-time aggregation is a game changer
 There's now a number of new, ingest-time aggregation tools (e.g. [Grafana Cloud's Adaptive Metrics](https://grafana.com/docs/grafana-cloud/cost-management-and-billing/reduce-costs/metrics-costs/control-metrics-usage-via-adaptive-metrics/) or [Chronosphere's aggregation rules](https://docs.chronosphere.io/control/shaping/rules)) which can drastically reduce active series by aggregating away unneeded high-cardinality labels.
 
-In the example above, if you only cared about the request duration percentiles across all pods (and not *per pod*), you could aggregate away the `pod` label, resulting in a single histogram- at a cost of **8 cents per month regardless of how many pods you scale to**.
+In the example above, if you only cared about the request duration percentiles across all pods (and not *per pod*), you could aggregate away the `pod` label, resulting in a single histogram for all 10 pods- at a cost of **8 cents per month regardless of how many pods you scale to**.
+
+We're using Grafana's Adaptive Metrics at SimpliSafe, and it's reduced our metrics bill by about 80%.
 :::
 
 Having the ability to choose metrics vs wide events for a given use-case can give you a lot more flexibility to find a good balance between the richness of telemetry data and its cost.
 
 ### Wait, so how is *anybody* using wide events?
 
-You may think the cost scaling example above is contrived, so let's talk about the real world. For SimpliSafe, the cost of capturing all our traces would be an **order of magnitude more expensive** than what we're currently paying for all our timeseries metrics.
+You may think the cost scaling example above is contrived (which is true)- you'd probably use a lot more labels on your metrics in practice, which increases the number of series. But calculating the total cardinality you'd generate is complicated, because the interaction between metrics labels produces a sparse matrix; you don't pay for all *possible* combinations of label values, only the combinations that *actually occur*. 
+
+So let's talk about the real world, specifically telemetry at SimpliSafe. If we were to send **all** of our traces to Honeycomb, it would be an **order of magnitude more expensive** than what we're currently paying for all our timeseries metrics.
 
 But wait, you ask: there are plenty of other companies happily using tracing- how are they affording it? 
 
@@ -114,7 +118,7 @@ Yep- they're probably doing what we're doing with our traces: *sampling*.
 
 ### Parents, have you talked to your kids about sampling traces?
 
-Sampling is a whole topic in itself; the gist is that you randomly select one out of every N traces, and rely on statistical extrapolation when you run queries. The attributes necessary to do sampling are actually built into the OpenTelemetry spec. 
+Sampling is a whole topic in itself; the gist is that you randomly select one out of every N traces, drop the rest, and rely on statistical extrapolation when you run queries. The attributes necessary to do sampling are actually built into the OpenTelemetry spec. 
 
 There's some tooling available, which can use these attributes, to do [tail sampling](https://opentelemetry.io/docs/concepts/sampling/#tail-sampling) (we use Honeycomb's [Refinery](https://github.com/honeycombio/refinery) for this). Honeycomb also does a nice job of extrapolating sampled values at query time based on the sample ratio, so it feels pretty opaque to a user- sometimes you forget you're working with sampled spans.
 
@@ -146,9 +150,9 @@ So if you're doing sampling on your wide events, which you *almost certainly are
 
 The other big problem with sampling is that it makes it virtually impossible to rely on traces for forensic/diagnostic use cases. If you're trying to diagnose an issue for a specific customer, client device, or other specific request, the chances of having a trace available is slim.
 
-Seriously, imagine trying to investigate a potential security breach with anything other than 100% of logs/traces.
+Gut check: imagine trying to investigate a potential security breach with anything other than 100% of logs/traces. Who would put themselves in that position?
 
-So for these forensic use cases, we end up relying on traditional structured logs, and not traces. It's not looking good for Observability 2.0's reduction of duplicate pillars!
+So for these forensic use cases, we end up needing our unsampled logs, and not traces.
 
 ### The historical inertia of metrics
 
@@ -180,17 +184,17 @@ I suspect these obstacles that prevented us from saying "yes" today are all solv
 
 To close the gap for a company like SimpliSafe, here's the problems we'd need solved:
 
-#### Affordability 
+#### Affordability
 
-If we actually want to discard the three pillars model, we've *got to make wide events more cost efficient and affordable*. Until we can get the costs down, sampling will continue to be necessary, and sampling undermines the idea that we can discard the three-pillars model:
+Unless we can get the cost of wide events down, sampling will continue to be necessary, and sampling undermines the idea that we can discard the three-pillars model:
 
 * Sampling traces makes them useless for diagnostic and forensic use cases, requiring you to retain logs
 * The complexity of sampling traces makes it more important to retain traditional metrics to corroborate results
 
-From my perspective, **sampling and Observability 2.0 are fundamentally incompatible**.
+This is a fundamental catch-22: **sampling and Observability 2.0 are fundamentally incompatible**. 
 
 :::warning Just to be clear
-I think that sampling traces is actually a great tradeoff. You get most of the value, and you pay a fraction of the cost. 
+I think that in our three-pillars world, sampling traces is actually a *great tradeoff*. You get most of the value, and you pay a fraction of the cost. 
 
 But I'm only OK with this tradeoff because I have *metrics and logs to cover the gaps*.
 :::
