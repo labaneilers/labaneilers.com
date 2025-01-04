@@ -9,7 +9,7 @@ draft: true
 :::tip[TL;DR]
 Observability 2.0 is a vision of observability that seeks to replace the traditional "three pillars" of observability (metrics, logs, and traces) with a single source of truth: wide events. 
 
-This vision is compelling, but there are a number of obstacles that make it difficult to adopt in practice.
+This vision is compelling, but there are a number of obstacles that make it difficult to adopt in practice. We're now thinking about Observability 2.0 as a philosophy we can work towards gradually.
 :::
 
 import Bee from './bee.jpg';
@@ -82,9 +82,13 @@ I'd also prefer to dine exclusively in restaurants with Michelin stars, but I do
 
 ### Let's compare costs as you scale
 
-As the frequency/volume of events increases, the fundamental overhead of wide events grows increasingly impractical in terms of computation, network, and storage... and ultimately dollars. This is not only because wide events are more heavyweight, but because there's *no aggregation*, so there's nothing to bend the cost curve in your favor as your load increases.
+As the frequency/volume of events increases, the fundamental overhead of wide events grows increasingly impractical in terms of computation, network, and storage... and ultimately dollars. This is for three fundamental reasons:
 
-For example: imagine you have 10 pods which each handle 100 requests per second. You can instrument this with a single exponential histogram metric, at the cost of a few active series (lets say 10 for the sake of argument) per pod. With traces, you're producing *100 spans per second, per pod* (one per request).
+* metrics are *aggregated* into a single value over an interval, whereas wide events are not
+* metric labels are stored only once per long-running series, unlike wide events, in which all attribute values are stored in full for every event 
+* wide events, by design, carry a lot more data (all the high-cardinality goodness you don't want on your metrics)
+
+For example: imagine you have 10 pods which each handle 100 requests per second. You can instrument this with a single histogram metric, at the cost of a few active series (lets say 10 for the sake of argument) per pod. With traces, you're producing *100 spans per second, per pod* (one per request).
 
 * With metrics, you have 100 active timeseries. Using [list pricing for Grafana Cloud](https://grafana.com/pricing/) of $8 for 1K series, this will cost **80 cents per month**.
 * With traces, you're producing *1000 spans per second*. Using [list pricing for Honeycomb](https://www.honeycomb.io/pricing) of 100M events for $130, this will cost **~$3300 per month**.
@@ -172,15 +176,23 @@ While Charity's Observability 2.0 vision of wide events technically includes str
 
 Here's a fun example: If you're using traces *only*, and are not saving logs, where would you look to diagnose an app crashing? OTEL instrumentation isn't going to politely wrap up the current span and flush its buffer when your app panics. You're just going to lose any record of the cause of the panic.
 
+Here's a few more examples we've experienced where the OTEL tracing ecosystem's maturity has bit us:
+
+* With certain node.js Promise libraries, trace context can get lost across async function chains, leading to orphaned spans
+* Long-running spans (more than a few seconds) are [generally an unsolved problem](https://thenewstack.io/opentelemetry-challenges-handling-long-running-spans/)- the behavior isn't well defined, and spans can get dropped or orphaned.
+* It's not currently possible to configure sampling to capture related traces: single logical operations that involve multiple requests, async events, etc.
+* Context propagation can get broken across a whole system by one service that's using an older OTEL SDK, listens via an esoteric protocol, or is just a little buggy
+* Graceful shutdowns are a lot trickier with OTEL tracing, because you have to first drain your actual connections/queues, then ensure you're flushing all in-progress spans before exiting. Any mistakes: you guessed it, dropped spans. 
+
 ### The path forward for Observability 2.0
 
-I'm not writing this to dump on either tracing, or the overall vision of Observability 2.0. I'm still a huge fan of the idea of simplifying signals down to minimize telemetry sprawl, and I've experienced the benefits of tracing and wide events firsthand. 
+I'm not writing this to dump on either OpenTelemetry, tracing, or the overall vision of Observability 2.0. I'm still a huge fan of the idea of simplifying signals down to minimize telemetry sprawl, and I've experienced the benefits of OTEL, tracing, and wide events firsthand. 
 
 Honeycomb is indeed a fucking *pleasure* to use- it's super fast, very powerful, and intuitive. Honeycomb's mere existence has prompted a virtual tidal wave of innovation across the observability space as competitors struggle to react to its power and elegance.
 
 But despite how seductive the vision of Observability 2.0 is, when it came time to make a bold decision to go all in... we equivocated, put our incrementalist hats back on, and decided to continue with the three pillars for the time being. Observability 2.0 is just a *bit too cutting edge* at the moment.
 
-I suspect these obstacles that prevented us from saying "yes" today are all solvable in time. I hear there are companies that have gone all in on Observability 2.0, and I've got to believe it's possible.
+The obstacles that prevented us from saying "yes" today may be solvable in time. I hear there are companies that have already gone all in on Observability 2.0, and I've got to believe it's possible.
 
 To close the gap for a company like SimpliSafe, here's the problems we'd need solved:
 
@@ -207,11 +219,23 @@ And I'm certainly not going to count out Honeycomb- knowing them, they'll contin
 
 The developer tools available for tracing are legitimately a lot more complex than those available for logs. We'll need ubiquitous tracing developer tools that approach the ease of use of `printf()` debugging, and that make it just as easy to validate that your tracing instrumentation is working the way you intended.
 
-The developer experience for OTEL SDK configuration is still... a work in progress. I hope to see more projects that package up OTEL SDKs and provide easier installation and configuration. Or who knows, maybe some of the SDK owners will decide that 200 lines of boilerplate before you can send a single span is a bit much.
+The developer experience for OTEL SDK configuration is still... a work in progress. I hope to see more projects that package up the OTEL SDKs as a  "distribution" to provide an installation experience that's as simple as vendor agents like NewRelic/DataDog's. Let's just admit that 200 lines of boilerplate before you can send a single span is a bit much.
 
-And we've got to find ways to deal with the edge cases (e.g capturing diagnostic data from crashes/panics) which OTEL tracing isn't currently handling.
+Documentation is also a big opportunity for improvement. I found it impossible to get an SDK properly configured without digging through the source code. We need *a lot* more examples, and more focus on use-cases.
 
-#### Ecosystem and maturity
+And please, for the love of god, let's not add [another layer of YAML](https://github.com/open-telemetry/opentelemetry-configuration/) to "simplify" configuration.
+
+:::tip My new years resolution
+Instead of just complaining about OTEL SDK configuration and docs, I'm going to shut up and start contributing.
+
+OTEL is amazing, thank you to everyone who's worked on the project. We appreciate you!
+:::
+
+#### Reliability and maturity
+
+Beyond installation and configuration, the OTEL tracing ecosystem needs some time to ripen, making it easier to get correct behavior (e.g. graceful shutdowns, context propagation, etc), handling edge cases (crashes/panics), and defining some standards for handling things like long-running spans, related traces, and unfinished spans.
+
+#### Ecosystem and adoption
 
 As long as most infrastructure and third-party tools are emitting only logs and metrics, it's going to be hard to go all in on tracing for first-party telemetry. It's possible that OpenTelemetry's trajectory will continue, and more and more OSS tools will start emitting traces, but there's a lot of ground to cover to hit critical mass.
 
