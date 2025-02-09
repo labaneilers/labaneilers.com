@@ -1,0 +1,122 @@
+---
+slug: opentelemetry-secret-weapon
+title: OpenTelemetry's secret weapon
+tags: [observability, opentelemetry, devops, platform-engineering]
+image: ./otel-secret-weapon.jpg
+draft: true
+---
+
+:::tip[TL;DR]
+As OpenTelemetry's adoption has surged, it's also drawn more criticism: it's complex, isn't fully matured, and its user experience can feel... unpolished. While these are valid criticisms, I think we've hit an inflection point where OTel's benefits outweigh its pain points, especially when compared to the alternative of proprietary telemetry pipelines and lock-in with the dominant (and outrageously expensive) vendors.
+
+OTel's momentum has recently intensified due to the increased adoption of its secret weapon: its semantic conventions. These conventions allow all observability vendors to create the same rich, powerful, out-of-the-box user experience that the dominant vendors had locked-down via their ownership the entire telemetry pipeline.
+:::
+
+import Bee from './otel-secret-weapon.jpg';
+
+<img src={Bee} className="blog-image" alt="A superhero holding a secret weapon"/>
+
+Now that OpenTelemetry (a.k.a. OTel) has gained such significant traction, it's starting to attract a lot of attention beyond the hardcore observability community. While most of what I read about OTel is pretty positive, it also draws its fair share of shade. 
+
+Honestly, a lot of the criticism is pretty reasonable stuff. As a big user of OTel, I've spent plenty of hours rage debugging OTTL filters in OTel collectors, desperately searching for SDK examples that actually work, or pulling my hair out trying to figure out which version of a protobuf schema changed and broke telemetry from my Swift clients. And like a lot of the haters, I also get frustrated that the overall level of complexity in the specifications leaks into the implementation details of every part of the project.
+
+All that said, I'm incredibly thankful that OTel exists. While it's still in its awkward teenage years, the fundamental shape of it has begun to solidify. Despite the challenges that currently exist, I think **OpenTelemetry is the only reasonable path forward for observability**.
+
+{/* truncate */}
+
+## So, like, I totally already know what OpenTelemetry is, but just give me a little refresher
+
+OpenTelemetry is an umbrella project with the broad and audacious mission to provide a set of open tools and standards for building telemetry pipelines. 
+
+:::info WTF is a telemetry pipeline?
+A telemetry pipeline is a set of tools that create, collect, and process telemetry data before sending it to a backend (e.g. Prometheus, DynaTrace, Honeycomb, etc) for storage and analysis. This includes:
+
+* The libraries/agents that instrument your application, and the code that uses them to record events, take measurements, collect performance data, and emit it as metrics, logs, traces, etc.
+* Any intermediate collection tools that collect the data, process/filter it, and forward it to a backend (e.g. DogStatsD, LogStash, Fluent Bit, Telegraf, etc)
+:::
+
+The reason OTel exists is that the tools available before it were mostly proprietary and vendor-specific. This has some big downsides:
+
+* **Black boxes**: Telemetry agents/libraries/SDKs (the thing you install into your app to collect metrics, logs, etc) were closed source, not modifiable or verifiable by users. If they didn't they work *exactly* as you need, you could really only hope you could persuade the vendor to add a feature for you.
+* **Vendor lock-in**: Since the agents are vendor-specific, the sheer effort required to switch vendors made it extremely cost prohibitive, which gave vendors enormous leverage to develop predatory pricing strategies  
+
+OpenTelemetry provides an alternative ecosystem, starting with some **open specifications**:
+
+* A standard telemetry protocol (OTLP) that defines the low-level shape of telemetry data (including traces, metrics, and logs) and how it gets transmitted
+* A lightweight, standardized API that can be used to add instrumentation to your code
+* SDKs that implement the API and configure your applications to export telemetry data
+* Semantic conventions that define the meaning of fields in telemetry data
+
+And then, more practically for users, there's some specific software:
+
+* **Language-specific SDKs**: A set of (mostly language-specific) SDKs that implement the SDK and API specifications. This is what you'd install into your apps (as an alternative to a vendor-specific agent). You'd use the APIs to sprinkle  manual instrumentation throughout your first-party code, and framework/library authors would use the API to add it to theirs.
+* **Auto-instrumentation**: A vast ecosystem of auto-instrumentation libraries and tools that automatically instrument all the most popular frameworks (e.g. Django, Express, Spring etc) and libraries (http, Postgres, Redis, Mongo, etc), using the API under the hood.
+* **The OpenTelemetry Collector**: A server application that's a sort of "universal translator" for telemetry data. It can accept telemetry in virtually any format you can imagine (e.g. statsd, Prometheus, Zipkin, InfluxDB, Loki, etc), apply arbitrary transformations, filters, and enrichments, and then export the data to an equally astonishing number of destinations formats (e.g. Jaeger, Prometheus, Splunk, Honeycomb, DataDog, Kafka, ClickHouse, etc).
+* **The OTel ecosystem**: A huge ecosystem of tooling (e.g. Kubernetes operators, helm charts, eBPF agents) that compose the SDKs, collector, protocols, etc, to create new capabilities.
+
+And the part of OTel that astonishes me the most: 
+
+* **Vendor support**: Basically **every observability vendor you can think of** now supports OTel.
+
+## Wait, why are all the vendors supporting OpenTelemetry?
+
+The most incredible thing about OpenTelemetry is that it even exists at all, much less that it's supported by virtually all observability vendors. Why would they voluntarily back a project that promotes vendor-neutrality, and *undermines their ability to lock-in customers*?
+
+The key to how this happened isn't particularly obvious. Clearly, there was initially an advantage to smaller vendors adopting OTel as a competitive differentiator. This put pressure on the industry, which slowly moved up-market until even the most dominant vendors felt pressure to offer at least some support (or lip-service for support).
+
+## The actual threat of OpenTelemetry
+
+There's a less obvious advantage that the dominant vendors had for years before OTel: *their ownership of the entire telemetry pipeline, end-to-end*. 
+
+If you've ever used one of the big tools, like DataDog or New Relic, you've probably experienced the customer experience benefits of this capability first hand:
+
+1. Install the vendor's proprietary agent into your apps (directly, or through some platform-wide integration)
+2. Open up the vendor's dashboard, and instantly see gorgeous dashboards with all kinds of pre-built visualizations and alerts, all out of the box. Revel in the insights and ease of use.
+
+:::warning A few more steps
+I forgot to mention a couple other steps:
+
+3. Get your first bill, freak out at the number of digits, and instruct your team to agonize over every instrumentation choice in a futile effort to manage costs
+4. About a year later, realize now that you've fully integrated their proprietary telemetry pipeline, you're completely fucked when negotiating the contract renewal
+:::
+
+OTel directly threatens this advantage by giving us the ability to create our own telemetry pipelines. But there's a secret weapon, hidden in the list of stuff above that OTel does, which I think is the most powerful and underappreciated part of the project: 
+
+* **Semantic conventions that define the meaning of fields in telemetry data**
+
+Why is this item so important?
+
+## Semantic conventions are what made the dominant observability tools so damn useful
+
+When you open that first dashboard in DataDog or NewRelic, you feel like you're standing in the Pentagon war room or something. There's so many graphs with data you've been dying to visualize- especially about your infrastructure- that were clearly very carefully curated. Your Kubernetes clusters are suddenly transparent and stripped of all their mystery. Within just a few seconds you can get a broad sense of the state of your system, and then drill down with a few clicks to find individual logs representing anomalies. The tooling gives you the ability to correlate data from different signals, allowing you to jump back and forth between aggregate performance graphs and individual exemplar pod data.
+
+The dominant, legacy vendors have been able to create this user experience because they've utilized their end-to-end ownership of the telemetry pipeline to establish (proprietary) conventions about the *meaning of the data they're collecting*.
+
+* They scoop up all that rich Kubernetes and cloud provider metadata (pods, nodes, namespaces, EC2 instance type, region, AMI ID, etc) and use it to enrich metrics and log lines with labels
+* They collect performance data using specific conventions and units
+* They auto-instrument your applications using language-specific instrumentation agents that know how to instrument all the most popular libraries and frameworks, using consistent metadata across all of them
+* They track the lifecycle of requests through your system, and correlate signals using identifiers sent through as (e.g.) custom HTTP headers
+
+By the time the telemetry data gets to their system, they already know an enormous amount about what it all actually means. They can then use this to create higher-level visualizations which understand all that Kubernetes and cloud provider metadata, supply canned alerts that handle a bunch of common Kubernetes failure modes, or build maps of services that show all the runtime relationships by using the correlation IDs they injected into your HTTP requests.
+
+This is why I think of OpenTelemetry's semantic conventions as a secret weapon. Now *all observability vendors* have the ability to go beyond just basic OTLP ingestion; they can now add this kind of rich, powerful, out-of-the-box user experience powered by an understanding of the meaning of the data they're collecting.
+
+And increasingly, they are!
+
+## It's not perfect, but it's already better than the alternative
+
+So when I read posts criticizing OpenTelemetry for its complexity, or its lack of maturity, or claiming that it's designed by committee, or it's hindered by having to satisfy the lowest common denominator, I can simultaneously agree with all that, while still believing that it's still the best way forward.
+
+Like most technical choices, this is fundamentally about tradeoffs, and I think OpenTelemetry has hit the inflection point where its benefits have begun to outweigh its pain points for many, many situations. I'm acutely aware that there's still a lot of friction in getting OTel set up, you've got to compare it to the alternatives.
+
+OpenTelemetry has finally become a workable enough solution that allows an organization to develop a solid observability capability - without having to trade-in their firstborn child in exchange for a few months of custom metrics.
+
+And OTel is only going to get better. So many brilliant people are contributing, vendors are investing heavily, and adoption is surging. 
+
+## An OTel anecdote that brings me joy
+
+I'd like to leave you with one of my favorite moments in OpenTelemetry from the last year:
+
+The OpenTelemetry community implemented a [DataDog receiver for the OTel collector](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/datadogreceiver). When I say *the community*,  I'm saying it specifically did NOT come from DataDog; it was driven by community members and *competing vendors* (e.g. Grafana Labs, Splunk). This receiver, along with some [supporting processors](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/deltatocumulativeprocessor), allows organizations that are stuck using DataDog's proprietary agents to redirect their telemetry data to any vendor that supports OTel.
+
+Imagine how DataDog sales felt the first time this came up in a contract negotiation!
