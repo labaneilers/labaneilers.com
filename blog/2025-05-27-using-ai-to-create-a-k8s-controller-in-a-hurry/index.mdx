@@ -57,7 +57,7 @@ Probably the biggest single problem is that CloudWatch queries for load balancer
 
 Now, if you want to build a Grafana dashboard with this, you need to hard-code this `LoadBalancer` ID into your dashboard's configuration. And since we don't know the ID until after the load balancer is created, we can't scaffold out a dashboard or alert rules until the service is live in production. Yuck.
 
-And since you probably want your dashboards parameterized so they can display metrics for multiple environments, you'd need to create a specially-formatted Grafana variable to map the environment to load balancer ID. This is possible (TODO ref), but isn't particularly straightforward.
+And since you probably want your dashboards parameterized so they can display metrics for multiple environments, you'd need to create a specially-formatted Grafana variable to map the environment to load balancer ID. This is [possible](https://grafana.com/docs/grafana/latest/dashboards/variables/add-template-variables/#add-a-custom-variable), but isn't particularly straightforward.
 
 Don't worry- it gets worse. The CloudWatch datasource for Grafana has 2 completely different types of queries: "Metrics query" and "Metrics Insights", as well as 2 different editing modes "Builder" and "Code". This creates 4 different modes for writing queries, each with their own quirks and sharp edges- including how they work with Grafana variables. If you're lucky enough to find documentation or examples for one of these modes, it likely won't work at all with the others.
 
