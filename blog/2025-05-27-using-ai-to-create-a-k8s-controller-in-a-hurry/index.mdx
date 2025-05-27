@@ -37,7 +37,7 @@ Load balancer metrics are incredibly valuable, and CloudWatch- the only way to g
 
 Our applications are already instrumented with OpenTelemetry for traces and metrics, and are emitting structured logs. We've already got visibility into request counts, latency distributions, error rates, as well as all kinds of other telemetry for their application-specific operations. With all this rich data, why would we also need metrics from our load balancers? 
 
-The answer: regardless of what your own application self-reports, the thing that ultimately matters most is *how your service is perceived by your users* (e.g. actual customers, or other services calling your API as a client). Load balancers are the actual interface users interact with, and there's a number of cases where if you were only to depend on self-reported telemetry from pods,  you'd be profoundly misled about your service's reliability.
+Regardless of what your own application self-reports, the thing that ultimately matters most is *how your service is perceived by your users* (e.g. actual customers, or other services calling your API as a client). Load balancers are the actual interface users interact with, and there's a number of cases where if you were only to depend on self-reported telemetry from pods,  you'd be profoundly misled about your service's reliability.
 
 ### You don't mind a few thousand 502s on every deployment, do you?
 
