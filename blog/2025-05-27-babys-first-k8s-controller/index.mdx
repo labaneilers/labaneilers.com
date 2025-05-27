@@ -1,0 +1,189 @@
+---
+slug: babys-first-k8s-controller
+title: "Using AI to create a Kubernetes controller in a hurry"
+tags: [platform-engineering, AI]
+image: ./babys-first-k8s-controller.jpg
+draft: true
+---
+
+:::tip[TL;DR]
+As a pretext to challenge myself to do something bold with generative AI developer tools, I created a Kubernetes controller which discovers Kubernetes-managed AWS load balancers, scrapes their CloudWatch metrics, and exposes them as Prometheus metrics, which are much easier to use in Grafana.
+
+I'll share what I learned about using LLMs for this kind of thing, and why even though they're amazing, I'm not worried about them taking my job any time soon.
+:::
+
+import Baby from './babys-first-k8s-controller.jpg';
+
+<figure className="blog-image" >
+<img src={Baby} alt="Baby's first Kubernetes controller"/>
+<figcaption>Baby's first Kubernetes controller</figcaption>
+</figure>
+
+Since I've been primarily working in platform and infrastructure recently, a lot the "code" I've been writing is domain-specific configuration languages (e.g. terraform, helm charts, OTel collector config, Kyverno policies, etc). Despite so many glowing testimonies of massive wins with generative AI dev tools, the results from my first few attempts to use them were a bit underwhelming. My guess is that config code usually doesn't get open sourced, so the models just don't get a lot of good examples to train on.
+
+This has left me hankering to do something more ambitious, and probably in a general purpose language, where I can get a better sense of what the tools can do (beyond fairly mundane auto-completion).
+
+Then recently, I had a few days where a lot of my colleagues were off on vacation (school vacation in Massachusetts), and it occurred to me I'd been quietly stewing on a problem that might be a great candidate for my own little hackathon.
+
+{/* truncate */}
+
+## Aggravation is the best inspiration
+
+The problem I'd been pondering: 
+
+Load balancer metrics are incredibly valuable, and CloudWatch- the only way to get them in AWS- is a spectacular pain in the ass to use. As a result, load balancer metrics have been seriously underutilized. I wanted to find a way to improve the developer experience for load balancer metrics, and make it possible to scaffold out great Grafana dashboard panels and alert rules for them.
+
+
+## Why are load balancer metrics so important?
+
+Our applications are already instrumented with OpenTelemetry for traces and metrics, and are emitting structured logs. We've already got visibility into request counts, latency distributions, error rates, as well as all kinds of other telemetry for their application-specific operations. With all this rich data, why would we also need metrics from our load balancers? 
+
+The answer: regardless of what your own application self-reports, the thing that ultimately matters most is *how your service is perceived by your users* (e.g. actual customers, or other services calling your API as a client). Load balancers are the actual interface users interact with, and there's a number of cases where if you were only to depend on self-reported telemetry from pods,  you'd be profoundly misled about your service's reliability.
+
+### You don't mind a few thousand 502s on every deployment, do you?
+
+For example: We use the [aws-load-balancer-controller](https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/) to create AWS load balancers from Kubernetes Ingresses and Services. There's a not-so-well-documented footgun with this controller, in which a pod will continue to receive requests from the load balancer for up to 20 seconds after it receives a `SIGTERM` signal (which Kubernetes uses to tell it to shut down). This is because, after the aws-load-balancer-controller notifies the target group that a pod is terminating, the load balancer's target groups take a few seconds to update, and during this time they continue sending traffic to the pod's IP- which no longer exists. This results in 502 or 504 responses to the client. 
+
+Whomp whomp.
+
+Note that in this case, *there's no pod to report an error*- the only evidence of the problem is the load balancer's own metrics- which is how we discovered this problem shortly after we started using the aws-load-balancer-controller a few years back. I had been meaning to write a post about this, but got beaten to the bunch by the folks at [Glasskube](https://glasskube.dev/), who wrote an [excellent article about this very problem](https://glasskube.dev/blog/kubernetes-zero-downtime-deployments-aws-eks/).
+
+There's plenty of other edge cases with Kubernetes and load balancers where requests will fail at the load balancer, and never make it to a pod- and it's really important to have visibility into these.
+
+## CloudWatch metrics are so freaking hard to use
+
+AWS load balancer metrics are available through CloudWatch (either through AWS's console or APIs), and we use Grafana for our dashboards and alerts, so we've been using Grafana's CloudWatch datasource to pull them in. This has been a generally frustrating developer experience.
+
+Probably the biggest single problem is that CloudWatch queries for load balancer metrics require you supply a "Dimension" parameter called `LoadBalancer`, which is a portion of the load balancer's ARN (e.g. `app/scrumulator/2ab15bf8abef2f4c`). This contains an ID that's randomly generated by AWS- it's not something you can set. So when you create an ingress using the aws-load-balancer-controller, you have to wait for the controller to create the load balancer, and only then can you use AWS console or APIs to get the ARN.
+
+Now, if you want to build a Grafana dashboard with this, you need to hard-code this `LoadBalancer` ID into your dashboard's configuration. And since we don't know the ID until after the load balancer is created, we can't scaffold out a dashboard or alert rules until the service is live in production. Yuck.
+
+And since you probably want your dashboards parameterized so they can display metrics for multiple environments, you'd need to create a specially-formatted Grafana variable to map the environment to load balancer ID. This is possible (TODO ref), but isn't particularly straightforward.
+
+Don't worry- it gets worse. The CloudWatch datasource for Grafana has 2 completely different types of queries: "Metrics query" and "Metrics Insights", as well as 2 different editing modes "Builder" and "Code". This creates 4 different modes for writing queries, each with their own quirks and sharp edges- including how they work with Grafana variables. If you're lucky enough to find documentation or examples for one of these modes, it likely won't work at all with the others.
+
+Oh, and did you want to be able to use a Grafana variable to switch the AWS region? Well that requires a totally different mechanism to parameterize, since the datasource itself is configured with a static region.
+
+While all these problems can be worked around, the overall complexity, fragility, and inflexibility of this mess was causing teams to avoid using their load balancer metrics. Not good.
+
+## The elevator pitch
+
+Here was my idea:
+
+I'd build a Kubernetes controller that would discover all the load balancers owned by Ingresses/Services in our clusters, scrape their CloudWatch metrics, and convert them into Prometheus metrics.
+
+The big win here would be that I could control what labels to put on the Prometheus metrics- so I could create a `load_balancer_name` label with the load balancer name tag, which is deterministic, and specified in the Ingress. This would make building panels/alerts just as easy for load balancer metrics as it is for application metrics.
+
+We could also add labels like `job`, `namespace`, `env`, `region`, and `cluster`, that matched the labels of the service that owned the load balancer. This would allow our developers to select metrics the same way they do for their application's own OTel metrics.
+
+:::tip Prior art
+I've used some other great tools to scrape CloudWatch metrics (e.g. [YACE](https://github.com/prometheus-community/yet-another-cloudwatch-exporter)) in the past, but none of them track the relationship between Kubernetes objects and the load balancers they manage, so they don't have the ability to add labels based on the owning Kubernetes object- which is key here.
+:::
+
+For example, let's say I created a Kubernetes Ingress and used an annotation from the aws-load-balancer-controller to set the name:
+
+```yaml
+annotations:
+  alb.ingress.kubernetes.io/load-balancer-name: scrumulator
+```
+
+Then, to get 5xx errors per minute, a fully parameterized PromQL query would look like:
+
+```
+alb_http_code_elb_5xx_count_sum{
+    load_balancer_name="scrumulator",
+    env="$env",
+    region="$region"
+}
+```
+
+This would be *ridiculously* easy to use in comparison to doing it with CloudWatch, plus I'd be able to create simple templates to scaffold out Grafana panels and alert rules for these metrics.
+
+## Baby's first Kubernetes controller
+
+I'd never built a Kubernetes controller before, so I spent a few minutes digesting the [Operator SDK documentation](https://sdk.operatorframework.io/docs/) to get an idea of how it could work. The Operator SDK has a [scaffolding tool](https://sdk.operatorframework.io/docs/cli/operator-sdk_create_api/), so I used that to create the shell of a basic controller that watches for changes to Ingresses in a cluster, added some dumb logging, and deployed it to a test cluster. After a little fiddling with RBAC and IAM integration, I had it logging each modification to any Ingress in the cluster.
+
+### Scraping from CloudWatch
+
+One of the biggest sources of uncertainty was around cost implications of scraping CloudWatch metrics, so I spent some extra time up-front making sure I understood the pricing model, and how to use the APIs in the optimal way (e.g. batching requests at the right size, keeping total returned datapoints under the right limits). 
+
+I spent the next few hours jumping between CloudWatch documentation and cajoling Github Copilot (alternating between a few different models) to write me some Go to grab metrics via the AWS CloudWatch SDK. It actually did a pretty great job on this. It needed a little feedback along the way, but for the most part, I did this almost entirely via prompts, and managed to avoid the temptation to just tweak the code by hand.
+
+### Exposing Prometheus metrics
+
+After I got it logging CloudWatch data points for a sample app's load balancer, I started looking into how to expose these as Prometheus metrics. I quickly discovered that the [Prometheus Go SDK](https://pkg.go.dev/github.com/prometheus/client_golang/prometheus)'s basic interfaces aren't designed for one of my fundamental requirements: setting the timestamp of the metrics to match the time of the CloudWatch datapoint.
+
+I spent a bit of time figuring out how to implement the Prometheus SDK's [Collector interface](https://github.com/prometheus/client_golang/blob/main/prometheus/collector.go), which allow's specifying the timestamp of a datapoint explicitly.
+
+:::warning LLM fails
+The models I tried sucked at generating a Prometheus Collector implementation, probably because there's many fewer examples of using the Collector interface for this type of edge-use case.
+
+I also tried explicitly pointing it at some [example code](https://github.com/google/cadvisor/blob/f6e31a3cff918285fd74cb1f20d0af32c3554a68/collector/prometheus_collector.go#L56) and [documentation](https://pkg.go.dev/github.com/prometheus/client_golang/prometheus#hdr-Custom_Collectors_and_constant_Metrics) for context, but it didn't help much. 
+
+I also noticed that the botched attempts it made all resulted in compilation errors, and even in Copilot's agent mode, it didn't use feedback from the language server to iterate and fix the problems. I imagine once Github gets this working, the tooling will get a whole lot better.
+:::
+
+ I got it working roughly before I realized that this had some fundamental limitations:
+
+* With a Prometheus client, the pull model introduces an additional time interval to data that's already delayed by a couple minutes by the CloudWatch API, and some unpredictability around the actual delay due to the alignment of the Prometheus scrape interval with my CloudWatch scrape interval. 
+* The Prometheus text exposition format doesn't have a way to specify multiple timestamps for the same metric/labels combination. This means I couldn't "backfill" metrics with older timestamps once I had a newer one.
+
+### Switching to OpenTelemetry metrics
+
+I'm pretty familiar with the OpenTelemetry metrics model, so I figured I'd see if pushing metric datapoints via OTLP would overcome the limitations of the Prometheus client's pull model. 
+
+Again, I found I couldn't use the OTel Go SDK's primary interface, since it also doesn't allow setting the timestamp of a metric explicitly. Once again, I dropped down to the lower-level OTLP APIs, and it didn't take long before I was shipping metrics to our Grafana-hosted Prometheus backend.
+
+:::info LLMs aren't going to take your job yet
+Again, the LLM wasn't able to help a lot with this part, because there's very few examples of writing metrics using the OTLP APIs, other than in the OTEL SDK itself. It made a few botched attempts, which didn't work at all.
+
+This said: even though the code it wrote it was completely wrong, gave me hints about where to look in the OTel SDK source code, which ultimately got me to working, hand-written code.
+:::
+
+I built a dashboard that allowed me to compare the underlying CloudWatch metrics with the scraped Prometheus metrics, which helped me work through a bunch of edge cases and quirks of CloudWatch APIs.
+
+:::warning CloudWatch metrics lie!
+Unlike Prometheus, in which datapoints are immutable once written, CloudWatch metrics' datapoints can actually change for up to a few minutes after they're written! I ended up realizing I simply couldn't trust a CloudWatch datapoint that was younger than 2 minutes old, since they virtually always report a value that is much too low. Once I updated the controller with a rule to only scrape 2-minute old data, the series began to look virtually identical between the two sources.
+:::
+
+### Rubber meet road
+
+At this point, I was fairly certain this approach was going to work, so I spent another hour or two cleaning it up before I started showing it to some folks to see if they thought it was useful... which they did, because CloudWatch is objectively terrible.
+
+Skipping ahead a few more days, I'd polished it up, added support for Services and NLBs, done a bunch of refactoring and testing, added some self-telemetry, and deployed it to a couple pre-production clusters. After some more refinement, it went out to all our clusters in production.
+
+Within another couple days, we have dozens of Grafana dashboards and alert rules using these new metrics. Within the first day of using the metrics, I found an error with the readiness gates on one of our internal services that was causing 5XXs on pod terminations.
+
+Great success!
+
+## Reflections
+
+While the LLMs I used weren't much help in writing code against lower-level Prometheus or OTel APIs, it was tremendously helpful in speeding me up a bunch of other ways. 
+
+#### Writing code against widely used APIs
+
+Writing basic data manipulation code for things like the CloudWatch API response schema isn't exactly hard, but it can be time consuming. With Copilot, I barely had to look at the schema documentation at all- the LLM got this almost entirely right.
+
+#### Implementing algorithms and data structures
+
+Once I had a well written prompt, the LLMs did really great at writing the boring plumbing code to manage metadata (e.g. mapping CloudWatch metric names and labels to Prometheus versions). It initially wrote some mildly inefficient code, and needed a little high-level feedback to optimize some data structures, but ultimately did the bulk of this work for me- with the bulk of the prompts being closer to business requirements than implementation details. 
+
+#### Suggesting high-level architectural approaches
+
+I don't have a ton of Go experience, so it took me a while to land on a concurrency model that worked well for this use case (something like an actor model). Once I realized I didn't like my first approach, and came up with a good high-level description of what I wanted, the LLM was able to produce the bones of an actor model implementation that ended up being exactly what I wanted.
+
+#### Refactoring
+
+While iterating through various concurrency models, and also with the switch to the OTel SDK, the tooling was incredibly useful for refactoring. This is where, even without integration with the Go language server, Copilot's agent mode saved a huge amount of time on tasks that would otherwise have been pretty mechanical and tedious.
+
+#### Courage boost
+
+I think the biggest advantage of these tools was that it gave me the courage to try something that might have been a bit too ambitious otherwise. I certainly could have built this controller without them, but adding another 50-75% lead time before I got a prototype done would have made me much less likely to attempt to do this with a time box of a few days.
+
+## Next up
+
+This experience has got me pumped to double down and get more ambitious. I've got a number of things I want to try next:
+
+* Being more systematic about tracking my prompts. I've got a colleague who recommended writing prompts like requirements docs, and storing them with the code- which sounds like it could be really useful.
+* I'd like to see if it's possible to use LLMs to generate integration tests for a legacy system that has so far resisted efforts to be refactored. I'm wondering if an LLM would be capable of finding all the subtle, implicit behaviors that aren't actually visible in the API, but still function like bubblegum holding the larger system together. If we could use it to generate really comprehensive, working tests, it might then give us the confidence to be a lot more aggressive about rearchitecting it.
+* There's a number of OSS projects I've wanted to contribute to, but the effort required to understand the architecture of a new project can be deterring. I'd like to try using LLMs as a tool to accelerate my understanding of their structure, and help me reason about how to add the features I'd like to contribute.
