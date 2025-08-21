@@ -45,6 +45,10 @@ figure.blog-image {
   display: block;
 }
 
+figcaption.attribution {
+  font-size: 13px;
+}
+
 /* Media query for wide screens */
 @media (min-width: 768px) {
   .blog-image {
