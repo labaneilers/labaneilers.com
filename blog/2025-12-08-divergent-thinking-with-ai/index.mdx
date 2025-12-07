@@ -7,9 +7,10 @@ draft: true
 ---
 
 :::tip[TL;DR]
-Inexperienced problem solvers have a tendency to get stuck on complex problems because they primarily focus their use of AI on *convergent thinking*: narrowing possibilities and looking for a specific solution which fits within their preconceptions. 
+A possible explanation for why we observe such a discrepancy between the productivity gains from AI tools of seasoned senior software engineers versus their less-experienced counterparts:
 
-Experienced problem solvers using AI successfully use it to augment a more scientific process, which includes building mental models, formulating hypotheses, and performing experiments. In this process, they use AI to accelerate *divergent thinking*: exploration and discovery of possibilities.
+* Inexperienced problem solvers have a tendency to get stuck when using AI tools to solve complex problems because they bias towards *convergent thinking*: narrowing possibilities and looking for a specific solution which fits within their preconceptions.
+* Experienced problem solvers who have adopted AI tools tend to use it to augment a scientific process, which includes building mental models, formulating hypotheses, and performing experiments. In this process, they use AI to accelerate *divergent thinking*: exploration and discovery of possibilities.
 :::
 
 import HeadsUp from './heads-up.jpg';
@@ -18,7 +19,7 @@ import HeadsUp from './heads-up.jpg';
 <img src={HeadsUp} alt="A heads-up display"/>
 </figure>
 
-I've been thinking a lot lately about the significant discrepancy I've observed in how effective different people are at using AI for problem solving. I'm certainly not the only one; there seems to be a strong consensus building in my field (software engineering) that AI tools disproportionally augment the effectiveness of experienced people (e.g. those who developed their craft before AI tools became omnipresent), and that providing AI to people early in their career can actually slow them down.
+I've been thinking a lot lately about the significant discrepancy I've observed in how effective different people are at using AI for problem solving. I'm certainly not the only one; there seems to be a strong consensus building in my field (software engineering) that AI tools disproportionally augment the effectiveness of experienced people (e.g. those who developed their craft before AI tools became omnipresent), and that providing AI to people early in their career can actually slow them down- and impede their growth.
 
 This certainly fits the observations I've made personally, but raises a lot of questions about what experienced people are doing so differently with AI. I've spent some time intermittently reflecting on my own use of AI, and also paying attention to how some of my younger colleagues are using it, and I think I have a working theory.
 
@@ -48,9 +49,9 @@ import ForkingRoad from './forking-road.jpg';
 <img src={ForkingRoad} alt="A forking road"/>
 </figure>
 
-I think of problem solving like traveling a road that branches into infinite forks. Each fork has different probabilities of success, different risks, and different tradeoffs. Some have hidden dangers, or they might be really exceptionally long and difficult to travel. On top of that, any of them could be dead ends. And a few lead to success.
+I think of problem solving like traveling a road that branches into infinite forks. Each fork has different probabilities of success, different risks, and different tradeoffs. Some have hidden dangers, or they might be really exceptionally long and difficult to travel. On top of that, any of them could be dead ends.
 
-Each fork you choose can reveal valuable information- data which you can use to refine your mental model (which in this metaphor would be something like an arial map). But it costs time and energy to take any one, so you need a methodology to make each decision as efficiently as possible.
+Following any fork- even the dead ends- could reveal valuable information, which you can use to refine your mental model (which in this metaphor would be something like an arial map). But it costs time and energy to take any one, so you need a methodology to make each decision as efficiently as possible.
 
 If there's a better way than the scientific method, I'm not aware of it.
 
@@ -58,7 +59,7 @@ If there's a better way than the scientific method, I'm not aware of it.
 
 Putting aside AI completely, the biggest advantages experienced problem solvers have in any give domain are:
 
-1. They have a more accurate, well-developed mental model of the problem space, and they understand the value of further refining that model. 
+1. They have a more accurate, well-developed mental model of the problem space, and they invest time in continuously refining that model. 
 2. They use this model to formulate better hypotheses, prioritize based on chances of success, and estimate the effort required to test them. 
 3. They design and execute these tests efficiently- they focus on building understanding and reducing uncertainty with the minimum necessary time/effort.
 4. They have a general awareness of when it would be more productive to double back instead of plowing forward. After invalidating a hypothesis, they're willing to retrace their steps past multiple previous forks in the road and use their newly refined model to reevaluate a previous decision.
@@ -71,9 +72,9 @@ But for an inexperienced problem solver faced with a problem that falls slightly
 
 ### Avoiding forks entirely
 
-Seasoned engineers often get a gut feel that they can't be the first person facing a particular problem they've encountered. And it's true- many hypotheses can be evaluated through research. Depending on the question you're asking, the answer (or relevant data that can help you answer it) might be readily available on the internet. 
+Seasoned engineers often get a gut feel that they can't be the first person facing a particular problem they've encountered. And it's often true- depending on the question you're asking, the answer (or relevant data that can help you answer it) might be readily available on the internet. 
 
-As it turns out, AIs are exceptionally good at rapidly scouring the internet, ingesting huge swaths of text, analyzing and summarizing it. These type of questions can require orders of magnitude less time and effort to answer with AI than by a human doing the research.
+As it turns out, AIs are exceptionally good at rapidly scouring the internet, ingesting huge swaths of text, analyzing and summarizing it. These types of questions can require orders of magnitude less time and effort to answer with AI than by a human doing the research.
 
 Experienced engineers get so much more out of AI in this realm because they have the instinct to ask the question before starting any work- and AI reduces the cost of answering many of these questions dramatically.
 
@@ -83,7 +84,7 @@ When initial research leaves you with open questions, you're left with investmen
 
 With AI, you gain the remarkable ability to execute tests like this with superhuman speed. If you can articulate your experiment in a prompt (and usually guide it through some iterations), a decent AI agent can take care of the mechanics and gruntwork to generate the minimum viable code to answer a whole lot of questions- lickety split. The fact that AIs tend to write code that's less than production quality is of little consequence when your goal isn't writing production code- it's answering questions.
 
-The AI speed difference in this phase of the process isn't just incremental, its transformative. An AI-assisted human can evaluate *exponentially* more hypotheses than a human alone. Experienced engineers are much more likely to utilize AIs in this way, and better equipped to interpret the results of the experiment.
+The AI speed difference in this phase of the process isn't just incremental, its transformative. An AI-assisted human can evaluate *exponentially* more hypotheses than a human alone. Experienced engineers are much more likely to utilize AIs in this way, and better equipped to interpret the results of each experiment.
 
 ### Discovering which forks exist
  
@@ -91,22 +92,22 @@ The two most common failure modes I observe when inexperienced software engineer
 * they very rapidly execute fully formed solutions that carry very significant (and often unacceptable) tradeoffs they didn't recognize or understand. 
 * they fail to solve the problem, and get stuck trying to find ways to solve it within the constraints they assume apply, but don't fully understand.
 
-In both cases, I would generally guide them through some [divergent thinking](https://en.wikipedia.org/wiki/Divergent_thinking). Using our forking road analogy, they had gotten stuck after choosing a path without spending any energy on finding out *what other paths existed*.
+Using our forking road analogy, they had gotten stuck after choosing a path without finding out *what other paths existed*.
 
-Experienced problem solvers deliberately invest time in idea generation, exploration, research, and brainstorming- to expand the realm of possible solutions they can consider- before they begin converging on a specific solution. 
+In both cases, I would generally guide my younger colleagues through some [divergent thinking](https://en.wikipedia.org/wiki/Divergent_thinking). Experienced problem solvers deliberately invest time in idea generation, exploration, research, and brainstorming- to expand the realm of possible solutions they can consider- before they begin converging on a specific solution. 
 
 Divergence is a core element of human creativity- and applies especially to difficult and novel problems which often require diversity of perspective and fresh approaches to solve.
 
 ## Using AI to promote divergence
 
-The first step in divergent thinking usually involves building the scope of your existing mental model by surveying preexisting knowledge. For software engineers, it might mean reading up on some relevant computer science concepts, product documentation, or open-source code- and letting this open up possibilities beyond the constraints you previously perceived.
+The first step in divergent thinking usually involves expanding the scope of your existing mental model by surveying preexisting knowledge. For software engineers, it might mean reading up on some relevant computer science concepts, product documentation, or open-source code- and letting this open up possibilities beyond the constraints you previously perceived.
 
 This is where I think AI is drastically underutilized by inexperienced users- for exploration, learning, and idea generation in a broad problem space. AI is *incredibly useful* when used in this way. In our forking road analogy, it's like having the ability flying a drone to scout ahead so you can see all the forks available within a few hours walk, eliminate the ones that obviously result in dead ends, and discover new ones that look very promising.
 
 AI's current flaws, like hallucination and sycophancy, are a lot less problematic when you're using them to augment divergent thinking- since any idea generated in this phase of problem solving (including by humans) can be flawed. It's part of the game- you take early ideas with a grain of salt.
 
 :::info We all get stuck in our own ideas sometimes
-Admittedly, I occasionally get stuck trying to make a particular idea work, only to fail repeatedly. Even with AI assistance, I'll sometimes find myself trying variations on the same approach until I get frustrated. 
+Persistence, I'm told, is one of my more admirable qualities... meaning I'm stubborn as hell. I occasionally get stuck trying to make a particular idea work, only to fail repeatedly. Even with AI assistance, I'll sometimes find myself trying variations on the same approach until I get frustrated. 
 
 I've learned that this is a great time to step back, open a fresh prompt with an empty context window, and treat the AI like a colleague who can give you a fresh perspective. I start asking questions that broaden the range of possible solutions. 
 
@@ -138,6 +139,4 @@ Once my mental model is sufficiently filled out, I find I'm *way* more effective
 
 Many non-engineers hold the misconception that software engineers spend most of their time and effort writing code: the kind of code that LLMs are getting increasingly good at writing every day. It is true that we spend a good amount of time staring at code on a screen, but obscures the truth that our time is *absolutely dominated* by more general problem solving: designing, debugging, troubleshooting, and analyzing systems.
 
-Experienced engineers who understand the scientific method, who value mental models, and who practice deliberate divergent thinking, are going to continue outperform those who don't. Augmenting them with powerful AI tooling is going to supercharge their effectiveness, while giving them to novices who haven't yet developed them- is going to create a mess.
-
-
+Experienced engineers who understand the scientific method, who value mental models, and who practice deliberate divergent thinking, have always outperformed those who don't. Augmenting them with powerful AI tools is going to drastically accentuate this discrepancy.
