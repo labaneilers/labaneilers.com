@@ -87,7 +87,7 @@ const config: Config = {
         {to: '/paintings', label: 'Paintings', position: 'left'},
         {to: '/resume', label: 'Resume', position: 'left'},
         {
-          href: '/rss.xml',
+          href: 'https://labaneilers.com/rss.xml',
           html: '<a href="/rss.xml" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">RSS <img src="/img/rss.png" alt="RSS feed" style="height: 27px; vertical-align: middle; padding-bottom: 5px;" /></a>',
           position: 'right'        
         },
