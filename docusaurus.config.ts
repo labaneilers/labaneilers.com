@@ -50,6 +50,9 @@ const config: Config = {
           feedOptions: {
             type: 'all',
             copyright: `Copyright © ${new Date().getFullYear()} Laban Eilers`,
+            xslt: {
+              rss: true
+            }
           },
           routeBasePath: '/'
         },
@@ -88,7 +91,7 @@ const config: Config = {
         {to: '/resume', label: 'Resume', position: 'left'},
         {
           href: 'https://labaneilers.com/rss.xml',
-          html: '<a href="/rss.xml" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">RSS <img src="/img/rss.png" alt="RSS feed" style="height: 27px; vertical-align: middle; padding-bottom: 5px;" /></a>',
+          html: '<a href="/rss.xml" target="_blank" class="navbar__item navbar__link">RSS <img src="/img/rss.png" alt="RSS feed" style="height: 27px; vertical-align: middle; padding-bottom: 5px;" /></a>',
           position: 'right'        
         },
         {
