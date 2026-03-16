@@ -1,0 +1,99 @@
+---
+slug: thinking-never-goes-out-of-style
+title: "Thinking never goes out of style"
+tags: [AI, programming]
+image: ./writer.jpg
+draft: true
+---
+
+:::tip[TL;DR]
+I've found myself still occasionally hand-writing some code, even though I've gone almost entirely all-in on AI-assisted engineering. I'm considering the value of programming by hand as a cognitive tool, much like writing, that can help facilitate deep thinking, combat biases, develop instincts, and lean into one's strengths as a human being in an age of token-chomping bots.
+:::
+
+import Writer from './writer.jpg';
+
+<figure className="blog-image" >
+<img src={Writer} alt="A writer"/>
+</figure>
+
+I haven't written much for the past few months- for a couple reasons.
+
+First, I've become utterly addicted to AI coding tools, and I haven't been able to pull myself away from watching my AI agents **absolutely tear through my feature backlog**. Suddenly nothing can escape my reach, from long-postponed major refactoring, to minor annoyances, to features that were tricky enough I wasn't sure they'd ever make sense to tackle. 
+
+Even my old nemesis, CSS, is no match for me on a dopamine-fueled, manic, AI coding rampage.
+
+Secondly, while I'm learning an insane amount with this stuff, it feels like all my mind-blowing insights have a shelf-life of about 5 minutes. Everyone else in the world seems to be coming to all the same conclusions. The next morning, everything I write just seems painfully *obvious*.
+
+{/* truncate */}
+
+## Please don't tell anyone, but I wrote this (gasp) by hand
+
+Despite being neck deep in a frantic, explosive bout of creativity, I've occasionally taken some time to go a bit beyond just reviewing the code Claude's writing for me, and to think about it a bit more deeply. A few times I've even caught myself typing- realizing that I'd been at it for a half-hour or so- without noticing how objectively *weird* it is to be doing that when I have an army of tireless, magical code-writing gremlins at my disposal.
+
+I realize it might appear that I'm wasting time in an anachronistic attempt to hand-craft some artisanal TypeScript- to infuse it with some humanity and love... or some shit like that. Or perhaps that I'm just having trouble letting go of the joy I used to experience from the puzzle-solving aspect. I mean, it might be a little of those things- at least it was at first. But it isn't anymore. 
+
+Within only a few months after committing myself fully to getting good at applying AI to engineering, my brain has already been completely rewired. Few months ago, AI-assistance was getting me at most a 20% productivity boost. Now, with better tools, a new mindset, and lots of practice- it's conservatively like 5-10x.
+
+The other day, when I set out the ingredients in preparation for cooking dinner, I was *viscerally disappointed* when I realized I couldn't spawn subagents to chop the onions, peppers, and carrots.
+
+Don't lie, you know this has happened to you too.
+
+## Old habits
+
+I've been ruminating on why I still occasionally revert to my old habits. I know the code I write by hand isn't any better than what Claude would do, and I'm absolutely sure I could have achieved the same outcomes (certainly faster) by prompting it. But at the speed the agents were moving, something felt off about the how much time I was spending thinking *deeply* about anything.
+
+And I think, until now, I hadn't appreciated how much programming could be like writing: *a tool to facilitate thinking*.
+
+Paul Graham once wrote, in a [tiny essay on writing](https://paulgraham.com/writing44.html):
+
+> I think it's far more important to write well than most people realize. Writing doesn't just communicate ideas; it generates them. If you're bad at writing and don't like to do it, you'll miss out on most of the ideas writing would have generated.
+
+This hits home. I abort roughly 2/3 of my attempts to write blog articles, mostly because the process of writing helps me see how fucking stupid some of my own ideas are. Sometimes I start writing out a thought, and find that it's become completely unrecognizable by the time I'm done- because writing forced me to think it through. Seeing my own thoughts in concrete form allows me to feel how they might land on another person, which helps weed out all the bullshit and expose what seems true.
+
+This is *valuable*.
+
+## Programming is also thinking made concrete
+
+When I'm really in the zone while programming, I float between a meditative, dissociative state, and a more analytical, critical one. It forces me to engage with a problem in abstract terms, and then pop back up and consider the broader effects of the changes I'm making.
+
+This mindset gets to the core of what humans add to the AI-assisted engineering equation. I'm still way better than Claude at knowing when to step back and ask questions like: 
+
+* what tradeoffs come along for the ride with this change (especially tradeoffs beyond the knowledge and context window of the LLM)?
+* what are the intrinsic relationships/coupling between entities, and how well dos this model the corresponding concepts in the real world? 
+* what will the 2nd order effects of this change be?
+* what social/emotional/behavior outcomes am I actually looking for?
+* are there assumptions built into my idea that I could test with less risk?
+
+But without any time spent with my mind immersed in types, data structures, or algorithms, I found it was really easy to get swept up in a what felt like a creative frenzy, only to later realize that I'd been moving *very fast in the wrong direction*. 
+
+Code relates to the real world in all kinds of ways- some obvious, and some much more subtle. Human intuitions around something this complex require some effort to nurture.
+
+## AI authored patches can anchor your conceptions
+
+A related effect of relying primarily on agents is that the code diffs they generate can reinforce and calcify your preconceptions about a problem space.
+
+Another relevant quote, from George Orwell's essay, [Politics and the English Language](https://www.orwellfoundation.com/the-orwell-foundation/orwell/essays-and-other-works/politics-and-the-english-language):
+
+> But if thought corrupts language, language can also corrupt thought.
+
+Orwell refers here to "ready-made phrases" (e.g. cliches or idioms) whose power, by virtue of tradition or sheer catchiness, can infect patterns of thought and leave their victims vulnerable to sloppy thinking- and prone to drawing illogical conclusions.
+
+I feel the echoes of this phenomenon when I read LLM-generated code. While they can certainly generate code that's elegant and idiomatic, it also has the side-effect of anchoring us into a particular conception of *how a problem is shaped*. 
+
+Since LLM output is largely a product of the language we use to prompt it (and the context we give it explicity), it can be easy to accidentally produce output that's a reflection of our own (perhaps flawed) mental model. Plus, because LLMs are trained on all the code in the universe, we're likely to get middle-of-the-bell-curve ideas as outputs, unless we work deliberately to push it towards something more interesting.
+
+## Cognitive tools: old and new
+
+Recognizing this, I've also developed plenty of [tricks to use LLMs as a critical, antagonistic thinking partner](/using-ai-to-promote-divergent-thinking): one that helps me poke holes in my own ideas and helps me explore divergent paths. This is, for me, a really amazing new tool to amp up my own creativity- and to combat my own cognitive biases. 
+
+But I don't think it's the only tool available. We've got tens of thousands of years of human history of creativity and critical thought behind us. Long before AI started spewing out probabilistic responses, we developed all kinds of tools and processes to facilitate innovation- and weed out bad ideas.
+
+Written language has been a huge one- for several thousand years. Programming, which has been around for (depending on your definition) something like 80-180 years, has a lot of similar properties, certainly in communicative power, but also as a method to force logical reasoning and root out ideas that don't work.
+
+## Human thought is still in style
+
+It can be easy to think of code only in terms of its ostensible purpose- a way to describe processes to be executed by a machine- and forget that it's also an interface designed for humans to be able to *express* these processes and *reason* about them. Programs exist in a much broader context than LLMs can be aware of, and humans are still far better at working at that level of abstraction. 
+
+I feel like there's some value to me in retaining a connection to code: understanding how data structures and algorithms model real world concepts, and continuing to develop my instincts about how my programs relate to their human users. 
+
+Even if it sometimes feels like an anachronism. 
