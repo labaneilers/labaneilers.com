@@ -1,0 +1,108 @@
+---
+slug: oops-this-app-i-vibe-coded-is-load-bearing
+title: "Oops, this app I vibe-coded is load-bearing"
+tags: [AI, programming]
+image: ./diagnosis.jpg
+draft: true
+---
+
+:::tip[TL;DR]
+
+The current generation of AI coding tools have given rise to a weird narrative: non-technical users can now build real, production software- without help from trained software engineers. This reveals some pretty profound misconceptions about the discipline of software engineering, and raises some questions about the perception of expertise across fields more generally.
+
+:::
+
+import diagnosis from './diagnosis.jpg';
+
+<figure className="blog-image" >
+<img src={diagnosis} alt="A software engineer giving a patient a diagnosis"/>
+</figure>
+
+My company, like many others, is exploring what it means to be able to empower non-technical employees with AI coding tools. There's a narrative pervading the zeitgeist that these tools give anyone the ability to vibe up real, working, load-bearing software systems.
+
+Until recently I've really tried to be open minded about this idea, but after being involved in some recent, real-life experiments- and applying a little additional scrutiny, this fantasy falls apart rapidly.
+
+{/* truncate */}
+
+## I could be CMO, right?
+
+I recently had a dream where my company's president told me that now that I've had such great success using Claude to solve engineering problems, he wanted me to take over our "go to market" function- bringing the same kind of wins I've had there.
+
+Unlike most dreams, this one stuck with me. I found myself dwelling on it; the cleverness of my subconscious's little thought experiment became more apparent, even as it seemed increasingly, *comically*, absurd.
+
+To be clear: I have basically zero expertise in go-to-market. I've spent my career in engineering- the last 10 years in "platform engineering" (working on backing infrastructure)- which is one more step removed from customers than most engineers.
+
+In my career, I've had the fortune to be able to rely on very, very smart colleagues who've dedicated themselves to the craft of marketing. From them, I've developed a rough working understanding of brand strategy. I've done some work to support campaigns and attribution, and I've also supported teams doing customer analytics. I've read market research reports and mostly understood them.
+
+In other words, I know enough to know just how little I know. I'm a marketing kindergartner.
+
+So the idea that I'd use Claude to take over Marketing seems **obviously insane**. No executive in their right mind would assume that AI would turn a random engineer into a competent marketer. Giving me an advertising budget would be blatant negligence. 
+
+:::warning How hard could it be?
+Don't get me wrong, I'm down to take on any challenge. I've learned to use AI to build marginal competence in unfamiliar technical domains- and this has worked out pretty well for me. 
+
+I'd probably start by using it as an educational tool- give myself a mini-MBA. I'd focus on on developing high-level concepts and vocabulary, and gradually build a mental model I can use to slowly test my understanding with some small experiments.
+
+Now that I think about it, maybe it's not such a bad idea. Surely marketing can't be that hard. What could go wrong?
+:::
+
+## There's a reason they give degrees for this shit
+
+Thinking through the absurdity of me using Claude to take over a function I'm utterly unqualified for made me think more deeply about what it would mean for non-technical vibe-coders to jump into my world- and start producing load-bearing software.
+
+I think a lot of non-engineers hold the understandable misconception that software engineering is primarily about writing code. Please bear with me while I disabuse you of this notion.
+
+Let's imagine a non-technical user has vibe-coded up a working full-stack application (web frontend, backend server, and a database). I'll lay out a few examples of the kind of stuff they're going to have to learn about, just to manage and operate this one application:
+
+* **Design and architecture**: Experienced engineers have learned to choose among well-understood patterns, with known tradeoffs, to build systems with attributes that work for their intended purpose. There's a whole set of language and concepts that will be completely foreign to a non-technical vibe-coder (e.g. consistency models, sharding, algorithmic complexity, convergence, idempotency, etc). This isn't just jargon; these are real concepts from computer science that are integral to making real systems work. The more the scope of your app grows (especially in terms its importance to the business), the more critical this stuff becomes.
+* **Debugging, diagnosis, and troubleshooting**: This includes being able to debug the code itself, but also all dependencies that got pulled in, the platform/cloud/infrastructure its running on, interactions/relationships with other systems. Fun fact: when engineers are "coding", the bulk of what they're really doing is debugging.
+* **Observability**: This is how we understand how our systems are actually behaving in production, and a critical part of how we identify and troubleshoot problems. There's different types of signals for different purposes, all kinds of analysis tooling and query languages, visualization techniques, and tooling to set up alerts that will page you when things go off the rails.
+* **Database administration**: Since this app has a database, you've got to have a strategy to manage schema updates (without production impact), identify and optimize slow queries, administer database upgrades- and a whole mess of "DBA-lite" skills full-stack developers need.
+* **Risk management and testing**: How do you know if your code is going to behave correctly when you add a new feature? How do you know your change didn't break existing features? Experienced engineers use methodologies like "Test Driven Development", API contracts, and property-based testing- and design their code to make it amenable to such techniques.
+* **Maintenance**: Engineers spend an embarrassing amount of time staving off "code-rot". As time passes, APIs your app depends on get schema updates (or get deprecated/retired), security vulnerabilities get discovered in libraries you depend on, infrastructure changes out from under you. Unfortunately, code doesn't keep working without TLC.
+* **Security**: Decisions made by engineers at all levels (e.g. from big architectural decisions to tiny coding choices) have security impact. Decisions about security have all kinds of inherent tradeoffs and consequences. We spend years developing instincts about how to avoid our apps getting pwned. Mistakes can be catastrophic.
+* **Being on-call**: If your app is load-bearing to the business, you'll need to set up your on-call rotation, so you get woken up in the middle of the night when a slow-burning memory leak causes your app to get OOM killed. Oh, and you have to learn what "OOM killed" means.
+
+I could go on and on, but I promised myself I'd try to keep this post short. I could rattle off another 30 bullets, easily. Suffice to say, each of the ones above could be expanded into a career's worth of learning.
+
+## A mountain of trivia
+
+I suspect this is the case in other fields, but whenever I onboard a new college graduate to an engineering team, I'm struck with self-awareness of the *absolute mountain of trivia* that's required to be effective in our field. 
+
+Modern software is built on a gigantic ecosystem of open-source tools and libraries, all of which encapsulate a huge amount of accumulated complexity- each with their own quirks and sharp edges. They all have cute names that you just have to memorize, and have them mapped to a set of related concepts, jargon, and tools, and know to what problem spaces they apply. This is the stuff that fills up like 80% of my brain.
+
+This all may seem nuts to someone outside our field, but the bulk of this isn't "accidental" accumulated complexity. Some of it has historical origins, but much of it is a reflection of complexity that exists in the real world. After all, software is all about modeling real-world concepts, and finding ways to do useful work that humans benefit from.
+
+## Can't AI handle this stuff for me?
+
+I mean, it can certainly help with *parts*, and it will almost certainly expand in capabilities into the future. 
+
+But today, I can say with 100% certainty: if you don't already have experience with this stuff, you're going to be in over your head in short order.
+
+I'm personally experiencing an *enormous* boost of productivity and creativity from using AI agents on engineering problems- but I've got almost 30 years of marinating in this world. I have instincts that come from years of hard-won experience. I can tell when agents are giving me bad output, and I can adjust accordingly because *I know what good looks like*. A non-programmer isn't going to be able to recognize when they've gotten slop.
+
+AI agents have superhuman abilities at researching, synthesizing, and reasoning within a relatively small context. They're not very good at strategizing, seeing the big picture, or understanding the current task in the context of a longer-term goal.
+
+The value, for me as an engineer, comes in combining my skills and experience with this superhuman speed within a series of bounded tasks where I'm keeping control of the big picture.
+
+A non-technical user will be able to build some interesting things with agentic tools, but you probably don't want them building software that runs accounting systems, medical devices, or aircraft control systems.
+
+## What *should* non-technical people do with AI coding agents?
+
+All this said, there's a few ways I imagine AI coding agents are going to provide real, meaningful value for non-technical folks. 
+
+For one, they can use AI to build prototypes that test hypotheses, prove out business opportunities, and demonstrate value. Armed with their domain expertise, they can probably do a whole lot of exploration of a problem space with a lot less need for assistance from expensive human engineers.
+
+A common way I'd imagine this could play out: non-technical teams could automate processes that they and their teams wouldn't have been able to previously, especially for processes where the value of the opportunity wasn't clear enough to justify engineering resources. Once the value of the automation becomes more apparent, and the team identifies a need for more reliability or efficiency, they could seek engineering resources to help build a more mature version.
+
+I think the real value will come from a combination of empowered business and domain experts working in collaboration with software engineers that are themselves massively accelerated with AI. I think this is the sweet spot.
+
+## Consider the nature of your own skills and experience
+
+We're already hearing stories about 3-person startups that launch vibe-coded products in insanely short timelines, and hitting revenue targets that would have previously required a decent sized engineering team. This makes a lot of sense in the early stages of a startup,  where robustness and reliability are often secondary to finding product-market fit.
+
+I'm certain there are a number of executives in middle/large sized companies hearing stories like this, and it's making them think they're going to be able to bypass the traditional prioritization constraints that prevent them from getting a swath of software projects delivered. After all, their product team can just vibe-code any software they need now that they have Claude.
+
+If this accurately describes your current perspective, I'd recommend taking a quick beat and considering whether you think it's equally plausible that one of your engineers could use Claude to take over your role.
+
+My guess is that would sound pretty silly.
